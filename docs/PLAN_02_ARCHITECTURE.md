@@ -199,3 +199,39 @@ com.campusoperationsmanager.backend
 | **Multiple Deployable Monoliths** | Unnecessary complexity, each module is not large enough to warrant its own deployment |
 
 **Conclusion:** Modular monolith gives us clean code organization with minimal operational overhead. It follows the course recommendation to start simple and scale only when necessary.
+
+### Why SQL
+
+**Lecture Reference:** Lecture 04 — Web Architecture, Tutorial 04 — Architecture Trade-offs
+
+We chose a relational SQL database (PostgreSQL via Neon) because our system has many interconnected entities with clear relationships: users, resources, bookings, tickets, comments, and notifications.
+
+#### How Our Data Is Related
+
+```
+User ────< Booking >──── Resource
+ │                        │
+ │                        ├───< Ticket >──── Comment
+ │                        │
+ └───< Notification
+```
+
+#### Why This Matters for Our Project
+
+| Benefit | How It Applies |
+|---|---|
+| **Relationships** | Foreign keys enforce data integrity between bookings and resources |
+| **Conflict Checks** | SQL queries can detect overlapping time ranges efficiently |
+| **Ownership Checks** | JOIN queries verify "who owns what" for access control |
+| **Transactions** | ACID guarantees prevent double-bookings and lost updates |
+| **Reporting** | Aggregations (bookings per resource, ticket resolution times) are straightforward |
+
+#### Why Not Other Approaches?
+
+| Database Type | Why Rejected |
+|---|---|
+| **NoSQL (MongoDB)** | Poor relationship support, booking overlap checks become complex application logic |
+| **In-Memory Collections** | Data lost on restart, no persistence, violates assignment requirements |
+| **File-Based Storage** | No concurrency control, no transactions, not scalable |
+
+**Conclusion:** SQL is the right choice because our data is highly relational and requires integrity guarantees. The assignment explicitly requires persistent database storage, and SQL provides the strongest foundation for our use case.
