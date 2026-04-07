@@ -142,3 +142,60 @@ We chose a 3-tier architecture because it provides clear separation of concerns.
 | **Single Monolith (no tiers)** | Everything mixed together, hard to test and maintain |
 
 **Conclusion:** 3-tier gives us the right balance between structure and simplicity for this project scope.
+
+### Why Modular Monolith
+
+**Lecture Reference:** Lecture 04 — Web Architecture, Tutorial 04 — Architecture Trade-offs
+
+We chose a modular monolith for our backend. This means one Spring Boot application contains all modules, but each module is organized in its own package with clear boundaries (controllers, services, repositories, models).
+
+#### How Our Backend Is Organized
+
+```
+com.campusoperationsmanager.backend
+├── resource/          ← Module A: Facilities & Assets
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   └── model/
+├── booking/           ← Module B: Booking Management
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   └── model/
+├── ticket/            ← Module C: Maintenance & Incident
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   └── model/
+├── notification/      ← Module D: Notifications
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   └── model/
+└── auth/              ← Module E: Authentication
+    ├── controller/
+    ├── service/
+    ├── repository/
+    └── model/
+```
+
+#### Why This Matters for Our Project
+
+| Benefit | How It Applies |
+|---|---|
+| **Simple Setup** | One deployable unit, no service discovery needed |
+| **Easy Debugging** | Single process, straightforward stack traces |
+| **Team Parallelism** | Each member owns their module package |
+| **Clean Boundaries** | Modules stay isolated, no cross-module coupling |
+| **Future Migration** | Tutorial 04: can split into microservices later if needed |
+
+#### Why Not Other Approaches?
+
+| Architecture | Why Rejected |
+|---|---|
+| **Microservices** | Tutorial 04: high complexity, infrastructure cost, debugging difficulty — overkill for 4 developers |
+| **Single Monolith (no modules)** | All code in one package, hard to maintain, violates separation of concerns |
+| **Multiple Deployable Monoliths** | Unnecessary complexity, each module is not large enough to warrant its own deployment |
+
+**Conclusion:** Modular monolith gives us clean code organization with minimal operational overhead. It follows the course recommendation to start simple and scale only when necessary.
