@@ -282,3 +282,89 @@ Level 3: HATEOAS with hypermedia links      ← Innovation target
 | **RPC-style (single endpoint)** | Violates REST uniform interface, hard to test, poor separation of concerns |
 
 **Conclusion:** REST is the right choice because it aligns with the course curriculum, satisfies the rubric requirements, and provides a clean, testable, scalable API design for our use case.
+
+### Why OAuth 2.0 and JWT
+
+**Lecture Reference:** Lecture 06 — REST APIs Auth, Tutorial 06 — Authentication Deep Dive
+
+We chose OAuth 2.0 for authorization and JWT (JSON Web Tokens) for stateless API communication. This combination satisfies the assignment rubric requirement for OAuth 2.0 authentication while keeping our REST API truly stateless.
+
+#### How Our Authentication Flow Works
+
+```
+┌─────────┐     ┌──────────────┐     ┌─────────────┐
+│  User   │────▶│ Google OAuth │────▶│  Our App    │
+│         │◀────│  (Provider)  │     │  Backend    │
+└─────────┘     └──────────────┘     └─────────────┘
+     │                                      │
+     │◀────────── JWT Token ────────────────│
+     │                                      │
+     │─── Request + JWT Header ────────────▶│
+     │◀────────── Protected Resource ───────│
+```
+
+#### Why This Matters for Our Project
+
+| Benefit | How It Applies |
+|---|---|
+| **No Password Storage** | Google handles credentials; we never store sensitive user passwords |
+| **Stateless API** | JWT contains all user info (id, role); no server-side session needed |
+| **Role-Based Access** | JWT payload includes user role (USER, ADMIN, TECHNICIAN) for endpoint protection |
+| **Scalability** | No session state means backend instances can scale horizontally |
+| **Rubric Requirement** | 10 marks for OAuth 2.0 implementation |
+
+#### OAuth 2.0 vs JWT: Clarifying the Roles
+
+| Concept | Role in Our System |
+|---|---|
+| **OAuth 2.0** | Authorization framework — handles "who can access what" via external provider |
+| **JWT** | Token format — carries user identity and role claims in a self-contained, verifiable way |
+| **OpenID Connect (OIDC)** | Identity layer on top of OAuth 2.0 — provides user profile information |
+
+#### Why Not Other Approaches?
+
+| Auth Method | Why Rejected |
+|---|---|
+| **Session-Based Auth** | Requires server-side session storage, breaks statelessness, hard to scale |
+| **HTTP Basic Auth** | Sends credentials on every request, insecure without HTTPS, no role support |
+| **API Keys** | No expiration, no role granularity, poor security if leaked |
+| **Custom Auth** | Reinventing the wheel, security risks, doesn't satisfy rubric requirement |
+
+**Conclusion:** OAuth 2.0 + JWT is the right choice because it satisfies the rubric, keeps our API stateless, provides role-based access control, and follows modern authentication best practices taught in the course.
+
+### Why React and Component-Based Frontend
+
+**Lecture Reference:** Lecture 07 — Frontend Development, Tutorial 07 — React State Management
+
+We chose React for our frontend because it uses a component-based architecture with a Virtual DOM, which makes UI updates efficient and code reusable. This aligns with the MVVM-style pattern where the UI stays separate from data-fetching and state logic.
+
+#### How Our Frontend Is Organized
+
+```
+frontend/src/
+├── pages/          ← Full screens (Dashboard, Resources, Bookings)
+├── components/     ← Reusable UI parts (Navbar, Cards, Forms)
+├── api/            ← Backend communication (axios calls)
+├── context/        ← Shared state (AuthContext, notifications)
+└── App.jsx         ← Root component with routing
+```
+
+#### Why This Matters for Our Project
+
+| Benefit | How It Applies |
+|---|---|
+| **Virtual DOM** | Efficient UI updates when booking status or notifications change |
+| **Component Reuse** | Same card, form, and table components across all modules |
+| **One-Way Data Flow** | Predictable state management — parent passes props to children |
+| **Hooks** | `useState` for local state, `useEffect` for API calls, `useContext` for auth |
+| **Vite Build Tool** | Fast dev server, hot reload, optimized production bundles |
+
+#### Why Not Other Approaches?
+
+| Frontend Framework | Why Rejected |
+|---|---|
+| **Angular** | Steeper learning curve, heavier bundle, overkill for our project scope |
+| **Vanilla JS** | Manual DOM manipulation, no component reuse, hard to maintain |
+| **Server-Side Rendering (Thymeleaf)** | Tightly couples UI to backend, violates 3-tier separation |
+
+**Conclusion:** React gives us a modern, component-based frontend that aligns with the course focus on JavaScript frameworks and keeps our UI layer clean, reusable, and maintainable.
