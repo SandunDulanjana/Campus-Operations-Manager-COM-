@@ -99,3 +99,46 @@ protected endpoints.
 The authentication design must support at least normal users and admins.
 Extra roles such as technician or manager can be added if they help the system
 work more clearly.
+
+---
+
+## Viva Defense
+
+This section explains why we made each architectural decision, connected to course materials.
+
+### Why 3-Tier Architecture
+
+**Lecture Reference:** Lecture 04 — Web Architecture
+
+We chose a 3-tier architecture because it provides clear separation of concerns. Each tier has a single responsibility and cannot directly access tiers it should not.
+
+#### System Structure
+
+```
+┌─────────────────────────────────┐
+│   Presentation Tier (React)     │  ← UI, user interaction, state
+├─────────────────────────────────┤
+│   Application Tier (Spring)     │  ← Business logic, validation, API
+├─────────────────────────────────┤
+│   Data Tier (PostgreSQL)       │  ← Persistent storage, queries
+└─────────────────────────────────┘
+```
+
+#### Why This Matters for Our Project
+
+| Benefit | How It Applies |
+|---|---|
+| **Security** | Frontend cannot directly query the database |
+| **Maintainability** | Change the UI without touching backend logic |
+| **Scalability** | Each tier can scale independently |
+| **Team Work** | Frontend and backend devs work in parallel |
+
+#### Why Not Other Approaches?
+
+| Architecture | Why Rejected |
+|---|---|
+| **2-Tier (Client-Server)** | Couples UI with business logic, violates separation of concerns |
+| **Microservices** | Tutorial 04: too complex for 4 developers, high overhead |
+| **Single Monolith (no tiers)** | Everything mixed together, hard to test and maintain |
+
+**Conclusion:** 3-tier gives us the right balance between structure and simplicity for this project scope.
