@@ -235,3 +235,50 @@ User ────< Booking >──── Resource
 | **File-Based Storage** | No concurrency control, no transactions, not scalable |
 
 **Conclusion:** SQL is the right choice because our data is highly relational and requires integrity guarantees. The assignment explicitly requires persistent database storage, and SQL provides the strongest foundation for our use case.
+
+### Why REST APIs
+
+**Lecture Reference:** Lecture 05 — REST APIs, Tutorial 05 — Analyzing RESTfulness
+
+We chose REST (Representational State Transfer) as our API architectural style because it enforces a uniform interface, stateless communication, and clear resource identification — all of which align with the course focus and the assignment rubric requirements.
+
+#### The 6 REST Constraints and How We Satisfy Them
+
+| Constraint | How Our System Satisfies It |
+|---|---|
+| **Client-Server** | React frontend and Spring Boot backend are strictly separated |
+| **Stateless** | Each request carries its own authentication (JWT token); no server-side session |
+| **Cacheable** | GET responses can declare cacheability; POST/PUT/DELETE are never cached |
+| **Uniform Interface** | Consistent resource URIs (`/api/resources/{id}`), standard HTTP methods |
+| **Layered System** | 3-tier architecture: frontend → backend → database, intermediaries invisible to client |
+| **Code on Demand** | *(Optional)* Frontend receives executable JavaScript via React bundles |
+
+#### REST Maturity Level
+
+We target **Level 2** (proper resources + HTTP verbs + status codes) as our baseline, with **Level 3 (HATEOAS)** planned as an innovation feature for creativity marks.
+
+```
+Level 0: Single endpoint, all POST          ← Swamp of POX
+Level 1: Multiple URIs, still mostly POST   ← Resources identified
+Level 2: Proper HTTP methods + status codes ← Our baseline target
+Level 3: HATEOAS with hypermedia links      ← Innovation target
+```
+
+#### Why This Matters for Our Project
+
+| Benefit | How It Applies |
+|---|---|
+| **Decoupling** | Frontend can be replaced (e.g., mobile app) without changing the API |
+| **Scalability** | Stateless design allows horizontal scaling of backend instances |
+| **Testability** | Each endpoint is independently testable with standard HTTP tools |
+| **Rubric Alignment** | 10 marks for REST constraints, 5 marks for endpoint naming, 10 marks for HTTP methods/status codes |
+
+#### Why Not Other Approaches?
+
+| API Style | Why Rejected |
+|---|---|
+| **SOAP** | Overly complex XML-based protocol, heavy WSDL contracts, not aligned with modern web development |
+| **GraphQL** | Adds query complexity, harder to cache, overkill for our CRUD-focused use case |
+| **RPC-style (single endpoint)** | Violates REST uniform interface, hard to test, poor separation of concerns |
+
+**Conclusion:** REST is the right choice because it aligns with the course curriculum, satisfies the rubric requirements, and provides a clean, testable, scalable API design for our use case.
