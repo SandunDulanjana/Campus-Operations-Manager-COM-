@@ -13,6 +13,3 @@ frontend/.env
 .vscode/settings.json
 *.iml
 .DS_Store
-
-# AI Agent Config
-AGENTS.md
