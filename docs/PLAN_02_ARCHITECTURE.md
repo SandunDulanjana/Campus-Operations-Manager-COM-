@@ -309,7 +309,7 @@ We chose Google login using OAuth 2.0 together with OpenID Connect (OIDC) for us
 |---|---|
 | **No Password Storage** | Google handles credentials; we never store sensitive user passwords |
 | **Stateless API** | JWT contains all user info (id, role); no server-side session needed |
-| **Role-Based Access** | JWT payload includes user role (USER, ADMIN, TECHNICIAN) for endpoint protection |
+| **Role-Based Access** | JWT payload includes the application role (USER, MANAGER, ADMIN, TECHNICIAN) for endpoint protection |
 | **Scalability** | No session state means backend instances can scale horizontally |
 | **Rubric Requirement** | 10 marks for OAuth 2.0 implementation |
 
