@@ -60,7 +60,7 @@ Expanded answer: OAuth 2.0 provides the authorization framework used in the sign
 
 Short answer: Authentication verifies who the user is; authorization controls what they can do.
 
-Expanded answer: Login establishes identity, then role checks (USER/ADMIN/TECHNICIAN) control access to protected endpoints.
+Expanded answer: Login establishes identity, then role checks (USER/MANAGER) control access to protected endpoints, including booking approval permissions.
 
 ## Workflow and Quality
 
