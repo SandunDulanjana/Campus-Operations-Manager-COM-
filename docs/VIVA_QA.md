@@ -44,9 +44,9 @@ Expanded answer: We use 200 for successful reads/updates, 201 for create, 204 fo
 
 ### Q6. Why not use RPC style endpoints?
 
-Short answer: RPC-style endpoints reduce clarity and violate REST uniform interface.
+Short answer: We prefer resource-oriented endpoints because they keep the API more consistent and easier to reason about.
 
-Expanded answer: Resource-oriented paths with standard verbs are easier to test, document, and reason about compared with action-heavy RPC naming.
+Expanded answer: REST generally models operations around resources and standard HTTP verbs rather than action-heavy RPC naming. In this project, the preferred approach is to represent workflow changes as resource state updates where possible (for example, changing a booking's `status` with `PATCH`). If a state-transition endpoint is used, it must be narrowly scoped, map clearly to a domain transition, and be documented consistently so it does not undermine the overall REST-oriented design.
 
 ## Authentication and Authorization
 
