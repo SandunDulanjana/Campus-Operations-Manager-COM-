@@ -368,3 +368,42 @@ frontend/src/
 | **Server-Side Rendering (Thymeleaf)** | Tightly couples UI to backend, violates 3-tier separation |
 
 **Conclusion:** React gives us a modern, component-based frontend that aligns with the course focus on JavaScript frameworks and keeps our UI layer clean, reusable, and maintainable.
+
+### Why IoC and Dependency Injection
+
+**Lecture Reference:** Lecture 01 — Software Frameworks, Tutorial 01 — Framework Concepts
+
+We use Inversion of Control (IoC) and Dependency Injection (DI) because they are the core principles of the Spring Framework. They allow us to write decoupled, testable code by letting the framework manage the lifecycle of objects (Beans).
+
+#### How It Works
+
+```
+Traditional (Tight Coupling):
+[ Controller ] ── creates ──▶ [ Service ] ── creates ──▶ [ Repository ]
+
+Spring IoC (Loose Coupling):
+[ Spring Container ]
+    │
+    ├── Injects ──▶ [ Repository ]
+    ├── Injects ──▶ [ Service ]
+    └── Injects ──▶ [ Controller ]
+```
+
+#### Why This Matters for Our Project
+
+| Concept | How It Applies |
+|---|---|
+| **Hollywood Principle** | "Don't call us, we'll call you." Spring calls our methods based on annotations. |
+| **Loose Coupling** | Controllers don't "new up" services; they receive them via constructor injection. |
+| **Testability** | We can easily swap real repositories for mocks during unit testing. |
+| **Maintainability** | Changing a service implementation doesn't require changing every class that uses it. |
+
+#### Why Not Other Approaches?
+
+| Method | Why Rejected |
+|---|---|
+| **Manual New Keywords** | Creates hard dependencies; if a constructor changes, we have to fix it in every usage |
+| **Static Utility Classes** | Hard to mock, hard to test, and doesn't follow Object Oriented best practices |
+| **Service Locator Pattern** | Hides dependencies; harder to see what a class actually needs to run |
+
+**Conclusion:** IoC and DI are why we use Spring Boot. They move the control of object creation from our code to the framework, allowing us to focus on business logic rather than wiring components together.
