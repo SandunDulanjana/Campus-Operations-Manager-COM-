@@ -287,7 +287,7 @@ Level 3: HATEOAS with hypermedia links      ← Innovation target
 
 **Lecture Reference:** Lecture 06 — REST APIs Auth, Tutorial 06 — Authentication Deep Dive
 
-We chose OAuth 2.0 for authorization and JWT (JSON Web Tokens) for stateless API communication. This combination satisfies the assignment rubric requirement for OAuth 2.0 authentication while keeping our REST API truly stateless.
+We chose Google login using OAuth 2.0 together with OpenID Connect (OIDC) for user authentication, and JWT (JSON Web Tokens) for stateless API authorization after sign-in. This satisfies the rubric requirement for OAuth 2.0-based login while also keeping our REST API truly stateless for protected requests.
 
 #### How Our Authentication Flow Works
 
