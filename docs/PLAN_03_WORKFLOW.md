@@ -110,10 +110,10 @@ This matches what was taught in Lecture 03:
 | Approach | Why We Did Not Use It |
 |---|---|
 | **Direct work on shared branch** | Risks breaking the branch for everyone and removes the review step |
-| **Working only locally** | Prevents regular collaboration and removes the remote repository as the teams shared source of truth |
+| **Working only locally** | Prevents regular collaboration and removes the remote repository as the team's shared source of truth |
 | **GitFlow** | The lecture materials describe GitFlow as comprehensive but potentially overkill for small projects like this one |
 
-**Conclusion:** Feature branches and Pull Requests are the best fit for this project because they follow the branching practices taught in the course, support safer collaboration, and make each members contribution easier to review and explain during viva.
+**Conclusion:** Feature branches and Pull Requests are the best fit for this project because they follow the branching practices taught in the course, support safer collaboration, and make each member's contribution easier to review and explain during viva.
 
 ### Why `developer` as the Shared Working Branch
 
@@ -126,7 +126,7 @@ The lecture materials emphasize that the main branch should only contain product
 | Benefit | How It Applies |
 |---|---|
 | **Keeps main clean** | Main stays as the stable, production-ready reference at all times |
-| **Team integration space** | Developer allows multiple members features to be merged and tested together before touching main |
+| **Team integration space** | Developer allows multiple members' features to be merged and tested together before touching main |
 | **Clear separation** | Main is for the final submission-ready state, developer is for active team integration |
 | **Submission readiness** | Main can always be zipped and submitted without worrying about broken in-progress features |
 
