@@ -94,9 +94,7 @@ APPROVED -> CANCELLED
 | `/api/bookings/{id}` | GET | Get one booking | 200 |
 | `/api/bookings/me` | GET | Get current user's bookings | 200 |
 | `/api/bookings` | GET | Admin list with filters | 200 |
-| `/api/bookings/{id}/approve` | PATCH | Approve booking | 200 |
-| `/api/bookings/{id}/reject` | PATCH | Reject booking with reason | 200 |
-| `/api/bookings/{id}/cancel` | PATCH | Cancel approved booking | 200 |
+| `/api/bookings/{id}` | PATCH | Update booking state (e.g., approve, reject with `reviewReason`, or cancel) | 200 |
 
 ## A-B Integration Contract
 
