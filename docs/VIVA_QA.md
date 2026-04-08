@@ -52,9 +52,9 @@ Expanded answer: Resource-oriented paths with standard verbs are easier to test,
 
 ### Q7. Why OAuth 2.0 and JWT?
 
-Short answer: OAuth 2.0 is required by rubric, and JWT supports stateless API requests.
+Short answer: We use OAuth 2.0 with OpenID Connect (for example, Google Sign-In) for user authentication, and JWT for stateless API requests.
 
-Expanded answer: OAuth handles secure identity delegation, and JWT carries user identity/role claims without server-side session state.
+Expanded answer: OAuth 2.0 provides the authorization framework used in the sign-in flow, while OpenID Connect adds authentication so the system can verify the user's identity. JWT is then used as a token format in the system—for example, an identity token from the provider and/or a backend-issued token carrying claims for stateless API authorization without server-side sessions.
 
 ### Q8. Explain authentication vs authorization in your system.
 
