@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createBooking, fetchMyBookings, updateBookingStatus } from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
 import { useAuth } from '../context/AuthContext'
+import bookingIllustration from '../assets/hero.png'
 
 const RESOURCE_TYPE_WITH_ATTENDEES = new Set(['MEETING_ROOM', 'LECTURE_HALL', 'LAB'])
 
@@ -142,106 +143,125 @@ function BookingPage() {
 
   return (
     <section className="booking-page">
-      <div className="panel-header">
-        <div>
+      <div className="booking-hero">
+        <div className="hero-copy">
+          <p className="eyebrow">Module B</p>
           <h1>Booking Management</h1>
-          <p>Create booking requests, track status, and cancel approved bookings.</p>
+          <p>
+            Request campus resources by selecting date, time range, and purpose. The system keeps the workflow
+            structured and blocks conflicting schedules.
+          </p>
+          <button className="primary-btn" type="button" onClick={() => setShowForm(true)}>
+            Request a Booking
+          </button>
         </div>
-        <button className="primary-btn" onClick={() => setShowForm((state) => !state)}>
-          {showForm ? 'Close Form' : 'New Booking'}
-        </button>
+
+        <div className="hero-media">
+          <img src={bookingIllustration} alt="Booking and scheduling illustration" />
+        </div>
       </div>
 
       {errorMessage ? <p className="status-banner error">{errorMessage}</p> : null}
       {successMessage ? <p className="status-banner success">{successMessage}</p> : null}
 
       {showForm ? (
-        <form className="booking-form" onSubmit={submitBooking}>
-          <label>
-            Resource
-            <select
-              required
-              value={formData.resourceId}
-              onChange={(event) => updateField('resourceId', event.target.value)}
-            >
-              <option value="">Select a resource</option>
-              {resources.map((resource) => (
-                <option key={resource.id} value={resource.id}>
-                  {resource.name} ({resource.type})
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowForm(false)}>
+          <div className="modal-window" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Request a Booking</h2>
+              <button type="button" className="ghost-btn" onClick={() => setShowForm(false)}>
+                Close
+              </button>
+            </div>
 
-          <label>
-            Date
-            <input
-              type="date"
-              required
-              value={formData.bookingDate}
-              onChange={(event) => updateField('bookingDate', event.target.value)}
-            />
-          </label>
+            <form className="booking-form" onSubmit={submitBooking}>
+              <label>
+                Resource
+                <select
+                  required
+                  value={formData.resourceId}
+                  onChange={(event) => updateField('resourceId', event.target.value)}
+                >
+                  <option value="">Select a resource</option>
+                  {resources.map((resource) => (
+                    <option key={resource.id} value={resource.id}>
+                      {resource.name} ({resource.type})
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <div className="time-row">
-            <label>
-              Start Time
-              <input
-                type="time"
-                required
-                value={formData.startTime}
-                onChange={(event) => updateField('startTime', event.target.value)}
-              />
-            </label>
+              <label>
+                Date
+                <input
+                  type="date"
+                  required
+                  value={formData.bookingDate}
+                  onChange={(event) => updateField('bookingDate', event.target.value)}
+                />
+              </label>
 
-            <label>
-              End Time
-              <input
-                type="time"
-                required
-                value={formData.endTime}
-                onChange={(event) => updateField('endTime', event.target.value)}
-              />
-            </label>
+              <div className="time-row">
+                <label>
+                  Start Time
+                  <input
+                    type="time"
+                    required
+                    value={formData.startTime}
+                    onChange={(event) => updateField('startTime', event.target.value)}
+                  />
+                </label>
+
+                <label>
+                  End Time
+                  <input
+                    type="time"
+                    required
+                    value={formData.endTime}
+                    onChange={(event) => updateField('endTime', event.target.value)}
+                  />
+                </label>
+              </div>
+
+              <label>
+                Purpose
+                <textarea
+                  required
+                  maxLength={500}
+                  value={formData.purpose}
+                  onChange={(event) => updateField('purpose', event.target.value)}
+                />
+              </label>
+
+              {showExpectedAttendees ? (
+                <label>
+                  Expected Attendees
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={formData.expectedAttendees}
+                    onChange={(event) => updateField('expectedAttendees', event.target.value)}
+                  />
+                </label>
+              ) : (
+                <label>
+                  Equipment Type
+                  <input
+                    type="text"
+                    required
+                    value={formData.equipmentType}
+                    onChange={(event) => updateField('equipmentType', event.target.value)}
+                  />
+                </label>
+              )}
+
+              <button className="primary-btn" type="submit" disabled={loading}>
+                {loading ? 'Submitting...' : 'Submit Booking Request'}
+              </button>
+            </form>
           </div>
-
-          <label>
-            Purpose
-            <textarea
-              required
-              maxLength={500}
-              value={formData.purpose}
-              onChange={(event) => updateField('purpose', event.target.value)}
-            />
-          </label>
-
-          {showExpectedAttendees ? (
-            <label>
-              Expected Attendees
-              <input
-                type="number"
-                min="1"
-                required
-                value={formData.expectedAttendees}
-                onChange={(event) => updateField('expectedAttendees', event.target.value)}
-              />
-            </label>
-          ) : (
-            <label>
-              Equipment Type
-              <input
-                type="text"
-                required
-                value={formData.equipmentType}
-                onChange={(event) => updateField('equipmentType', event.target.value)}
-              />
-            </label>
-          )}
-
-          <button className="primary-btn" type="submit" disabled={loading}>
-            {loading ? 'Submitting...' : 'Submit Booking Request'}
-          </button>
-        </form>
+        </div>
       ) : null}
 
       <div className="table-panel">
@@ -251,8 +271,10 @@ function BookingPage() {
             <thead>
               <tr>
                 <th>Resource</th>
+                <th>Type</th>
                 <th>Date</th>
                 <th>Time</th>
+                <th>Purpose</th>
                 <th>Status</th>
                 <th>Reason</th>
                 <th>Action</th>
@@ -262,10 +284,12 @@ function BookingPage() {
               {myBookings.map((booking) => (
                 <tr key={booking.id}>
                   <td>{booking.resourceName}</td>
+                  <td>{booking.resourceType}</td>
                   <td>{booking.bookingDate}</td>
                   <td>
                     {booking.startTime} - {booking.endTime}
                   </td>
+                  <td>{booking.purpose}</td>
                   <td>
                     <span className={`badge ${booking.status.toLowerCase()}`}>{booking.status}</span>
                   </td>

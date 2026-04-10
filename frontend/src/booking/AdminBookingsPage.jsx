@@ -116,7 +116,7 @@ function AdminBookingsPage() {
         <div className="table-panel">
           <h1>Admin Booking Review</h1>
           <p className="status-banner error">
-            Switch role to ADMIN from the navbar to access review actions.
+            Switch role to ADMIN from the profile menu to access review actions.
           </p>
         </div>
       </section>

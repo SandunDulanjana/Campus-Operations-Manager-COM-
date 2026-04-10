@@ -1,45 +1,60 @@
-import { NavLink } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 function Navbar() {
-  const { user, setRole, setUserId } = useAuth()
+  const { user } = useAuth()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const initials = useMemo(() => {
+    return user.name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase()
+  }, [user.name])
 
   return (
     <header className="main-navbar">
-      <div className="brand">
+      <Link to="/" className="brand" aria-label="Go to home page">
         <span className="brand-mark" aria-hidden="true">
           SC
         </span>
         <div>
           <p className="brand-title">Smart Campus</p>
-          <p className="brand-subtitle">Booking Management</p>
+          <p className="brand-subtitle">Operations Hub</p>
         </div>
-      </div>
+      </Link>
 
       <nav className="nav-links">
-        <NavLink to="/bookings">Home</NavLink>
-        <NavLink to="/bookings">My Bookings</NavLink>
-        <NavLink to="/admin/bookings">Admin Review</NavLink>
+        <NavLink to="/" end>
+          Home
+        </NavLink>
+        <NavLink to="/bookings">Booking</NavLink>
       </nav>
 
-      <div className="session-controls">
-        <label>
-          Role
-          <select value={user.role} onChange={(event) => setRole(event.target.value)}>
-            <option value="USER">USER</option>
-            <option value="ADMIN">ADMIN</option>
-          </select>
-        </label>
+      <div className="profile-area" onMouseLeave={() => setIsMenuOpen(false)}>
+        <button
+          type="button"
+          className="profile-btn"
+          onClick={() => setIsMenuOpen((state) => !state)}
+          aria-haspopup="menu"
+          aria-expanded={isMenuOpen}
+        >
+          <span className="avatar">{initials}</span>
+        </button>
 
-        <label>
-          User ID
-          <input
-            type="number"
-            min="1"
-            value={user.id}
-            onChange={(event) => setUserId(Number(event.target.value) || 1)}
-          />
-        </label>
+        {isMenuOpen ? (
+          <div className="profile-menu" role="menu">
+            <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+              Profile
+            </button>
+            <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+              Logout
+            </button>
+          </div>
+        ) : null}
       </div>
     </header>
   )
