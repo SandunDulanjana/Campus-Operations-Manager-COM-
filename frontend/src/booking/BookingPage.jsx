@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { createBooking, fetchMyBookings, updateBookingStatus } from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
 import { useAuth } from '../context/AuthContext'
-import bookingIllustration from '../assets/hero.png'
+import bookingIllustration from '../assets/hero.jpg'
+import HeroSection from '../components/layout/HeroSection'
+import StatusBanner from '../components/ui/StatusBanner'
+import StatusBadge from '../components/ui/StatusBadge'
+import ActionButton from '../components/ui/ActionButton'
 
 const RESOURCE_TYPE_WITH_ATTENDEES = new Set(['MEETING_ROOM', 'LECTURE_HALL', 'LAB'])
 
@@ -143,35 +147,29 @@ function BookingPage() {
 
   return (
     <section className="booking-page">
-      <div className="booking-hero">
-        <div className="hero-copy">
-          <p className="eyebrow">Module B</p>
-          <h1>Booking Management</h1>
-          <p>
-            Request campus resources by selecting date, time range, and purpose. The system keeps the workflow
-            structured and blocks conflicting schedules.
-          </p>
-          <button className="primary-btn" type="button" onClick={() => setShowForm(true)}>
+      <HeroSection
+        title="Booking Management"
+        description="Request campus resources by selecting date, time range, and purpose. The system keeps the workflow structured and blocks conflicting schedules."
+        imageSrc={bookingIllustration}
+        imageAlt="Booking and scheduling illustration"
+        actions={
+          <ActionButton kind="primary" onClick={() => setShowForm(true)}>
             Request a Booking
-          </button>
-        </div>
+          </ActionButton>
+        }
+      />
 
-        <div className="hero-media">
-          <img src={bookingIllustration} alt="Booking and scheduling illustration" />
-        </div>
-      </div>
-
-      {errorMessage ? <p className="status-banner error">{errorMessage}</p> : null}
-      {successMessage ? <p className="status-banner success">{successMessage}</p> : null}
+      <StatusBanner type="error" message={errorMessage} />
+      <StatusBanner type="success" message={successMessage} />
 
       {showForm ? (
         <div className="modal-backdrop" role="presentation" onClick={() => setShowForm(false)}>
           <div className="modal-window" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <h2>Request a Booking</h2>
-              <button type="button" className="ghost-btn" onClick={() => setShowForm(false)}>
+              <ActionButton kind="ghost" onClick={() => setShowForm(false)}>
                 Close
-              </button>
+              </ActionButton>
             </div>
 
             <form className="booking-form" onSubmit={submitBooking}>
@@ -256,9 +254,9 @@ function BookingPage() {
                 </label>
               )}
 
-              <button className="primary-btn" type="submit" disabled={loading}>
+              <ActionButton kind="primary" type="submit" disabled={loading}>
                 {loading ? 'Submitting...' : 'Submit Booking Request'}
-              </button>
+              </ActionButton>
             </form>
           </div>
         </div>
@@ -291,19 +289,14 @@ function BookingPage() {
                   </td>
                   <td>{booking.purpose}</td>
                   <td>
-                    <span className={`badge ${booking.status.toLowerCase()}`}>{booking.status}</span>
+                    <StatusBadge status={booking.status} />
                   </td>
                   <td>{booking.reviewReason || '-'}</td>
                   <td>
                     {booking.status === 'APPROVED' ? (
-                      <button
-                        className="danger-btn"
-                        type="button"
-                        onClick={() => cancelBooking(booking.id)}
-                        disabled={loading}
-                      >
+                      <ActionButton kind="danger" onClick={() => cancelBooking(booking.id)} disabled={loading}>
                         Cancel
-                      </button>
+                      </ActionButton>
                     ) : (
                       '-'
                     )}

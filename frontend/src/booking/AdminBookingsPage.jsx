@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchAllBookings, updateBookingStatus } from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
 import { useAuth } from '../context/AuthContext'
+import StatusBanner from '../components/ui/StatusBanner'
+import StatusBadge from '../components/ui/StatusBadge'
+import ActionButton from '../components/ui/ActionButton'
 
 const DEFAULT_FILTERS = {
   date: '',
@@ -115,9 +118,7 @@ function AdminBookingsPage() {
       <section className="booking-page">
         <div className="table-panel">
           <h1>Admin Booking Review</h1>
-          <p className="status-banner error">
-            Switch role to ADMIN from the profile menu to access review actions.
-          </p>
+          <StatusBanner type="error" message="Admin access is required for review actions." />
         </div>
       </section>
     )
@@ -132,8 +133,8 @@ function AdminBookingsPage() {
         </div>
       </div>
 
-      {errorMessage ? <p className="status-banner error">{errorMessage}</p> : null}
-      {successMessage ? <p className="status-banner success">{successMessage}</p> : null}
+      <StatusBanner type="error" message={errorMessage} />
+      <StatusBanner type="success" message={successMessage} />
 
       <form className="filter-form" onSubmit={applyFilters}>
         <label>
@@ -167,9 +168,9 @@ function AdminBookingsPage() {
           </select>
         </label>
 
-        <button type="submit" className="primary-btn" disabled={loading}>
+        <ActionButton kind="primary" type="submit" disabled={loading}>
           {loading ? 'Loading...' : 'Apply Filters'}
-        </button>
+        </ActionButton>
       </form>
 
       <div className="table-panel">
@@ -199,7 +200,7 @@ function AdminBookingsPage() {
                     {booking.startTime} - {booking.endTime}
                   </td>
                   <td>
-                    <span className={`badge ${booking.status.toLowerCase()}`}>{booking.status}</span>
+                    <StatusBadge status={booking.status} />
                   </td>
                   <td>
                     {booking.status === 'PENDING' ? (
@@ -221,22 +222,12 @@ function AdminBookingsPage() {
                   <td>
                     {booking.status === 'PENDING' ? (
                       <div className="action-row">
-                        <button
-                          type="button"
-                          className="approve-btn"
-                          onClick={() => approveBooking(booking.id)}
-                          disabled={loading}
-                        >
+                        <ActionButton kind="approve" onClick={() => approveBooking(booking.id)} disabled={loading}>
                           Approve
-                        </button>
-                        <button
-                          type="button"
-                          className="danger-btn"
-                          onClick={() => rejectBooking(booking.id)}
-                          disabled={loading}
-                        >
+                        </ActionButton>
+                        <ActionButton kind="danger" onClick={() => rejectBooking(booking.id)} disabled={loading}>
                           Reject
-                        </button>
+                        </ActionButton>
                       </div>
                     ) : (
                       '-'
