@@ -8,7 +8,7 @@ import StatsStrip from '../components/home/StatsStrip'
 function HomePage() {
   return (
     <section className="home-page">
-      <QuickLinksBar />
+     
 
       <div className="home-hero-card">
         <div className="home-hero-copy">
