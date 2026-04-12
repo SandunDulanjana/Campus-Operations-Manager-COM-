@@ -260,13 +260,19 @@
   z-index: 30;
 }
 
+.profile-area .profile-menu {
+  min-width: 220px;
+}
+
 .menu-item {
+  display: block;
   width: 100%;
   border: none;
   background: transparent;
   text-align: left;
   font: inherit;
   color: #111827;
+  text-decoration: none;
   padding: 0.55rem;
   border-radius: 0.45rem;
   cursor: pointer;

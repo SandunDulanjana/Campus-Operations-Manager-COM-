@@ -5,10 +5,21 @@ const AuthContext = createContext(null)
 const STORAGE_KEY = 'campus-test-user'
 const BYPASS_LOGIN_FOR_TESTING = true
 
+const TEST_USERS_BY_ROLE = {
+  ADMIN: {
+    id: 1,
+    name: 'Admin Tester',
+    role: 'ADMIN',
+  },
+  USER: {
+    id: 2,
+    name: 'User Tester',
+    role: 'USER',
+  },
+}
+
 const DEFAULT_USER = {
-  id: 1,
-  name: 'Admin Tester',
-  role: 'ADMIN',
+  ...TEST_USERS_BY_ROLE.ADMIN,
 }
 
 function getInitialUser() {
@@ -39,7 +50,9 @@ export function AuthProvider({ children }) {
       user,
       setRole: (role) =>
         setUser((current) => {
-          const nextUser = { ...current, role }
+          const nextUser = BYPASS_LOGIN_FOR_TESTING
+            ? (TEST_USERS_BY_ROLE[role] ?? { ...current, role })
+            : { ...current, role }
           window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
           return nextUser
         }),

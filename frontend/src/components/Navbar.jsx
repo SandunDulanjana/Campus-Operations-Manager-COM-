@@ -32,49 +32,51 @@ function Navbar() {
             </div>
           </Link>
 
-          <div className="top-actions" onMouseLeave={() => setIsMenuOpen(false)}>
+          <div className="top-actions">
             <button type="button" className="notify-btn" aria-label="Notifications">
               <span aria-hidden="true">🔔</span>
             </button>
 
-            <button
-              type="button"
-              className="profile-btn"
-              onClick={() => setIsMenuOpen((state) => !state)}
-              aria-haspopup="menu"
-              aria-expanded={isMenuOpen}
-            >
-              <span className="profile-name">{user.name.toUpperCase()}</span>
-              <span aria-hidden="true">▾</span>
-              <span className="avatar">{initials}</span>
-            </button>
+            <div className="profile-area">
+              <button
+                type="button"
+                className="profile-btn"
+                onClick={() => setIsMenuOpen((state) => !state)}
+                aria-haspopup="menu"
+                aria-expanded={isMenuOpen}
+              >
+                <span className="profile-name">{user.name.toUpperCase()}</span>
+                <span aria-hidden="true">▾</span>
+                <span className="avatar">{initials}</span>
+              </button>
 
-            {isMenuOpen ? (
-              <div className="profile-menu" role="menu">
-                {user.role === 'ADMIN' ? (
-                  <Link to="/admin" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                    Admin Dashboard
-                  </Link>
-                ) : null}
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="menu-item"
-                  onClick={() => {
-                    setRole(user.role === 'ADMIN' ? 'USER' : 'ADMIN')
-                    setIsMenuOpen(false)
-                  }}
-                >
-                  Switch to {user.role === 'ADMIN' ? 'USER' : 'ADMIN'}
-                </button>
-                <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                  Profile
-                </button>
-                <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                  Logout
-                </button>
-              </div>
-            ) : null}
+              {isMenuOpen ? (
+                <div className="profile-menu" role="menu">
+                  {user.role === 'ADMIN' ? (
+                    <Link to="/admin" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                      Admin Dashboard
+                    </Link>
+                  ) : null}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="menu-item"
+                    onClick={() => {
+                      setRole(user.role === 'ADMIN' ? 'USER' : 'ADMIN')
+                      setIsMenuOpen(false)
+                    }}
+                  >
+                    Switch to {user.role === 'ADMIN' ? 'USER' : 'ADMIN'}
+                  </button>
+                  <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                    Profile
+                  </button>
+                  <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                    Logout
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
 
