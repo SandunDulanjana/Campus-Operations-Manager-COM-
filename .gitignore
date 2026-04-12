@@ -19,3 +19,6 @@ frontend/.env
 .agents/
 .codex/
 plugins/
+
+# Project notes
+prompt.md
