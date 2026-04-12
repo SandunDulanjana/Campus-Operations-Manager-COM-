@@ -287,6 +287,18 @@
   padding: 0 clamp(1rem, 4vw, 3.5rem) 2.5rem;
 }
 
+.app-shell.admin-mode {
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.admin-page-content {
+  padding: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
 .home-page,
 .booking-page {
   width: 100%;
@@ -296,12 +308,13 @@
 }
 
 .admin-dashboard {
-  margin-top: 1.2rem;
+  margin-top: 0;
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
-  gap: 1rem;
-  align-items: start;
-  min-height: calc(100svh - 14.5rem);
+  gap: 0;
+  align-items: stretch;
+  min-height: 100%;
+  height: 100%;
 }
 
 .admin-dashboard.collapsed {
@@ -310,7 +323,7 @@
 
 .admin-sidebar,
 .admin-section-card {
-  border-radius: 1rem;
+  border-radius: 0;
   border: 1px solid #e5e7eb;
   background: #ffffff;
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
@@ -318,15 +331,16 @@
 
 .admin-sidebar {
   padding: 0.85rem;
-  position: sticky;
-  top: 5.8rem;
-  min-height: calc(100svh - 14.8rem);
-  max-height: calc(100svh - 14.8rem);
+  position: static;
+  min-height: 100%;
+  max-height: none;
   overflow: auto;
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 0.9rem;
   background: #f6faf8;
+  border-left: none;
+  margin-left: 0;
 }
 
 .admin-sidebar-top {
@@ -387,6 +401,16 @@
   background: #e2f5ef;
 }
 
+.admin-nav-icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .admin-nav-link:hover {
   border-color: #99c9bf;
   background: #ecfdf5;
@@ -396,6 +420,10 @@
   background: #d1fae5;
   color: #065f46;
   border-color: #86efac;
+}
+
+.admin-nav-link.active .admin-nav-icon {
+  background: #bbf7d0;
 }
 
 .admin-sidebar-footer {
@@ -420,17 +448,37 @@
 .admin-main-content {
   min-width: 0;
   display: grid;
-  gap: 1rem;
+  gap: 0.4rem;
+  padding: 1rem;
+  overflow: auto;
+}
+
+.admin-mode .site-footer {
+  margin-top: 0;
 }
 
 .admin-bookings-page {
-  display: grid;
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.admin-bookings-page .panel-header {
+  margin-bottom: 1rem;
+}
+
+.admin-bookings-page .panel-header h1 {
+  margin: 0;
+}
+
+.admin-bookings-page .panel-header p {
+  margin: 0.1rem 0 0;
 }
 
 .admin-home-page {
-  display: grid;
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
 .admin-home-header h1 {
@@ -454,7 +502,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 0.85rem;
   background: #ffffff;
-  padding: 0.72rem 0.85rem;
+  padding: 0.55rem 0.7rem;
 }
 
 .admin-stat-card p {
@@ -464,7 +512,7 @@
 }
 
 .admin-stat-card h2 {
-  margin: 0.3rem 0 0;
+  margin: 0.15rem 0 0;
   color: #0f172a;
   font-size: 1.45rem;
 }
@@ -496,23 +544,31 @@
   background: #ffffff;
   border: 1px solid #e5e7eb;
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
-  padding: 0.8rem;
+  padding: 0.45rem 0.6rem;
   display: flex;
   align-items: center;
-  gap: 0.72rem;
+  gap: 2rem;
   flex-wrap: nowrap;
 }
 
 .admin-filter-row label {
-  display: grid;
-  gap: 0.32rem;
+  display: flex;
+  align-items: center;   
+  gap: 1rem;           
   min-width: 210px;
   color: #334155;
   font-weight: 700;
 }
 
+
 .admin-filter-row select {
   height: 2.25rem;
+  width: 170px;
+}
+
+.admin-filter-row input {
+  height: 2.25rem;
+  width: 170px;
 }
 
 .admin-filter-row .primary-btn {
@@ -1129,6 +1185,8 @@ th {
   .admin-sidebar {
     position: static;
     min-height: auto;
+    max-height: none;
+    border-left: 1px solid #e5e7eb;
   }
 
   .admin-dashboard.collapsed .admin-sidebar-title,

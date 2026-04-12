@@ -7,7 +7,8 @@ import StatusBadge from '../components/ui/StatusBadge'
 import ActionButton from '../components/ui/ActionButton'
 
 const DEFAULT_FILTERS = {
-  timePeriod: '',
+  selectedDate: '',
+  selectedMonth: '',
   resourceType: '',
   status: '',
 }
@@ -50,13 +51,8 @@ function AdminBookingsPage() {
     setLoading(true)
     setErrorMessage('')
     try {
-      const now = new Date()
-      const today = now.toISOString().slice(0, 10)
-      const dateFilter = filters.timePeriod === 'TODAY' ? today : undefined
-
       const response = await fetchAllBookings(
         {
-          date: dateFilter,
           resourceType: filters.resourceType || undefined,
           status: filters.status || undefined,
         },
@@ -64,19 +60,12 @@ function AdminBookingsPage() {
       )
 
       const filtered = response.filter((booking) => {
-        if (filters.timePeriod === 'THIS_WEEK') {
-          const bookingDate = new Date(`${booking.bookingDate}T00:00:00`)
-          const startOfWeek = new Date(now)
-          startOfWeek.setHours(0, 0, 0, 0)
-          startOfWeek.setDate(now.getDate() - now.getDay())
-          const endOfWeek = new Date(startOfWeek)
-          endOfWeek.setDate(startOfWeek.getDate() + 6)
-          return bookingDate >= startOfWeek && bookingDate <= endOfWeek
+        if (filters.selectedDate) {
+          return booking.bookingDate === filters.selectedDate
         }
 
-        if (filters.timePeriod === 'THIS_MONTH') {
-          const bookingDate = new Date(`${booking.bookingDate}T00:00:00`)
-          return bookingDate.getMonth() === now.getMonth() && bookingDate.getFullYear() === now.getFullYear()
+        if (filters.selectedMonth) {
+          return booking.bookingDate.startsWith(filters.selectedMonth)
         }
 
         return true
@@ -93,6 +82,8 @@ function AdminBookingsPage() {
   function updateFilter(field, value) {
     setFilters((current) => ({
       ...current,
+      ...(field === 'selectedDate' && value ? { selectedMonth: '' } : {}),
+      ...(field === 'selectedMonth' && value ? { selectedDate: '' } : {}),
       [field]: value,
     }))
   }
@@ -151,13 +142,21 @@ function AdminBookingsPage() {
 
       <form className="admin-filter-row" onSubmit={applyFilters}>
         <label>
-          Time Period
-          <select value={filters.timePeriod} onChange={(event) => updateFilter('timePeriod', event.target.value)}>
-            <option value="">All</option>
-            <option value="TODAY">Today</option>
-            <option value="THIS_WEEK">This Week</option>
-            <option value="THIS_MONTH">This Month</option>
-          </select>
+          Date
+          <input
+            type="date"
+            value={filters.selectedDate}
+            onChange={(event) => updateFilter('selectedDate', event.target.value)}
+          />
+        </label>
+
+        <label>
+          Month
+          <input
+            type="month"
+            value={filters.selectedMonth}
+            onChange={(event) => updateFilter('selectedMonth', event.target.value)}
+          />
         </label>
 
         <label>
