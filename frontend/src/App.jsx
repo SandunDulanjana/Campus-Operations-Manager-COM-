@@ -8,6 +8,7 @@ import AdminLayout from './admin/AdminLayout'
 import RequireAdmin from './admin/RequireAdmin'
 import AdminUsersPage from './admin/AdminUsersPage'
 import AdminResourcesPage from './admin/AdminResourcesPage'
+import AdminDashboardHome from './admin/AdminDashboardHome'
 import './App.css'
 
 function App() {
@@ -26,7 +27,8 @@ function App() {
               </RequireAdmin>
             }
           >
-            <Route index element={<Navigate to="bookings" replace />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboardHome />} />
             <Route path="bookings" element={<AdminBookingsPage />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="resources" element={<AdminResourcesPage />} />
