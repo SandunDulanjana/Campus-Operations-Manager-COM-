@@ -8,6 +8,8 @@ import homeImage6 from '../assets/home_image/6.jpg'
 import homeImage7 from '../assets/home_image/7.jpg'
 import homeImage8 from '../assets/home_image/8.jpg'
 import SectionCard from '../components/ui/SectionCard'
+import ResourceShowcase from '../components/home/ResourceShowcase'
+import SloganIntroSection from '../components/home/SloganIntroSection'
 import ModuleGrid from '../components/home/ModuleGrid'
 import StatsStrip from '../components/home/StatsStrip'
 
@@ -71,6 +73,10 @@ function HomePage() {
         </div>
       </div>
 
+      <SloganIntroSection />
+
+      <ResourceShowcase />
+
       <StatsStrip />
 
       <div className="home-content-grid">
@@ -82,24 +88,6 @@ function HomePage() {
             <li>Managers review and update status to <strong>APPROVED</strong> or <strong>REJECTED</strong>.</li>
             <li>Approved bookings can be cancelled when plans change.</li>
           </ol>
-        </SectionCard>
-
-        <SectionCard>
-          <h2>Available Resources</h2>
-          <div className="home-feature-grid">
-            <div className="feature-card">
-              <h3>Meeting Rooms</h3>
-              <p>Plan discussions, project reviews, and small team sessions.</p>
-            </div>
-            <div className="feature-card">
-              <h3>Lecture Halls & Labs</h3>
-              <p>Schedule teaching sessions, practicals, and academic events.</p>
-            </div>
-            <div className="feature-card">
-              <h3>Equipment</h3>
-              <p>Reserve projectors and key resources with conflict checks enabled.</p>
-            </div>
-          </div>
         </SectionCard>
 
         <SectionCard className="module-overview-card">
