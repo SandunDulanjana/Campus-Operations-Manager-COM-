@@ -1,6 +1,7 @@
 package com.campusoperationsmanager.backend.resource.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,10 @@ public class ResourceService {
 
     public List<Resource> getAllResources() {
         return resourceRepository.findAll();
+    }
+
+    public Optional<Resource> getResourceById(Long resourceId) {
+        return resourceRepository.findById(resourceId);
     }
 
     public Resource saveResource(Resource resource) {

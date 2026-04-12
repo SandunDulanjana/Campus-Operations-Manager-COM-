@@ -3,8 +3,10 @@ package com.campusoperationsmanager.backend.booking;
 import com.campusoperationsmanager.backend.booking.dto.BookingResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingStatusUpdateRequest;
 import com.campusoperationsmanager.backend.booking.dto.CreateBookingRequest;
-import com.campusoperationsmanager.backend.booking.resource.ResourceCatalog;
-import com.campusoperationsmanager.backend.booking.resource.ResourceCatalogService;
+import com.campusoperationsmanager.backend.resource.model.Resource;
+import com.campusoperationsmanager.backend.resource.model.ResourceStatus;
+import com.campusoperationsmanager.backend.resource.model.ResourceType;
+import com.campusoperationsmanager.backend.resource.service.ResourceService;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -13,22 +15,22 @@ import org.springframework.stereotype.Service;
 public class BookingService {
 
     private final BookingRepository bookingRepository;
-    private final ResourceCatalogService resourceCatalogService;
+    private final ResourceService resourceService;
 
-    public BookingService(BookingRepository bookingRepository, ResourceCatalogService resourceCatalogService) {
+    public BookingService(BookingRepository bookingRepository, ResourceService resourceService) {
         this.bookingRepository = bookingRepository;
-        this.resourceCatalogService = resourceCatalogService;
+        this.resourceService = resourceService;
     }
 
     public BookingResponse createBooking(CreateBookingRequest request, Long userId) {
         validateTimeRange(request);
 
-        ResourceCatalog resource = resourceCatalogService.findById(request.getResourceId())
+        Resource resource = resourceService.getResourceById(request.getResourceId())
             .orElseThrow(() -> new BookingValidationException("Selected resource does not exist"));
 
         validateByResourceType(request, resource.getType());
 
-        if (!resource.isActive()) {
+        if (resource.getStatus() != ResourceStatus.ACTIVE) {
             throw new BookingValidationException("Selected resource is OUT_OF_SERVICE");
         }
 
@@ -51,7 +53,7 @@ public class BookingService {
         Booking booking = new Booking();
         booking.setResourceId(resource.getId());
         booking.setResourceName(resource.getName());
-        booking.setResourceType(resource.getType());
+        booking.setResourceType(resource.getType().name());
         booking.setUserId(userId);
         booking.setBookingDate(request.getBookingDate());
         booking.setStartTime(request.getStartTime());
@@ -137,13 +139,8 @@ public class BookingService {
         }
     }
 
-    private void validateByResourceType(CreateBookingRequest request, String resourceType) {
-        String type = normalizeText(resourceType);
-        if (type == null) {
-            type = "";
-        }
-
-        if ("EQUIPMENT".equalsIgnoreCase(type)) {
+    private void validateByResourceType(CreateBookingRequest request, ResourceType resourceType) {
+        if (resourceType == ResourceType.EQUIPMENT) {
             if (normalizeText(request.getEquipmentType()) == null) {
                 throw new BookingValidationException("Equipment type is required for EQUIPMENT bookings");
             }
