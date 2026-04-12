@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 function Navbar() {
-  const { user } = useAuth()
+  const { user, setRole } = useAuth()
+  const location = useLocation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isResourceOpen, setIsResourceOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const isAdminRoute = location.pathname.startsWith('/admin')
 
   const initials = useMemo(() => {
     return user.name
@@ -32,37 +34,65 @@ function Navbar() {
             </div>
           </Link>
 
-          <div className="top-actions" onMouseLeave={() => setIsMenuOpen(false)}>
+          <div className="top-actions">
             <button type="button" className="notify-btn" aria-label="Notifications">
               <span aria-hidden="true">🔔</span>
             </button>
 
-            <button
-              type="button"
-              className="profile-btn"
-              onClick={() => setIsMenuOpen((state) => !state)}
-              aria-haspopup="menu"
-              aria-expanded={isMenuOpen}
-            >
-              <span className="profile-name">{user.name.toUpperCase()}</span>
-              <span aria-hidden="true">▾</span>
-              <span className="avatar">{initials}</span>
-            </button>
+            <div className="profile-area">
+              <button
+                type="button"
+                className="profile-btn"
+                onClick={() => setIsMenuOpen((state) => !state)}
+                aria-haspopup="menu"
+                aria-expanded={isMenuOpen}
+              >
+                <span className="profile-name">{user.name.toUpperCase()}</span>
+                <span aria-hidden="true">▾</span>
+                <span className="avatar">{initials}</span>
+              </button>
 
-            {isMenuOpen ? (
-              <div className="profile-menu" role="menu">
-                <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                  Profile
-                </button>
-                <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                  Logout
-                </button>
-              </div>
-            ) : null}
+              {isMenuOpen ? (
+                <div className="profile-menu" role="menu">
+                  {user.role === 'ADMIN' && !isAdminRoute ? (
+                    <Link to="/admin" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                      Admin Dashboard
+                    </Link>
+                  ) : null}
+                  {isAdminRoute ? (
+                    <Link to="/" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                      Home
+                    </Link>
+                  ) : null}
+                  {!isAdminRoute ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="menu-item"
+                      onClick={() => {
+                        setRole(user.role === 'ADMIN' ? 'USER' : 'ADMIN')
+                        setIsMenuOpen(false)
+                      }}
+                    >
+                      Switch to {user.role === 'ADMIN' ? 'USER' : 'ADMIN'}
+                    </button>
+                  ) : null}
+                  <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                    Profile
+                  </button>
+                  {!isAdminRoute ? (
+                    <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                      Logout
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
 
-        <div className="sub-header">
+        {!isAdminRoute ? (
+          <div className="sub-header">
           <nav className="sub-nav" aria-label="Primary navigation">
             <Link to="/" className="home-icon-link" title="Home">
               <span className="nav-icon" aria-hidden="true">
@@ -125,7 +155,8 @@ function Navbar() {
               </button>
             </div>
           ) : null}
-        </div>
+          </div>
+        ) : null}
       </header>
     </>
   )
