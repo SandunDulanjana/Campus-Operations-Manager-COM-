@@ -5,6 +5,7 @@ import com.campusoperationsmanager.backend.booking.dto.BookingStatusUpdateReques
 import com.campusoperationsmanager.backend.booking.dto.CreateBookingRequest;
 import com.campusoperationsmanager.backend.booking.resource.ResourceCatalog;
 import com.campusoperationsmanager.backend.booking.resource.ResourceCatalogService;
+import com.campusoperationsmanager.backend.timetable.TimetableService;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,13 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final ResourceCatalogService resourceCatalogService;
+    private final TimetableService timetableService;
 
-    public BookingService(BookingRepository bookingRepository, ResourceCatalogService resourceCatalogService) {
+    public BookingService(BookingRepository bookingRepository, ResourceCatalogService resourceCatalogService,
+                         TimetableService timetableService) {
         this.bookingRepository = bookingRepository;
         this.resourceCatalogService = resourceCatalogService;
+        this.timetableService = timetableService;
     }
 
     public BookingResponse createBooking(CreateBookingRequest request, Long userId) {
@@ -41,6 +45,17 @@ public class BookingService {
 
         if (hasConflict) {
             throw new BookingConflictException("Requested time range overlaps an approved booking");
+        }
+
+        boolean hasTimetableConflict = timetableService.hasConflict(
+            request.getResourceId(),
+            request.getBookingDate(),
+            request.getStartTime(),
+            request.getEndTime()
+        );
+
+        if (hasTimetableConflict) {
+            throw new BookingConflictException("Requested time range overlaps faculty timetable");
         }
 
         if (request.getExpectedAttendees() != null && resource.getCapacity() != null

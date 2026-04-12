@@ -33,4 +33,11 @@ public class ResourceCatalogService {
     public Optional<ResourceCatalog> findById(Long id) {
         return resources.stream().filter(resource -> resource.getId().equals(id)).findFirst();
     }
+
+    public Optional<ResourceCatalog> findByName(String name) {
+        if (name == null) return Optional.empty();
+        return resources.stream()
+            .filter(r -> r.getName().equalsIgnoreCase(name))
+            .findFirst();
+    }
 }

@@ -50,12 +50,10 @@ public class BookingController {
 
     @GetMapping
     public ResponseEntity<List<BookingResponse>> getAllBookings(
-        @RequestHeader(HEADER_USER_ROLE) String userRole,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
         @RequestParam(required = false) String resourceType,
         @RequestParam(required = false) BookingStatus status
     ) {
-        ensureAdmin(userRole);
         return ResponseEntity.ok(bookingService.getAllBookings(date, resourceType, status));
     }
 
