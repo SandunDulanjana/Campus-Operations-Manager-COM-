@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { createBooking, fetchAllBookings, fetchMyBookings, updateBookingStatus } from '../api/bookingApi'
+import { createBooking, fetchApprovedWeeklyBookings, fetchMyBookings, updateBookingStatus } from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
-import { uploadTimetable } from '../api/timetableApi'
+import { fetchWeeklyTimetable, uploadTimetable } from '../api/timetableApi'
 import { useAuth } from '../context/AuthContext'
 import bookingIllustration from '../assets/hero.jpg'
 import HeroSection from '../components/layout/HeroSection'
@@ -206,17 +206,20 @@ function BookingPage() {
 
   async function loadWeeklyBookings() {
     try {
-      const data = await fetchAllBookings({ status: 'APPROVED' }, user)
-      const weekStartDate = new Date(timetableWeek)
-      const weekEndDate = new Date(weekStartDate)
-      weekEndDate.setDate(weekEndDate.getDate() + 6)
+      const [approvedBookings, timetableSlots] = await Promise.all([
+        fetchApprovedWeeklyBookings(timetableWeek, user),
+        fetchWeeklyTimetable(timetableWeek, user),
+      ])
 
-      const filtered = data.filter((booking) => {
-        const bookingDate = new Date(booking.bookingDate)
-        return bookingDate >= weekStartDate && bookingDate <= weekEndDate
-      })
+      const normalizedTimetableSlots = timetableSlots.map((slot) => ({
+        id: `timetable-${slot.id}`,
+        resourceName: slot.resourceName,
+        bookingDate: slot.slotDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+      }))
 
-      setWeeklyBookings(filtered)
+      setWeeklyBookings([...approvedBookings, ...normalizedTimetableSlots])
     } catch (error) {
       setErrorMessage(error?.response?.data?.error || 'Failed to load bookings')
     }
@@ -479,7 +482,7 @@ function BookingPage() {
         <div className="modal-backdrop" role="presentation" onClick={() => setShowTimetableModal(false)}>
           <div className="modal-window" style={{ maxWidth: '900px' }} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>All User Bookings</h2>
+              <h2>All Approved Bookings</h2>
               <ActionButton kind="ghost" className="modal-close-icon" aria-label="Close" onClick={() => setShowTimetableModal(false)}>
                 &#10005;
               </ActionButton>
@@ -540,7 +543,7 @@ function BookingPage() {
                 ))}
               </div>
               {weeklyBookings.length === 0 ? (
-                <p className="calendar-empty-state">No approved bookings found for this week</p>
+                <p className="calendar-empty-state">No approved bookings or lecture reservations found for this week</p>
               ) : null}
             </div>
           </div>

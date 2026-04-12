@@ -94,6 +94,18 @@ public class BookingService {
             .toList();
     }
 
+    public List<BookingResponse> getApprovedBookingsForWeek(LocalDate weekStart) {
+        LocalDate weekEnd = weekStart.plusDays(6);
+        return bookingRepository.findByStatusAndBookingDateBetweenOrderByBookingDateAscStartTimeAsc(
+                BookingStatus.APPROVED,
+                weekStart,
+                weekEnd
+            )
+            .stream()
+            .map(BookingResponse::from)
+            .toList();
+    }
+
     public BookingResponse updateBookingStatus(Long bookingId, BookingStatusUpdateRequest request, Long actorUserId, boolean isAdmin) {
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId));
         BookingStatus nextStatus = request.getStatus();
