@@ -769,6 +769,130 @@
   background: #f43f5e;
 }
 
+.slogan-intro-panel {
+  width: 100%;
+  border-radius: 1.2rem;
+  border: 1px solid #d9e2ec;
+  background: linear-gradient(140deg, #f8fafc 0%, #eef2ff 100%);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  padding: clamp(1.1rem, 2.5vw, 1.8rem);
+  display: grid;
+  gap: 0.65rem;
+}
+
+.slogan-kicker {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.slogan-intro-panel h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
+}
+
+.slogan-intro-panel p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.7;
+  max-width: 90ch;
+}
+
+.resource-showcase-section {
+  width: 100%;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.resource-showcase-header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.resource-showcase-kicker {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.resource-showcase-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.4rem, 2.8vw, 2rem);
+}
+
+.resource-showcase-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.resource-row {
+  border-radius: 1.2rem;
+  border: 1px solid #d9e2ec;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 280px;
+}
+
+.resource-row.right-copy .resource-row-copy {
+  order: 2;
+}
+
+.resource-row.right-copy .resource-row-media {
+  order: 1;
+}
+
+.resource-row-copy {
+  padding: clamp(1rem, 2.5vw, 2rem);
+  display: grid;
+  align-content: center;
+  gap: 0.7rem;
+}
+
+.resource-row-copy h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+}
+
+.resource-row-copy p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.7;
+}
+
+.resource-row-media {
+  min-height: 240px;
+}
+
+.resource-row-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.resource-theme-lecture {
+  background: linear-gradient(135deg, #fff8f1 0%, #ffedd5 100%);
+}
+
+.resource-theme-meeting {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.resource-theme-equipment {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
 .stats-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1254,6 +1378,15 @@ th {
   .home-content-grid,
   .admin-dashboard {
     grid-template-columns: 1fr;
+  }
+
+  .resource-row {
+    grid-template-columns: 1fr;
+  }
+
+  .resource-row.right-copy .resource-row-copy,
+  .resource-row.right-copy .resource-row-media {
+    order: initial;
   }
 
   .admin-sidebar {
