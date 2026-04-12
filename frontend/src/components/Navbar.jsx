@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 function Navbar() {
-  const { user } = useAuth()
+  const { user, setRole } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isResourceOpen, setIsResourceOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -56,6 +56,17 @@ function Navbar() {
                     Admin Dashboard
                   </Link>
                 ) : null}
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="menu-item"
+                  onClick={() => {
+                    setRole(user.role === 'ADMIN' ? 'USER' : 'ADMIN')
+                    setIsMenuOpen(false)
+                  }}
+                >
+                  Switch to {user.role === 'ADMIN' ? 'USER' : 'ADMIN'}
+                </button>
                 <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                   Profile
                 </button>
