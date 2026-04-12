@@ -566,6 +566,11 @@
   width: 170px;
 }
 
+.admin-filter-row input {
+  height: 2.25rem;
+  width: 170px;
+}
+
 .admin-filter-row .primary-btn {
   width: 170px;
   height: 2.25rem;
