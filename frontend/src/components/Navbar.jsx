@@ -51,6 +51,11 @@ function Navbar() {
 
             {isMenuOpen ? (
               <div className="profile-menu" role="menu">
+                {user.role === 'ADMIN' ? (
+                  <Link to="/admin" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                    Admin Dashboard
+                  </Link>
+                ) : null}
                 <button type="button" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                   Profile
                 </button>

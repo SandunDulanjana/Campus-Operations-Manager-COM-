@@ -113,19 +113,8 @@ function AdminBookingsPage() {
     }
   }
 
-  if (user.role !== 'ADMIN') {
-    return (
-      <section className="booking-page">
-        <div className="table-panel">
-          <h1>Admin Booking Review</h1>
-          <StatusBanner type="error" message="Admin access is required for review actions." />
-        </div>
-      </section>
-    )
-  }
-
   return (
-    <section className="booking-page">
+    <section className="admin-bookings-page">
       <div className="panel-header">
         <div>
           <h1>Admin Booking Review</h1>

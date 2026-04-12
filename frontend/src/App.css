@@ -289,6 +289,99 @@
   margin-top: 2rem;
 }
 
+.admin-dashboard {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.admin-sidebar,
+.admin-section-card {
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+}
+
+.admin-sidebar {
+  padding: 1rem;
+  position: sticky;
+  top: 6.9rem;
+}
+
+.admin-sidebar-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-sidebar h2 {
+  margin: 0.35rem 0 0.95rem;
+  font-size: 1.85rem;
+  color: #111827;
+}
+
+.admin-nav {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-nav-link {
+  text-decoration: none;
+  color: #334155;
+  border: 1px solid #d7dee8;
+  border-radius: 0.6rem;
+  padding: 0.62rem 0.75rem;
+  font-weight: 700;
+  background: #f8fafc;
+}
+
+.admin-nav-link:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+}
+
+.admin-nav-link.active {
+  background: #36454f;
+  color: #f8fafc;
+  border-color: #36454f;
+}
+
+.admin-main-content {
+  min-width: 0;
+}
+
+.admin-bookings-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-section-card {
+  padding: 1rem;
+}
+
+.admin-section-card h1 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+.admin-section-card p {
+  margin: 0.72rem 0 0;
+  color: #4b5563;
+  line-height: 1.65;
+}
+
+.admin-coming-soon {
+  color: #0f766e;
+  font-weight: 700;
+}
+
 .quick-links-bar {
   display: flex;
   flex-wrap: wrap;
@@ -871,8 +964,13 @@ th {
 
   .home-hero-card,
   .booking-hero,
-  .home-content-grid {
+  .home-content-grid,
+  .admin-dashboard {
     grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    position: static;
   }
 
   .home-hero-card {
