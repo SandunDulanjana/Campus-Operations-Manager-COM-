@@ -1,94 +1,78 @@
-import { Link } from 'react-router-dom'
-import heroImage from '../assets/hero.jpg'
-import SectionCard from '../components/ui/SectionCard'
-import QuickLinksBar from '../components/home/QuickLinksBar'
-import ModuleGrid from '../components/home/ModuleGrid'
-import StatsStrip from '../components/home/StatsStrip'
+import { useState } from 'react'
+import homeImage1 from '../assets/home_image/1.jpg'
+import homeImage2 from '../assets/home_image/2.jpg'
+import homeImage3 from '../assets/home_image/3.jpg'
+import homeImage4 from '../assets/home_image/4.jpg'
+import homeImage5 from '../assets/home_image/5.jpg'
+import homeImage6 from '../assets/home_image/6.jpg'
+import homeImage7 from '../assets/home_image/7.jpg'
+import homeImage8 from '../assets/home_image/8.jpg'
+import ResourceShowcase from '../components/home/ResourceShowcase'
+import SloganIntroSection from '../components/home/SloganIntroSection'
+
+const HERO_IMAGES = [
+  homeImage1,
+  homeImage2,
+  homeImage3,
+  homeImage4,
+  homeImage5,
+  homeImage6,
+  homeImage7,
+  homeImage8,
+]
 
 function HomePage() {
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
+
+  function showPreviousImage() {
+    setActiveImageIndex((current) => (current - 1 + HERO_IMAGES.length) % HERO_IMAGES.length)
+  }
+
+  function showNextImage() {
+    setActiveImageIndex((current) => (current + 1) % HERO_IMAGES.length)
+  }
+
   return (
     <section className="home-page">
-     
-
-      <div className="home-hero-card">
+      <div
+        className="home-hero-card"
+        style={{
+          backgroundImage: `linear-gradient(110deg, rgba(56, 60, 68, 0.55), rgba(5, 13, 32, 0)), url(${HERO_IMAGES[activeImageIndex]})`,
+        }}
+      >
         <div className="home-hero-copy">
-          <p className="eyebrow">Smart Campus Operations Hub</p>
-          <h1>Welcome to the Smart Campus Operations Platform</h1>
-          <p>
-            A common digital workspace for all assignment modules to manage campus resources, booking workflows,
-            incidents, notifications, and secure user access.
-          </p>
-          <div className="home-hero-actions">
-            <Link to="/bookings" className="primary-link">
-              Request a Booking
-            </Link>
-            <a href="#how-to-use" className="secondary-link">
-              How It Works
-            </a>
-          </div>
+          <h1>Welcome to the Smart Campus</h1>
         </div>
-        <div className="home-hero-media">
-          <img src={heroImage} alt="Campus operations and scheduling" />
+
+        <button
+          type="button"
+          className="carousel-nav-btn prev"
+          onClick={showPreviousImage}
+          aria-label="Previous image"
+        >
+          &#8592;
+        </button>
+        <button
+          type="button"
+          className="carousel-nav-btn next"
+          onClick={showNextImage}
+          aria-label="Next image"
+        >
+          &#8594;
+        </button>
+        <div className="carousel-progress" aria-hidden="true">
+          {HERO_IMAGES.map((_, index) => (
+            <span
+              key={index}
+              className={`carousel-dot${index === activeImageIndex ? ' active' : ''}`}
+            />
+          ))}
         </div>
       </div>
 
-      <StatsStrip />
+      <SloganIntroSection />
 
-      <div className="home-content-grid">
-        <SectionCard className="how-to-use-card" id="how-to-use">
-          <h2>How to Use the System</h2>
-          <ol>
-            <li>Select a resource and submit booking details (date, time range, purpose).</li>
-            <li>Booking request enters the workflow as <strong>PENDING</strong>.</li>
-            <li>Managers review and update status to <strong>APPROVED</strong> or <strong>REJECTED</strong>.</li>
-            <li>Approved bookings can be cancelled when plans change.</li>
-          </ol>
-        </SectionCard>
-
-        <SectionCard>
-          <h2>Available Resources</h2>
-          <div className="home-feature-grid">
-            <div className="feature-card">
-              <h3>Meeting Rooms</h3>
-              <p>Plan discussions, project reviews, and small team sessions.</p>
-            </div>
-            <div className="feature-card">
-              <h3>Lecture Halls & Labs</h3>
-              <p>Schedule teaching sessions, practicals, and academic events.</p>
-            </div>
-            <div className="feature-card">
-              <h3>Equipment</h3>
-              <p>Reserve projectors and key resources with conflict checks enabled.</p>
-            </div>
-          </div>
-        </SectionCard>
-
-        <SectionCard className="module-overview-card">
-          <h2>Module Overview</h2>
-          <ModuleGrid />
-        </SectionCard>
-
-        <SectionCard>
-          <h2>Why This Platform Matters</h2>
-          <p>
-            The assignment scope covers booking management, incident handling, notifications, and secure user
-            access. This homepage introduces the booking workflow while fitting the broader Smart Campus vision.
-          </p>
-          <ul>
-            <li>Reduces manual scheduling errors</li>
-            <li>Improves visibility for students, staff, and admins</li>
-            <li>Supports clean approval workflow and operational accountability</li>
-          </ul>
-        </SectionCard>
-
-        <SectionCard className="contact-card">
-          <h2>Contact Information</h2>
-          <p>Need support with bookings or system access? Reach out to the campus operations team.</p>
-          <p><strong>Email:</strong> campusops@university.edu</p>
-          <p><strong>Phone:</strong> +94 11 234 5678</p>
-          <p><strong>Office:</strong> Administration Building, Level 2</p>
-        </SectionCard>
-      </div>
+      <ResourceShowcase />
     </section>
   )
 }
