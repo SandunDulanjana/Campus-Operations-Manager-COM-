@@ -1,0 +1,10 @@
+[commands]
+dev = ["bash", "./scripts/dev-up.sh"]
+lint = ["bash", "./scripts/dev-lint.sh"]
+test = ["bash", "./scripts/dev-test.sh"]
+
+[browser]
+url = "http://localhost:5173"
+
+[env]
+FORCE_COLOR = "3"
