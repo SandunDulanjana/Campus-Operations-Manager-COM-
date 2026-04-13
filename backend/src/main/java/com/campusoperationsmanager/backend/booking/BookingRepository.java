@@ -11,6 +11,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByUserIdOrderByCreatedAtDesc(Long userId);
 
+    List<Booking> findByStatusAndBookingDateBetweenOrderByBookingDateAscStartTimeAsc(
+        BookingStatus status,
+        LocalDate startDate,
+        LocalDate endDate
+    );
+
     @Query("""
         SELECT b FROM Booking b
         WHERE (:date IS NULL OR b.bookingDate = :date)

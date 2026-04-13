@@ -7,6 +7,7 @@ import com.campusoperationsmanager.backend.resource.model.Resource;
 import com.campusoperationsmanager.backend.resource.model.ResourceStatus;
 import com.campusoperationsmanager.backend.resource.model.ResourceType;
 import com.campusoperationsmanager.backend.resource.service.ResourceService;
+import com.campusoperationsmanager.backend.timetable.TimetableService;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,16 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final ResourceService resourceService;
+    private final TimetableService timetableService;
 
-    public BookingService(BookingRepository bookingRepository, ResourceService resourceService) {
+    public BookingService(
+        BookingRepository bookingRepository,
+        ResourceService resourceService,
+        TimetableService timetableService
+    ) {
         this.bookingRepository = bookingRepository;
         this.resourceService = resourceService;
+        this.timetableService = timetableService;
     }
 
     public BookingResponse createBooking(CreateBookingRequest request, Long userId) {
@@ -43,6 +50,17 @@ public class BookingService {
 
         if (hasConflict) {
             throw new BookingConflictException("Requested time range overlaps an approved booking");
+        }
+
+        boolean hasTimetableConflict = timetableService.hasConflict(
+            request.getResourceId(),
+            request.getBookingDate(),
+            request.getStartTime(),
+            request.getEndTime()
+        );
+
+        if (hasTimetableConflict) {
+            throw new BookingConflictException("Requested time range overlaps faculty timetable");
         }
 
         if (request.getExpectedAttendees() != null && resource.getCapacity() != null
@@ -76,6 +94,18 @@ public class BookingService {
 
     public List<BookingResponse> getAllBookings(LocalDate date, String resourceType, BookingStatus status) {
         return bookingRepository.findAllWithFilters(date, normalizeText(resourceType), status)
+            .stream()
+            .map(BookingResponse::from)
+            .toList();
+    }
+
+    public List<BookingResponse> getApprovedBookingsForWeek(LocalDate weekStart) {
+        LocalDate weekEnd = weekStart.plusDays(6);
+        return bookingRepository.findByStatusAndBookingDateBetweenOrderByBookingDateAscStartTimeAsc(
+                BookingStatus.APPROVED,
+                weekStart,
+                weekEnd
+            )
             .stream()
             .map(BookingResponse::from)
             .toList();

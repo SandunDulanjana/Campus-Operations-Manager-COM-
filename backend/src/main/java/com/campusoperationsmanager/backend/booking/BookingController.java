@@ -50,13 +50,18 @@ public class BookingController {
 
     @GetMapping
     public ResponseEntity<List<BookingResponse>> getAllBookings(
-        @RequestHeader(HEADER_USER_ROLE) String userRole,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
         @RequestParam(required = false) String resourceType,
         @RequestParam(required = false) BookingStatus status
     ) {
-        ensureAdmin(userRole);
         return ResponseEntity.ok(bookingService.getAllBookings(date, resourceType, status));
+    }
+
+    @GetMapping("/approved-weekly")
+    public ResponseEntity<List<BookingResponse>> getApprovedBookingsForWeek(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart
+    ) {
+        return ResponseEntity.ok(bookingService.getApprovedBookingsForWeek(weekStart));
     }
 
     @PatchMapping("/{bookingId}")
@@ -73,12 +78,6 @@ public class BookingController {
             isAdmin(userRole)
         );
         return ResponseEntity.ok(response);
-    }
-
-    private void ensureAdmin(String role) {
-        if (!isAdmin(role)) {
-            throw new BookingValidationException("Admin role is required for this action");
-        }
     }
 
     private boolean isAdmin(String role) {

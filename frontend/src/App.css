@@ -1028,6 +1028,176 @@
   padding: clamp(1.5rem, 3vw, 2.8rem);
 }
 
+.booking-actions-row {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+  flex-wrap: wrap;
+}
+
+.booking-actions-row .primary-btn,
+.booking-actions-row .secondary-btn {
+  width: auto;
+}
+
+.secondary-btn {
+  background: #36454f;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.55rem;
+  padding: 0.62rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background: #4b5a6a;
+}
+
+.timetable-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-close-icon {
+  width: 2.2rem;
+  min-width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.timetable-nav-btn {
+  width: 2.2rem;
+  min-width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.timetable-controls span {
+  font-weight: 600;
+  color: #334155;
+}
+
+.booking-calendar-wrap {
+  max-height: 62svh;
+  overflow: auto;
+  padding: 0.75rem;
+}
+
+.booking-calendar-grid {
+  min-width: 1040px;
+  display: grid;
+  grid-template-columns: 110px repeat(7, minmax(130px, 1fr));
+  border: 1px solid #d9e2ec;
+  border-radius: 0.7rem;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.calendar-corner,
+.calendar-day-header,
+.calendar-time-label,
+.calendar-cell {
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.calendar-corner {
+  padding: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  background: #f8fafc;
+}
+
+.calendar-day-header {
+  min-height: 62px;
+  padding: 0.45rem 0.55rem;
+  display: grid;
+  align-content: center;
+  background: #f8fafc;
+}
+
+.calendar-day-header strong {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.calendar-day-header span {
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.calendar-time-label {
+  min-height: 54px;
+  padding: 0.45rem 0.55rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  background: #f8fafc;
+}
+
+.calendar-cell {
+  min-height: 54px;
+  padding: 0.25rem;
+  background: #ffffff;
+}
+
+.calendar-cell.has-booking {
+  background: #f8fff9;
+}
+
+.booking-cell-item {
+  border: 1px solid #bbf7d0;
+  background: #dcfce7;
+  border-radius: 0.5rem;
+  padding: 0.22rem 0.35rem;
+  display: grid;
+  gap: 0.08rem;
+  margin-bottom: 0.2rem;
+}
+
+.booking-cell-item:last-child {
+  margin-bottom: 0;
+}
+
+.booking-cell-resource {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #14532d;
+  line-height: 1.2;
+}
+
+.booking-cell-time {
+  font-size: 0.7rem;
+  color: #166534;
+  line-height: 1.2;
+}
+
+.calendar-empty-state {
+  margin: 0.75rem 0 0;
+  color: #64748b;
+  font-weight: 600;
+}
+
 .hero-copy {
   display: grid;
   gap: 0.95rem;
@@ -1465,6 +1635,11 @@ th {
 
   .resource-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .timetable-controls {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .hero-copy h1,
