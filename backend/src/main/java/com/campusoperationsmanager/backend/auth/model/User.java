@@ -1,4 +1,4 @@
-package com.campusoperationsmanager.backend.auth;
+package com.campusoperationsmanager.backend.auth.model;
 
 import java.time.LocalDateTime;
 
@@ -15,12 +15,10 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class User {
@@ -29,7 +27,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Google's unique ID — never changes even if user changes email
     @Column(name = "google_id", unique = true)
     private String googleId;
 
@@ -41,12 +38,10 @@ public class User {
     @Column(name = "profile_picture")
     private String profilePicture;
 
-    // Stored as text: "USER", "ADMIN", "TECHNICIAN"
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
-    // false = banned/deactivated, data kept for audit trail
     @Column(nullable = false)
     @Builder.Default
     private boolean enabled = true;
@@ -57,11 +52,14 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public User() {
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (role == null) role = Role.USER; // everyone starts as USER
+        if (role == null) role = Role.USER;
     }
 
     @PreUpdate
@@ -69,10 +67,9 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 
-    // Role enum lives here — only auth package needs it
     public enum Role {
-        USER,        // student/staff — book rooms, create tickets
-        ADMIN,       // approve bookings, manage users
-        TECHNICIAN   // handle maintenance tickets
+        USER,
+        ADMIN,
+        TECHNICIAN
     }
 }

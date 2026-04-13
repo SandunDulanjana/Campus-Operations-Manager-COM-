@@ -1,12 +1,9 @@
-package com.campusoperationsmanager.backend.auth;
-
-import java.time.LocalDateTime;
+package com.campusoperationsmanager.backend.auth.dto;
 
 import lombok.Builder;
 import lombok.Data;
+import java.time.LocalDateTime;
 
-// DTO = Data Transfer Object
-// What we actually send to the frontend — clean, safe subset of User
 @Data
 @Builder
 public class UserDTO {

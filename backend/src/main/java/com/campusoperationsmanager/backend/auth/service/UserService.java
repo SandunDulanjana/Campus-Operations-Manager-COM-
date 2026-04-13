@@ -1,9 +1,11 @@
-package com.campusoperationsmanager.backend.auth;
+package com.campusoperationsmanager.backend.auth.service;
 
+import com.campusoperationsmanager.backend.auth.dto.UserDTO;
+import com.campusoperationsmanager.backend.auth.model.User;
+import com.campusoperationsmanager.backend.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -13,41 +15,22 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    /**
-     * Find user by ID — throws exception if not found.
-     * Used by controllers to get current user.
-     */
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("User not found: " + id));
     }
 
-    /**
-     * Get all users — ADMIN dashboard feature.
-     */
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    /**
-     * Change a user's role — ADMIN only.
-     * e.g. promote staff to TECHNICIAN so they can handle tickets.
-     */
     public User updateRole(Long userId, String newRole) {
         User user = getUserById(userId);
-
-        // Role.valueOf throws IllegalArgumentException for invalid roles
-        // Spring will convert that to a 400 Bad Request automatically
         user.setRole(User.Role.valueOf(newRole.toUpperCase()));
-        log.info("Role updated for user {}: {}", user.getEmail(), newRole);
+        log.info("Role updated → user: {} role: {}", user.getEmail(), newRole);
         return userRepository.save(user);
     }
 
-    /**
-     * Soft-delete a user — ADMIN only.
-     * Sets enabled=false instead of deleting row.
-     * This keeps the audit trail (who made what bookings, etc.)
-     */
     public void deactivateUser(Long userId) {
         User user = getUserById(userId);
         user.setEnabled(false);
@@ -55,15 +38,12 @@ public class UserService {
         log.info("User deactivated: {}", user.getEmail());
     }
 
-    /**
-     * Find or create user after Google login.
-     * Called by OAuth2AuthenticationSuccessHandler.
-     */
+    // Called by OAuth2AuthenticationSuccessHandler on Google login
     public User findOrCreateUser(String email, String name,
                                   String googleId, String picture) {
         return userRepository.findByEmail(email)
                 .orElseGet(() -> {
-                    log.info("New user registering via Google: {}", email);
+                    log.info("New user via Google: {}", email);
                     return userRepository.save(
                             User.builder()
                                     .email(email)
@@ -76,7 +56,6 @@ public class UserService {
                 });
     }
 
-    // Helper — convert entity to DTO (never send raw entity to frontend)
     public UserDTO toDTO(User user) {
         return UserDTO.builder()
                 .id(user.getId())
