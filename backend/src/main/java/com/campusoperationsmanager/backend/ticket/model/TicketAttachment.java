@@ -6,19 +6,23 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ticket_attachments")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class TicketAttachment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", nullable = false)
-    @ToString.Exclude
     private Ticket ticket;
 
     private String fileName;    // e.g. "broken_projector.jpg"

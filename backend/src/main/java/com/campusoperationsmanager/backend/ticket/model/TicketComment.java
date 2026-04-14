@@ -6,14 +6,19 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ticket_comments")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class TicketComment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
     // Many comments belong to ONE ticket
@@ -21,7 +26,6 @@ public class TicketComment {
     // This is a performance optimization - only load if you actually need it
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", nullable = false) // Creates "ticket_id" column in DB
-    @ToString.Exclude  // Prevent infinite loop in toString
     private Ticket ticket;
 
     @Column(columnDefinition = "TEXT", nullable = false)
