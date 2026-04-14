@@ -402,7 +402,12 @@ function BookingPage() {
       ) : null}
 
       <div className="table-panel">
-        <h2>My Bookings</h2>
+        <div className="panel-header">
+          <div>
+            <h2>My Bookings</h2>
+            <p>Track your current requests, approval status, and any review notes from administrators.</p>
+          </div>
+        </div>
         <div className="table-wrap">
           <table>
             <thead>
