@@ -2,6 +2,45 @@ import { useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+function HeaderIcon({ kind }) {
+  if (kind === 'bell') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 4a4 4 0 0 0-4 4v1.3c0 1.1-.36 2.18-1.02 3.05L5.6 14.1A1 1 0 0 0 6.4 15.7h11.2a1 1 0 0 0 .8-1.6l-1.38-1.75A5.07 5.07 0 0 1 16 9.3V8a4 4 0 0 0-4-4Z" />
+        <path d="M10 18a2 2 0 0 0 4 0" />
+      </svg>
+    )
+  }
+
+  if (kind === 'home') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 11.5 12 5l8 6.5" />
+        <path d="M7.5 10.75V19h9v-8.25" />
+      </svg>
+    )
+  }
+
+  if (kind === 'search') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="m16 16 4 4" />
+      </svg>
+    )
+  }
+
+  if (kind === 'chevron') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m7 10 5 5 5-5" />
+      </svg>
+    )
+  }
+
+  return null
+}
+
 function Navbar() {
   const { user, setRole } = useAuth()
   const location = useLocation()
@@ -36,7 +75,9 @@ function Navbar() {
 
           <div className="top-actions">
             <button type="button" className="notify-btn" aria-label="Notifications">
-              <span aria-hidden="true">🔔</span>
+              <span className="nav-icon-shell" aria-hidden="true">
+                <HeaderIcon kind="bell" />
+              </span>
             </button>
 
             <div className="profile-area">
@@ -47,9 +88,14 @@ function Navbar() {
                 aria-haspopup="menu"
                 aria-expanded={isMenuOpen}
               >
-                <span className="profile-name">{user.name.toUpperCase()}</span>
-                <span aria-hidden="true">▾</span>
                 <span className="avatar">{initials}</span>
+                <span className="profile-copy">
+                  <span className="profile-eyebrow">{user.role}</span>
+                  <span className="profile-name">{user.name}</span>
+                </span>
+                <span className={`profile-chevron${isMenuOpen ? ' open' : ''}`} aria-hidden="true">
+                  <HeaderIcon kind="chevron" />
+                </span>
               </button>
 
               {isMenuOpen ? (
@@ -95,8 +141,8 @@ function Navbar() {
           <div className="sub-header">
           <nav className="sub-nav" aria-label="Primary navigation">
             <Link to="/" className="home-icon-link" title="Home">
-              <span className="nav-icon" aria-hidden="true">
-                ⌂
+              <span className="nav-icon-shell" aria-hidden="true">
+                <HeaderIcon kind="home" />
               </span>
             </Link>
 
@@ -108,7 +154,10 @@ function Navbar() {
                 aria-haspopup="menu"
                 aria-expanded={isResourceOpen}
               >
-                Resources <span aria-hidden="true">▾</span>
+                <span>Resources</span>
+                <span className={`sub-link-chevron${isResourceOpen ? ' open' : ''}`} aria-hidden="true">
+                  <HeaderIcon kind="chevron" />
+                </span>
               </button>
 
               {isResourceOpen ? (
@@ -128,8 +177,8 @@ function Navbar() {
             aria-expanded={isSearchOpen}
             aria-label="Toggle search"
           >
-            <span className="nav-icon" aria-hidden="true">
-              ⌕
+            <span className="nav-icon-shell" aria-hidden="true">
+              <HeaderIcon kind="search" />
             </span>
           </button>
 

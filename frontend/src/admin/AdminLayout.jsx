@@ -64,14 +64,19 @@ function AdminLayout() {
     <section className={collapsed ? 'admin-dashboard collapsed' : 'admin-dashboard'}>
       <aside className="admin-sidebar" aria-label="Admin navigation">
         <div className="admin-sidebar-top">
-          <p className="admin-sidebar-title">Admin Panel</p>
+          <div className="admin-sidebar-heading">
+            <p className="admin-sidebar-title">Admin Panel</p>
+            <p className="admin-sidebar-subtitle">Operations controls</p>
+          </div>
           <button
             type="button"
             className="admin-collapse-btn"
             onClick={() => setCollapsed((current) => !current)}
             aria-label="Toggle sidebar"
           >
-            {collapsed ? '>' : '<'}
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              {collapsed ? <path d="m10 7 5 5-5 5" /> : <path d="m14 7-5 5 5 5" />}
+            </svg>
           </button>
         </div>
 
