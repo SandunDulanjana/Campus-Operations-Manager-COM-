@@ -1,69 +1,60 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import axios from 'axios'
 
 const AuthContext = createContext(null)
 
-const STORAGE_KEY = 'campus-test-user'
-const BYPASS_LOGIN_FOR_TESTING = true
+const TOKEN_KEY = 'campus-jwt-token'
+const USER_KEY = 'campus-user'
 
-const TEST_USERS_BY_ROLE = {
-  ADMIN: {
-    id: 1,
-    name: 'Admin Tester',
-    role: 'ADMIN',
-  },
-  USER: {
-    id: 2,
-    name: 'User Tester',
-    role: 'USER',
-  },
-}
-
-const DEFAULT_USER = {
-  ...TEST_USERS_BY_ROLE.ADMIN,
-}
-
-function getInitialUser() {
-  if (BYPASS_LOGIN_FOR_TESTING) {
-    return DEFAULT_USER
-  }
-
+// On first load, try to restore user from localStorage
+function getStoredAuth() {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      return DEFAULT_USER
-    }
-    const parsed = JSON.parse(raw)
-    if (!parsed?.id || !parsed?.name || !parsed?.role) {
-      return DEFAULT_USER
-    }
-    return parsed
+    const token = localStorage.getItem(TOKEN_KEY)
+    const raw = localStorage.getItem(USER_KEY)
+    if (!token || !raw) return { user: null, token: null }
+    const user = JSON.parse(raw)
+    return { user, token }
   } catch {
-    return DEFAULT_USER
+    return { user: null, token: null }
   }
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(getInitialUser)
+  const stored = getStoredAuth()
+  const [user, setUser] = useState(stored.user)       // { id, name, email, role, ... }
+  const [token, setToken] = useState(stored.token)    // JWT string
+
+  // Whenever token changes, set it as the default Authorization header for all axios calls
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    } else {
+      delete axios.defaults.headers.common['Authorization']
+    }
+  }, [token])
+
+  // login() is called by LoginPage after a successful API response
+  function login(userData, jwtToken) {
+    localStorage.setItem(TOKEN_KEY, jwtToken)
+    localStorage.setItem(USER_KEY, JSON.stringify(userData))
+    setToken(jwtToken)
+    setUser(userData)
+    // Set the token on the axios header immediately
+    axios.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`
+  }
+
+  // logout() clears everything and redirects to login
+  function logout() {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(USER_KEY)
+    delete axios.defaults.headers.common['Authorization']
+    setToken(null)
+    setUser(null)
+  }
 
   const value = useMemo(
-    () => ({
-      user,
-      setRole: (role) =>
-        setUser((current) => {
-          const nextUser = BYPASS_LOGIN_FOR_TESTING
-            ? (TEST_USERS_BY_ROLE[role] ?? { ...current, role })
-            : { ...current, role }
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
-          return nextUser
-        }),
-      setUserId: (id) =>
-        setUser((current) => {
-          const nextUser = { ...current, id }
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser))
-          return nextUser
-        }),
-    }),
-    [user],
+    () => ({ user, token, login, logout }),
+    [user, token]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -71,8 +62,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used inside AuthProvider')
-  }
+  if (!context) throw new Error('useAuth must be used inside AuthProvider')
   return context
 }

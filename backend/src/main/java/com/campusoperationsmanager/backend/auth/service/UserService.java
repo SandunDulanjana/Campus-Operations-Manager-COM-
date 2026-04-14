@@ -1,12 +1,16 @@
 package com.campusoperationsmanager.backend.auth.service;
 
+import java.util.List;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.campusoperationsmanager.backend.auth.dto.UserDTO;
 import com.campusoperationsmanager.backend.auth.model.User;
 import com.campusoperationsmanager.backend.auth.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -14,6 +18,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder; // injected from AuthConfig bean
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
@@ -54,6 +59,25 @@ public class UserService {
                                     .build()
                     );
                 });
+    }
+
+    /**
+     * Campus credentials login.
+     * Returns User if valid, throws RuntimeException if not.
+     */
+    public User login(String username, String rawPassword) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+
+        if (!user.isEnabled()) {
+            throw new RuntimeException("Account is disabled. Contact admin.");
+        }
+
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new RuntimeException("Invalid username or password");
+        }
+
+        return user;
     }
 
     public UserDTO toDTO(User user) {

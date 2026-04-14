@@ -1,8 +1,7 @@
 package com.campusoperationsmanager.backend;
 
-import com.campusoperationsmanager.backend.security.JwtAuthenticationFilter;
-import com.campusoperationsmanager.backend.security.OAuth2AuthenticationSuccessHandler;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,7 +16,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import com.campusoperationsmanager.backend.security.JwtAuthenticationFilter;
+import com.campusoperationsmanager.backend.security.OAuth2AuthenticationSuccessHandler;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -38,11 +40,11 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/oauth2/**", "/login/**").permitAll()
+                .requestMatchers("/api/auth/login").permitAll()       // NEW: campus login
                 .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
-            )
-
+                )
             .oauth2Login(oauth2 -> oauth2
                     .authorizationEndpoint(e ->
                             e.baseUri("/oauth2/authorize"))
