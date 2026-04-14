@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -49,6 +49,8 @@ function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const isAdminRoute = location.pathname.startsWith('/admin')
+  const profileAreaRef = useRef(null)
+  const resourceAreaRef = useRef(null)
 
   const initials = useMemo(() => {
     return user.name
@@ -58,6 +60,34 @@ function Navbar() {
       .slice(0, 2)
       .toUpperCase()
   }, [user.name])
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (profileAreaRef.current && !profileAreaRef.current.contains(event.target)) {
+        setIsMenuOpen(false)
+      }
+
+      if (resourceAreaRef.current && !resourceAreaRef.current.contains(event.target)) {
+        setIsResourceOpen(false)
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false)
+        setIsResourceOpen(false)
+        setIsSearchOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [])
 
   return (
     <>
@@ -80,11 +110,14 @@ function Navbar() {
               </span>
             </button>
 
-            <div className="profile-area">
+            <div className="profile-area" ref={profileAreaRef}>
               <button
                 type="button"
                 className="profile-btn"
-                onClick={() => setIsMenuOpen((state) => !state)}
+                onClick={() => {
+                  setIsMenuOpen((state) => !state)
+                  setIsResourceOpen(false)
+                }}
                 aria-haspopup="menu"
                 aria-expanded={isMenuOpen}
               >
@@ -146,11 +179,14 @@ function Navbar() {
               </span>
             </Link>
 
-            <div className="resource-dropdown" onMouseLeave={() => setIsResourceOpen(false)}>
+            <div className="resource-dropdown" ref={resourceAreaRef}>
               <button
                 type="button"
                 className="sub-link-btn"
-                onClick={() => setIsResourceOpen((state) => !state)}
+                onClick={() => {
+                  setIsResourceOpen((state) => !state)
+                  setIsMenuOpen(false)
+                }}
                 aria-haspopup="menu"
                 aria-expanded={isResourceOpen}
               >
@@ -163,7 +199,7 @@ function Navbar() {
               {isResourceOpen ? (
                 <div className="resource-menu" role="menu">
                   <Link to="/bookings" className="menu-item" role="menuitem" onClick={() => setIsResourceOpen(false)}>
-                    Booking
+                    Bookings
                   </Link>
                 </div>
               ) : null}
