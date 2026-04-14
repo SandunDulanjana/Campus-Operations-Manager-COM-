@@ -220,7 +220,7 @@ User ────< Booking >──── Resource
 
 | Benefit | How It Applies |
 |---|---|
-| **Relationships** | Foreign keys enforce data integrity between bookings and resources |
+| **Relationships** | The target design prefers foreign-key-backed integrity between linked records, but current implementation still has some module boundaries represented by scalar ids during integration |
 | **Conflict Checks** | SQL queries can detect overlapping time ranges efficiently |
 | **Ownership Checks** | JOIN queries verify "who owns what" for access control |
 | **Transactions** | ACID guarantees prevent double-bookings and lost updates |
@@ -287,7 +287,7 @@ Level 3: HATEOAS with hypermedia links      ← Innovation target
 
 **Lecture Reference:** Lecture 06 — REST APIs Auth, Tutorial 06 — Authentication Deep Dive
 
-We chose Google login using OAuth 2.0 together with OpenID Connect (OIDC) for user authentication, and JWT (JSON Web Tokens) for stateless API authorization after sign-in. This satisfies the rubric requirement for OAuth 2.0-based login while also keeping our REST API truly stateless for protected requests.
+We chose Google login using OAuth 2.0 together with OpenID Connect (OIDC) for user authentication, and JWT (JSON Web Tokens) for stateless API authorization after sign-in. This satisfies the rubric requirement for OAuth 2.0-based login while also keeping our REST API truly stateless for protected requests. This is still an in-progress integration area in the codebase and should be described as the target architecture until the frontend and protected backend flows are fully migrated.
 
 #### How Our Authentication Flow Works
 
