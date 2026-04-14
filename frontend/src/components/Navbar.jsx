@@ -38,6 +38,16 @@ function HeaderIcon({ kind }) {
     )
   }
 
+  if (kind === 'brand') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 16.5V8.2c0-.7.36-1.34.96-1.7L12 3.5l5.04 3c.6.36.96 1 .96 1.7v8.3c0 .7-.36 1.34-.96 1.7L12 21l-5.04-2.8A1.97 1.97 0 0 1 6 16.5Z" />
+        <path d="M9.2 10.8 12 9l2.8 1.8V14L12 15.8 9.2 14v-3.2Z" />
+        <path d="M12 3.5v5.4" />
+      </svg>
+    )
+  }
+
   return null
 }
 
@@ -95,11 +105,11 @@ function Navbar() {
         <div className="top-header">
           <Link to="/" className="brand" aria-label="Go to home page">
             <span className="brand-mark" aria-hidden="true">
-              SC
+              <HeaderIcon kind="brand" />
             </span>
             <div>
               <p className="brand-title">Smart Campus</p>
-              <p className="brand-subtitle">CourseWeb</p>
+              <p className="brand-subtitle">Operations Hub</p>
             </div>
           </Link>
 
