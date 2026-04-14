@@ -1,5 +1,8 @@
-package com.campusoperationsmanager.backend.auth;
+package com.campusoperationsmanager.backend.auth.controller;
 
+import com.campusoperationsmanager.backend.auth.dto.UserDTO;
+import com.campusoperationsmanager.backend.auth.model.User;
+import com.campusoperationsmanager.backend.auth.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -7,17 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
-/**
- * Handles user management by ADMIN.
- * Endpoint: /api/users/...
- *
- * Separated from AuthController to keep responsibilities clean:
- * - AuthController = "my own profile"
- * - UserController = "manage other users (admin)"
- */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -27,10 +21,7 @@ public class UserController {
 
     /**
      * GET /api/users
-     * ADMIN ONLY — list all users.
-     *
-     * @PreAuthorize checks the role BEFORE entering this method.
-     * If not ADMIN → 403 Forbidden automatically.
+     * ADMIN ONLY — get all registered users.
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -44,14 +35,12 @@ public class UserController {
 
     /**
      * PUT /api/users/{id}/role
-     * ADMIN ONLY — promote/demote a user's role.
-     *
-     * Request body: { "role": "TECHNICIAN" }
-     * Response: updated user object
+     * ADMIN ONLY — change a user's role.
+     * Body: { "role": "TECHNICIAN" }
      */
     @PutMapping("/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDTO> updateUserRole(
+    public ResponseEntity<UserDTO> updateRole(
             @PathVariable Long id,
             @Valid @RequestBody RoleUpdateRequest request) {
 
@@ -61,9 +50,8 @@ public class UserController {
 
     /**
      * DELETE /api/users/{id}
-     * ADMIN ONLY — deactivate a user (soft delete).
-     *
-     * Returns 204 No Content — success with no body.
+     * ADMIN ONLY — deactivate user (soft delete).
+     * Returns 204 No Content.
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -72,7 +60,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // Inner class for request body — small enough to keep here
     @Data
     static class RoleUpdateRequest {
         @NotBlank(message = "Role is required")
