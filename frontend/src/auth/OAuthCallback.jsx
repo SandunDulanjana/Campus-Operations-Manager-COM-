@@ -1,35 +1,39 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 
 function OAuthCallback() {
   const [searchParams] = useSearchParams()
   const { login } = useAuth()
   const navigate = useNavigate()
   const [error, setError] = useState('')
+  const hasRun = useRef(false) // prevents double-run in React StrictMode
 
   useEffect(() => {
+    if (hasRun.current) return
+    hasRun.current = true
+
     const token = searchParams.get('token')
 
     if (!token) {
-      setError('No token received from Google login.')
+      // Use setTimeout to avoid synchronous setState inside effect
+      setTimeout(() => setError('No token received from Google login.'), 0)
       return
     }
 
-    // Set token temporarily to fetch user info
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
-    axios.get('http://localhost:8081/api/auth/me')
+    axios
+      .get('http://localhost:8081/api/auth/me')
       .then((response) => {
-        // Store the user + token in AuthContext
         login(response.data, token)
         navigate('/')
       })
       .catch(() => {
         setError('Failed to retrieve user info after Google login.')
       })
-  }, [])
+  }, [searchParams, login, navigate]) // fixed: all dependencies listed
 
   if (error) {
     return (

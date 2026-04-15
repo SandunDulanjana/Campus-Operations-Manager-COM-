@@ -12,7 +12,7 @@ import AdminResourcesPage from './admin/AdminResourcesPage'
 import AdminDashboardHome from './admin/AdminDashboardHome'
 import LoginPage from './auth/LoginPage'
 import OAuthCallback from './auth/OAuthCallback'
-import { useAuth } from './context/AuthContext'
+import { useAuth } from './context/useAuth';   // or './context/useAuth.js'
 import './App.css'
 
 function App() {

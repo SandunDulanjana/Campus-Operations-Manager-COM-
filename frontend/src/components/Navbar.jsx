@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 
 function Navbar() {
   const { user, logout } = useAuth()
@@ -12,15 +12,9 @@ function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const isAdminRoute = location.pathname.startsWith('/admin')
 
-  const initials = useMemo(() => {
-    if (!user?.name) return '?'
-    return user.name
-      .split(' ')
-      .map((part) => part[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase()
-  }, [user?.name])
+  const initials = user?.name
+  ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+  : '?'
 
   function handleLogout() {
     logout()

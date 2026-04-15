@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 
 const AuthContext = createContext(null)
@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
     } else {
-      delete axios.defaults.headers.common['Authorization']
+      axios.defaults.headers.common['Authorization'] = undefined
     }
   }, [token])
 
@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
-    delete axios.defaults.headers.common['Authorization']
+    axios.defaults.headers.common['Authorization'] = undefined
     setToken(null)
     setUser(null)
   }
@@ -60,8 +60,4 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) throw new Error('useAuth must be used inside AuthProvider')
-  return context
-}
+export { AuthContext }
