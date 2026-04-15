@@ -35,26 +35,22 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(s ->
+            .sessionManagement(s -> 
                     s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/oauth2/**", "/login/**").permitAll()
-                .requestMatchers("/api/auth/login").permitAll()       // NEW: campus login
+                // IMPORTANT: Permit all OAuth2 related endpoints
+                .requestMatchers("/oauth2/**", "/login/**", "/login/oauth2/code/**").permitAll()
+                .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
-                )
-            .oauth2Login(oauth2 -> oauth2
-                    .authorizationEndpoint(e ->
-                            e.baseUri("/oauth2/authorize"))
-                    .redirectionEndpoint(e ->
-                            e.baseUri("/oauth2/callback/*"))
-                    .successHandler(oAuth2SuccessHandler)
             )
-
-            .addFilterBefore(jwtAuthenticationFilter,
-                    UsernamePasswordAuthenticationFilter.class);
+            .oauth2Login(oauth2 -> oauth2
+                // Remove custom baseUri to use Spring defaults (recommended)
+                .successHandler(oAuth2SuccessHandler)
+                // You can keep .failureHandler if you have one
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -70,7 +66,6 @@ public class SecurityConfig {
                 "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
