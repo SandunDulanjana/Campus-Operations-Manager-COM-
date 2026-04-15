@@ -5,9 +5,9 @@ import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,8 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/timetable")
 public class TimetableController {
-
-    private static final String HEADER_USER_ROLE = "X-User-Role";
 
     private final TimetableService timetableService;
 
@@ -28,9 +26,9 @@ public class TimetableController {
     @PostMapping("/upload")
     public ResponseEntity<?> uploadTimetable(
             @RequestParam("file") MultipartFile file,
-            @RequestHeader(value = HEADER_USER_ROLE, defaultValue = "USER") String userRole
+            Authentication authentication
     ) {
-        if (!isAdmin(userRole)) {
+        if (!isAdmin(authentication)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new ErrorResponse("Admin role required for this action"));
         }
@@ -61,8 +59,10 @@ public class TimetableController {
         return ResponseEntity.ok(slots);
     }
 
-    private boolean isAdmin(String role) {
-        return "ADMIN".equalsIgnoreCase(role);
+    private boolean isAdmin(Authentication authentication) {
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 
     public record ErrorResponse(String error) {}
