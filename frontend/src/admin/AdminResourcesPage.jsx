@@ -36,7 +36,8 @@ function AdminResourcesPage() {
 
   useEffect(() => {
     void loadResources()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // intentionally run once on mount only
 
   const capacityRequired = useMemo(() => isCapacityRequired(formData.type), [formData.type])
 
