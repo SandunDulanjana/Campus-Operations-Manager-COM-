@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import { createBooking, fetchApprovedWeeklyBookings, fetchMyBookings, updateBookingStatus } from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
 import { fetchWeeklyTimetable, uploadTimetable } from '../api/timetableApi'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import bookingIllustration from '../assets/hero.jpg'
 import HeroSection from '../components/layout/HeroSection'
 import StatusBanner from '../components/ui/StatusBanner'
@@ -47,17 +47,19 @@ function BookingPage() {
   const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
-    void loadResources()
-  }, [])
+  void loadResources()
+}, [])
 
   useEffect(() => {
     void loadMyBookings()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id, user.role])
 
   useEffect(() => {
-    if (showTimetableModal) {
-      void loadWeeklyBookings()
-    }
+  if (showTimetableModal) {
+    void loadWeeklyBookings()
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTimetableModal, timetableWeek])
 
   const selectedResource = useMemo(

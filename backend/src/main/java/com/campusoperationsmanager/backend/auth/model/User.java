@@ -33,6 +33,14 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    // Campus login username (e.g. "s12345")
+    @Column(unique = true)
+    private String username;
+
+    // BCrypt hashed password — never stored as plain text
+    @Column
+    private String password;
+
     private String name;
 
     @Column(name = "profile_picture")
@@ -52,8 +60,7 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public User() {
-    }
+    public User() {}
 
     @PrePersist
     protected void onCreate() {

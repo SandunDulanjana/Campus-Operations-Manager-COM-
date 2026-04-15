@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchAllBookings, updateBookingStatus } from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import StatusBanner from '../components/ui/StatusBanner'
 import StatusBadge from '../components/ui/StatusBadge'
 import ActionButton from '../components/ui/ActionButton'
@@ -27,11 +27,12 @@ function AdminBookingsPage() {
     void loadResources()
   }, [])
 
-  useEffect(() => {
-    if (user.role === 'ADMIN') {
-      void loadBookings()
-    }
-  }, [user.role])
+    useEffect(() => {
+      if (user.role === 'ADMIN') {
+        void loadBookings()
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user.role])
 
   const resourceTypes = useMemo(
     () => [...new Set(resources.map((resource) => resource.type))].sort(),
