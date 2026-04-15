@@ -1,5 +1,5 @@
 import StatusBanner from '../components/ui/StatusBanner'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 
 function RequireAdmin({ children }) {
   const { user } = useAuth()
