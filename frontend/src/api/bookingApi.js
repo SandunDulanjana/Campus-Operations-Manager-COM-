@@ -31,6 +31,14 @@ export async function fetchAllBookings(filters, user) {
   return response.data
 }
 
+export async function fetchApprovedWeeklyBookings(weekStart, user) {
+  const response = await axios.get(`${API_BASE_URL}/api/bookings/approved-weekly`, {
+    headers: buildHeaders(user),
+    params: { weekStart },
+  })
+  return response.data
+}
+
 export async function updateBookingStatus(bookingId, payload, user) {
   const response = await axios.patch(`${API_BASE_URL}/api/bookings/${bookingId}`, payload, {
     headers: buildHeaders(user),
