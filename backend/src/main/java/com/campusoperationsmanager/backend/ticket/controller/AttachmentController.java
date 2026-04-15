@@ -1,5 +1,7 @@
 package com.campusoperationsmanager.backend.ticket.controller;
 
+import com.campusoperationsmanager.backend.auth.model.User;
+import com.campusoperationsmanager.backend.auth.service.UserService;
 import com.campusoperationsmanager.backend.ticket.model.TicketAttachment;
 import com.campusoperationsmanager.backend.ticket.service.AttachmentService;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +22,7 @@ import java.util.Map;
 public class AttachmentController {
 
     private final AttachmentService attachmentService;
+    private final UserService userService;
 
     // POST /api/v1/tickets/{ticketId}/attachments
     // multipart/form-data because we're sending a FILE (not JSON)
@@ -28,9 +30,9 @@ public class AttachmentController {
     public ResponseEntity<Map<String, Object>> upload(
             @PathVariable Long ticketId,
             @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal OAuth2User principal) throws IOException {
+            @AuthenticationPrincipal Long userId) throws IOException {
 
-        String email = principal.getAttribute("email");
+        String email = requireUser(userId).getEmail();
         TicketAttachment saved = attachmentService.upload(ticketId, file, email);
 
         // Return metadata only, not the file data
@@ -68,5 +70,12 @@ public class AttachmentController {
 
         attachmentService.delete(attachmentId);
         return ResponseEntity.ok(Map.of("message", "Attachment deleted"));
+    }
+
+    private User requireUser(Long userId) {
+        if (userId == null) {
+            throw new IllegalStateException("Authenticated user id is missing");
+        }
+        return userService.getUserById(userId);
     }
 }

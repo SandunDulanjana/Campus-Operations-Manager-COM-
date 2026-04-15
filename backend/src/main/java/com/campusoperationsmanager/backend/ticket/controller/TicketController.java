@@ -6,12 +6,13 @@ import com.campusoperationsmanager.backend.ticket.dto.UpdateTicketStatusRequest;
 import com.campusoperationsmanager.backend.ticket.exception.TicketException;
 import com.campusoperationsmanager.backend.ticket.model.TicketStatus;
 import com.campusoperationsmanager.backend.ticket.service.TicketService;
+import com.campusoperationsmanager.backend.auth.model.User;
+import com.campusoperationsmanager.backend.auth.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,15 +24,17 @@ import java.util.Map;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final UserService userService;
 
     // ── POST /api/v1/tickets ──────────────────────────────────
     // Any logged-in user can create a ticket
     @PostMapping
     public ResponseEntity<TicketResponse> create(
             @Valid @RequestBody CreateTicketRequest request,
-            @AuthenticationPrincipal OAuth2User principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        String email = extractEmail(principal);
+        User user = requireUser(userId);
+        String email = user.getEmail();
         TicketResponse response = ticketService.createTicket(request, email);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -53,18 +56,18 @@ public class TicketController {
     // Current user's own tickets
     @GetMapping("/my")
     public ResponseEntity<List<TicketResponse>> getMyTickets(
-            @AuthenticationPrincipal OAuth2User principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        return ResponseEntity.ok(ticketService.getMyTickets(extractEmail(principal)));
+        return ResponseEntity.ok(ticketService.getMyTickets(requireUser(userId).getEmail()));
     }
 
     // ── GET /api/v1/tickets/assigned ──────────────────────────
     // Technician: tickets assigned to me
     @GetMapping("/assigned")
     public ResponseEntity<List<TicketResponse>> getAssigned(
-            @AuthenticationPrincipal OAuth2User principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        return ResponseEntity.ok(ticketService.getAssignedToMe(extractEmail(principal)));
+        return ResponseEntity.ok(ticketService.getAssignedToMe(requireUser(userId).getEmail()));
     }
 
     // ── GET /api/v1/tickets/{id} ──────────────────────────────
@@ -80,10 +83,11 @@ public class TicketController {
     public ResponseEntity<TicketResponse> updateStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateTicketStatusRequest request,
-            @AuthenticationPrincipal OAuth2User principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        String email = extractEmail(principal);
-        boolean isAdmin = isAdmin(principal);
+        User user = requireUser(userId);
+        String email = user.getEmail();
+        boolean isAdmin = isAdmin(user);
         return ResponseEntity.ok(ticketService.updateStatus(id, request, email, isAdmin));
     }
 
@@ -92,9 +96,10 @@ public class TicketController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> delete(
             @PathVariable Long id,
-            @AuthenticationPrincipal OAuth2User principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        if (!isAdmin(principal)) {
+        User user = requireUser(userId);
+        if (!isAdmin(user)) {
             throw TicketException.forbidden("delete tickets (admin only)");
         }
         ticketService.deleteTicket(id);
@@ -102,14 +107,14 @@ public class TicketController {
     }
 
     // ── Helper methods ────────────────────────────────────────
-    private String extractEmail(OAuth2User principal) {
-        String email = principal.getAttribute("email");
-        if (email == null) throw new IllegalStateException("Could not get email from token");
-        return email;
+    private User requireUser(Long userId) {
+        if (userId == null) {
+            throw new IllegalStateException("Authenticated user id is missing");
+        }
+        return userService.getUserById(userId);
     }
 
-    private boolean isAdmin(OAuth2User principal) {
-        return principal.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    private boolean isAdmin(User user) {
+        return user.getRole() == User.Role.ADMIN;
     }
 }
