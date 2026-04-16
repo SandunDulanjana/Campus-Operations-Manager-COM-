@@ -3,6 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../context/useAuth'
 
+function LoginBrandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 16.5V8.2c0-.7.36-1.34.96-1.7L12 3.5l5.04 3c.6.36.96 1 .96 1.7v8.3c0 .7-.36 1.34-.96 1.7L12 21l-5.04-2.8A1.97 1.97 0 0 1 6 16.5Z" />
+      <path d="M9.2 10.8 12 9l2.8 1.8V14L12 15.8 9.2 14v-3.2Z" />
+      <path d="M12 3.5v5.4" />
+    </svg>
+  )
+}
+
 function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -45,7 +55,9 @@ function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-brand">
-          <span className="brand-mark" aria-hidden="true">SC</span>
+          <span className="brand-mark" aria-hidden="true">
+            <LoginBrandIcon />
+          </span>
           <div>
             <p className="brand-title">Smart Campus</p>
             <p className="brand-subtitle">CourseWeb</p>
@@ -57,40 +69,40 @@ function LoginPage() {
         {error && <p className="login-error">{error}</p>}
 
         <form className="login-form" onSubmit={handleSubmit}>
-        <div className="login-inputs-row">
-          <label>
-            Campus Username
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. s12345"
-              required
-              autoComplete="username"
-            />
-          </label>
+          <div className="login-inputs-row">
+            <label>
+              Campus Username
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="e.g. s12345"
+                required
+                autoComplete="username"
+              />
+            </label>
 
-          <label>
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-              autoComplete="current-password"
-            />
-          </label>
+            <label>
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+              />
+            </label>
 
-          <button 
-            type="submit" 
-            className="primary-btn login-submit-btn" 
-            disabled={loading}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </div>
-      </form>
+            <button
+              type="submit"
+              className="primary-btn login-submit-btn"
+              disabled={loading}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </div>
+        </form>
 
         <div className="login-divider">
           <span>or</span>

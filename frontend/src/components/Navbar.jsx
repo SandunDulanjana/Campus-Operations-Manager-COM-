@@ -38,6 +38,16 @@ function HeaderIcon({ kind }) {
     )
   }
 
+  if (kind === 'stack') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 4 4.75 7.5 12 11l7.25-3.5L12 4Z" />
+        <path d="M4.75 12.25 12 15.75l7.25-3.5" />
+        <path d="M4.75 16.75 12 20.25l7.25-3.5" />
+      </svg>
+    )
+  }
+
   if (kind === 'brand') {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -112,7 +122,9 @@ function Navbar() {
       <header className="site-header">
         <div className="top-header">
           <Link to="/" className="brand" aria-label="Go to home page">
-            <span className="brand-mark" aria-hidden="true">SC</span>
+            <span className="brand-mark" aria-hidden="true">
+              <HeaderIcon kind="brand" />
+            </span>
             <div>
               <p className="brand-title">Smart Campus</p>
               <p className="brand-subtitle">Operations Hub</p>
@@ -137,8 +149,6 @@ function Navbar() {
                 aria-haspopup="menu"
                 aria-expanded={isMenuOpen}
               >
-                <span className="profile-name">{user.name?.toUpperCase()}</span>
-                <span aria-hidden="true">▾</span>
                 <span className="avatar">{initials}</span>
                 <span className="profile-copy">
                   <span className="profile-eyebrow">{user.role}</span>
@@ -231,13 +241,14 @@ function Navbar() {
 
         {!isAdminRoute && (
           <div className="sub-header">
-            {/* Your sub-header nav and search remain the same */}
             <nav className="sub-nav" aria-label="Primary navigation">
               <Link to="/" className="home-icon-link" title="Home">
-                <span className="nav-icon" aria-hidden="true">⌂</span>
+                <span className="nav-icon-shell" aria-hidden="true">
+                  <HeaderIcon kind="home" />
+                </span>
               </Link>
 
-              <div className="resource-dropdown" onMouseLeave={() => setIsResourceOpen(false)}>
+              <div className="resource-dropdown" ref={resourceAreaRef}>
                 <button
                   type="button"
                   className="sub-link-btn"
@@ -245,12 +256,18 @@ function Navbar() {
                   aria-haspopup="menu"
                   aria-expanded={isResourceOpen}
                 >
-                  Resources <span aria-hidden="true">▾</span>
+                  <span className="nav-icon-shell" aria-hidden="true">
+                    <HeaderIcon kind="stack" />
+                  </span>
+                  <span>Resources</span>
+                  <span className={`sub-link-chevron${isResourceOpen ? ' open' : ''}`} aria-hidden="true">
+                    <HeaderIcon kind="chevron" />
+                  </span>
                 </button>
                 {isResourceOpen && (
                   <div className="resource-menu" role="menu">
                     <Link to="/bookings" className="menu-item" role="menuitem" onClick={() => setIsResourceOpen(false)}>
-                      Booking
+                      Bookings
                     </Link>
                   </div>
                 )}
@@ -264,7 +281,9 @@ function Navbar() {
               aria-expanded={isSearchOpen}
               aria-label="Toggle search"
             >
-              <span className="nav-icon" aria-hidden="true">⌕</span>
+              <span className="nav-icon-shell" aria-hidden="true">
+                <HeaderIcon kind="search" />
+              </span>
             </button>
 
             {isSearchOpen && (

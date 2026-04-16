@@ -187,6 +187,11 @@
   transition: transform 140ms ease, border-color 140ms ease, background-color 140ms ease, color 140ms ease;
 }
 
+.sub-link-btn .nav-icon-shell {
+  width: 1rem;
+  height: 1rem;
+}
+
 .sub-link-btn:hover {
   color: #ffffff;
   border-color: rgba(255, 255, 255, 0.18);
@@ -246,7 +251,7 @@
   background: rgba(255, 255, 255, 0.9);
   color: var(--text-strong);
   border-radius: 999px;
-  padding: 0.35rem 0.42rem 0.35rem 0.35rem;
+  padding: 0.35rem 0.58rem 0.35rem 0.35rem;
   display: inline-flex;
   align-items: center;
   gap: 0.72rem;
@@ -1847,8 +1852,11 @@ tbody tr:hover td {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f4f5f2;
-  padding: 1.5rem;
+  background:
+    radial-gradient(circle at top left, rgba(45, 111, 149, 0.12), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(27, 127, 123, 0.14), transparent 34%),
+    linear-gradient(180deg, #eff5f4 0%, #f7faf9 100%);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
 }
 
 .login-card {
@@ -1868,7 +1876,6 @@ tbody tr:hover td {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.25rem;
 }
 
 .login-title {
@@ -1883,7 +1890,17 @@ tbody tr:hover td {
   gap: 1rem;
 }
 
-.login-form label {
+.login-inputs-row {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.login-form label,
+.login-inputs-row label {
+  flex: 1;
+  min-width: 180px;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -1892,24 +1909,31 @@ tbody tr:hover td {
   color: #374151;
 }
 
-.login-form input {
+.login-form input,
+.login-inputs-row input {
   padding: 0.65rem 0.85rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   font: inherit;
   font-size: 0.95rem;
   color: #111827;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
-.login-form input:focus {
+.login-form input:focus,
+.login-inputs-row input:focus {
   outline: 2px solid #0f766e;
   outline-offset: 1px;
   border-color: transparent;
 }
 
 .login-submit-btn {
-  width: 100%;
-  padding: 0.7rem;
+  width: auto;
+  min-width: 140px;
+  height: 52px;
+  margin-top: 1.7rem;
+  white-space: nowrap;
+  padding: 0 1.8rem;
   font-size: 1rem;
 }
 
@@ -1960,46 +1984,6 @@ tbody tr:hover td {
   background: #f9fafb;
 }
 
-/* ==================== ADDED FOR HORIZONTAL LOGIN FORM (Screenshot Layout) ==================== */
-.login-inputs-row {
-  display: flex;
-  gap: 1rem;
-  align-items: end;
-  flex-wrap: wrap;
-}
-
-.login-inputs-row label {
-  flex: 1;
-  min-width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.login-inputs-row .login-submit-btn {
-  width: auto;
-  min-width: 140px;
-  height: 52px;
-  margin-top: 1.7rem;        /* aligns button vertically with inputs */
-  white-space: nowrap;
-  padding: 0 1.8rem;
-  font-size: 1rem;
-}
-
-/* On small screens, stack back to vertical */
-@media (max-width: 700px) {
-  .login-inputs-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .login-inputs-row .login-submit-btn {
-    margin-top: 0;
-    height: auto;
-    width: 100%;
-  }
-}
-/* ========================================================================================== */
-
 @media (max-width: 1120px) {
   .footer-main {
     grid-template-columns: 1fr 1fr;
@@ -2032,6 +2016,7 @@ tbody tr:hover td {
   .resource-showcase-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
 }
 
 @media (max-width: 1440px) {
@@ -2135,6 +2120,20 @@ tbody tr:hover td {
 
   .profile-copy {
     display: none;
+  }
+
+  .login-page {
+    padding: 1rem;
+  }
+
+  .login-inputs-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .login-submit-btn {
+    width: 100%;
+    margin-top: 0;
   }
 
   .time-row,
