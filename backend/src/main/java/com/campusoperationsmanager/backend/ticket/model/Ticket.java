@@ -8,14 +8,19 @@ import java.util.List;
 
 @Entity
 @Table(name = "tickets")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class Ticket {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
     // ── Basic info ────────────────────────────────────────────
@@ -88,13 +93,11 @@ public class Ticket {
     // orphanRemoval = if comment removed from list, delete from DB
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    @ToString.Exclude  // Prevents infinite loop: Ticket→Comment→Ticket→...
     private List<TicketComment> comments = new ArrayList<>();
 
     // One ticket → up to 3 attachments
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    @ToString.Exclude
     private List<TicketAttachment> attachments = new ArrayList<>();
 
     // ── Auto-set timestamps ───────────────────────────────────

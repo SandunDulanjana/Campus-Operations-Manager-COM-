@@ -31,7 +31,9 @@ The goal is to keep implementation consistent with the assignment brief, marking
 - `name` must not be blank
 - `capacity` must be positive
 - `availabilityStart` must be before `availabilityEnd` (if both exist)
+- `availabilityStart` and `availabilityEnd` must be provided together
 - `status` defaults to `ACTIVE`
+- `EQUIPMENT` may omit `capacity`, but if provided it must still be positive
 
 ### A3. Module A Endpoints (Draft)
 
@@ -110,7 +112,7 @@ APPROVED -> CANCELLED
 
 ### Edge Cases to Handle
 
-- resource deleted after bookings exist (decide soft-delete vs hard-block)
+- resource deleted after bookings exist (current implementation uses hard delete; booking-side handling still needs review)
 - resource switched to `OUT_OF_SERVICE` while future bookings exist
 - concurrent booking attempts for same resource/time window
 
@@ -126,7 +128,7 @@ Use these prompts while implementing endpoints:
 
 ## Open Decisions
 
-- Soft delete vs hard delete for resources
+- Whether resource deletion should stay hard-delete or move to block/soft-delete once auth and broader module integration are complete
 - Whether booking history is immutable after terminal state
 - Whether `availabilityStart/End` is daily or per-date
 - Exact role permissions for booking approval/rejection/cancellation

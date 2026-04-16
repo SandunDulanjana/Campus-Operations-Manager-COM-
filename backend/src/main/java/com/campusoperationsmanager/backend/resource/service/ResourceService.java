@@ -92,7 +92,7 @@ public class ResourceService {
         }
 
         if (resource.getStatus() == null) {
-            throw new ResourceValidationException("status is required");
+            resource.setStatus(ResourceStatus.ACTIVE);
         }
 
         if (resource.getType() == ResourceType.EQUIPMENT) {

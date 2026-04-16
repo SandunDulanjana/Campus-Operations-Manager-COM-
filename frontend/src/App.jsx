@@ -6,28 +6,48 @@ import AdminBookingsPage from './booking/AdminBookingsPage'
 import HomePage from './home/HomePage'
 import AdminLayout from './admin/AdminLayout'
 import RequireAdmin from './admin/RequireAdmin'
+import RequireAuth from './auth/RequireAuth'
 import AdminUsersPage from './admin/AdminUsersPage'
 import AdminResourcesPage from './admin/AdminResourcesPage'
 import AdminDashboardHome from './admin/AdminDashboardHome'
+import LoginPage from './auth/LoginPage'
+import OAuthCallback from './auth/OAuthCallback'
+import { useAuth } from './context/useAuth';   // or './context/useAuth.js'
 import './App.css'
+
+
 
 function App() {
   const location = useLocation()
+  const { user } = useAuth()
   const isAdminRoute = location.pathname.startsWith('/admin')
+  const isLoginRoute = location.pathname === '/login' || location.pathname.startsWith('/oauth2')
+
 
   return (
     <div className={isAdminRoute ? 'app-shell admin-mode' : 'app-shell'}>
-      <Navbar />
+      {/* Hide Navbar on login/callback pages */}
+      {!isLoginRoute && <Navbar />}
+
       <main className={isAdminRoute ? 'page-content admin-page-content' : 'page-content'}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/bookings" element={<BookingPage />} />
+          {/* Public routes */}
+          <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
+
+          {/* Protected routes — require login */}
+          <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
+          <Route path="/bookings" element={<RequireAuth><BookingPage /></RequireAuth>} />
+
+          {/* Admin routes */}
           <Route
             path="/admin"
             element={
-              <RequireAdmin>
-                <AdminLayout />
-              </RequireAdmin>
+              <RequireAuth>
+                <RequireAdmin>
+                  <AdminLayout />
+                </RequireAdmin>
+              </RequireAuth>
             }
           >
             <Route index element={<Navigate to="dashboard" replace />} />
@@ -36,10 +56,12 @@ function App() {
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="resources" element={<AdminResourcesPage />} />
           </Route>
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <Footer />
+
+      {!isLoginRoute && <Footer />}
     </div>
   )
 }

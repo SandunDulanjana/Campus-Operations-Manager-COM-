@@ -1,7 +1,10 @@
+[dev_services]
+frontend = ["bash", "-lc", "cd frontend && npm run dev -- --host 0.0.0.0"]
+backend = ["bash", "-lc", "cd backend && ./mvnw spring-boot:run"]
+
 [commands]
-dev = ["bash", "./scripts/dev-up.sh"]
-lint = ["bash", "./scripts/dev-lint.sh"]
-test = ["bash", "./scripts/dev-test.sh"]
+lint = ["bash", "-lc", "cd frontend && npm run lint"]
+test = ["bash", "-lc", "cd backend && ./mvnw test -B"]
 
 [browser]
 url = "http://localhost:5173"

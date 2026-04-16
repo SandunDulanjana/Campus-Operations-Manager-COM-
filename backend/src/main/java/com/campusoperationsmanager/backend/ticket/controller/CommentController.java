@@ -1,5 +1,7 @@
 package com.campusoperationsmanager.backend.ticket.controller;
 
+import com.campusoperationsmanager.backend.auth.model.User;
+import com.campusoperationsmanager.backend.auth.service.UserService;
 import com.campusoperationsmanager.backend.ticket.dto.CreateCommentRequest;
 import com.campusoperationsmanager.backend.ticket.dto.TicketResponse;
 import com.campusoperationsmanager.backend.ticket.service.CommentService;
@@ -8,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.Map;
 public class CommentController {
 
     private final CommentService commentService;
+    private final UserService userService;
 
     // GET /api/v1/tickets/{ticketId}/comments
     @GetMapping
@@ -33,9 +35,9 @@ public class CommentController {
     public ResponseEntity<TicketResponse.CommentResponse> add(
             @PathVariable Long ticketId,
             @Valid @RequestBody CreateCommentRequest request,
-            @AuthenticationPrincipal OAuth2User principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        String email = principal.getAttribute("email");
+        String email = requireUser(userId).getEmail();
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(commentService.addComment(ticketId, request, email));
@@ -48,9 +50,9 @@ public class CommentController {
             @PathVariable Long ticketId,
             @PathVariable Long commentId,
             @Valid @RequestBody CreateCommentRequest request,
-            @AuthenticationPrincipal OAuth2User principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        String email = principal.getAttribute("email");
+        String email = requireUser(userId).getEmail();
         return ResponseEntity.ok(commentService.updateComment(commentId, request, email));
     }
 
@@ -59,12 +61,19 @@ public class CommentController {
     public ResponseEntity<Map<String, String>> delete(
             @PathVariable Long ticketId,
             @PathVariable Long commentId,
-            @AuthenticationPrincipal OAuth2User principal) {
+            @AuthenticationPrincipal Long userId) {
 
-        String email = principal.getAttribute("email");
-        boolean isAdmin = principal.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        User user = requireUser(userId);
+        String email = user.getEmail();
+        boolean isAdmin = user.getRole() == User.Role.ADMIN;
         commentService.deleteComment(commentId, email, isAdmin);
         return ResponseEntity.ok(Map.of("message", "Comment deleted"));
+    }
+
+    private User requireUser(Long userId) {
+        if (userId == null) {
+            throw new IllegalStateException("Authenticated user id is missing");
+        }
+        return userService.getUserById(userId);
     }
 }

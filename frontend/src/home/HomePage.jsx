@@ -21,6 +21,14 @@ const HERO_IMAGES = [
   homeImage8,
 ]
 
+function CarouselArrow({ direction }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      {direction === 'left' ? <path d="m14.5 6-6 6 6 6" /> : <path d="m9.5 6 6 6-6 6" />}
+    </svg>
+  )
+}
+
 function HomePage() {
   const [activeImageIndex, setActiveImageIndex] = useState(0)
 
@@ -50,7 +58,7 @@ function HomePage() {
           onClick={showPreviousImage}
           aria-label="Previous image"
         >
-          &#8592;
+          <CarouselArrow direction="left" />
         </button>
         <button
           type="button"
@@ -58,7 +66,7 @@ function HomePage() {
           onClick={showNextImage}
           aria-label="Next image"
         >
-          &#8594;
+          <CarouselArrow direction="right" />
         </button>
         <div className="carousel-progress" aria-hidden="true">
           {HERO_IMAGES.map((_, index) => (
