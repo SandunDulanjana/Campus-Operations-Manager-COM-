@@ -76,7 +76,9 @@ public class User {
 
     public enum Role {
         USER,
-        MANAGER,
+        MAINTENANCEMNG,
+        RECOURSEMNG,
+        BOOKINGMNG,
         ADMIN,
         TECHNICIAN
     }

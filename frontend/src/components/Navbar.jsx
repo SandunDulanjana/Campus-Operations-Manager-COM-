@@ -166,14 +166,49 @@ function Navbar() {
                   </Link>
 
                   {user.role === 'TECHNICIAN' && (
-                    <Link to="/maintain-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Maintain Dashboard
+                    <Link
+                      to="/technician-dashboard"
+                      role="menuitem"
+                      className="menu-item"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Technician Dashboard
                     </Link>
                   )}
 
-                  {user.role === 'MANAGER' && (
-                    <Link to="/manager-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Manager Dashboard
+                      {/* MAINTENANCEMNG → Maintenance Manager Dashboard */}
+                  {user.role === 'MAINTENANCEMNG' && (
+                    <Link
+                      to="/maintenance-dashboard"
+                      role="menuitem"
+                      className="menu-item"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Maintenance Dashboard
+                    </Link>
+                  )}
+
+                  {/* RECOURSEMNG → Resource Manager Dashboard */}
+                  {user.role === 'RECOURSEMNG' && (
+                    <Link
+                      to="/resource-dashboard"
+                      role="menuitem"
+                      className="menu-item"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Resource Dashboard
+                    </Link>
+                  )}
+
+                  {/* BOOKINGMNG → Booking Manager Dashboard */}
+                  {user.role === 'BOOKINGMNG' && (
+                    <Link
+                      to="/booking-dashboard"
+                      role="menuitem"
+                      className="menu-item"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Booking Dashboard
                     </Link>
                   )}
 
