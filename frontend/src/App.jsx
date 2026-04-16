@@ -16,6 +16,20 @@ import { useAuth } from './context/useAuth';   // or './context/useAuth.js'
 import './App.css'
 
 
+// Role dashboard placeholder pages (create these files later)
+function TechnicianDashboard() {
+  return <div className="page-content"><h1>Technician Dashboard</h1></div>
+}
+function MaintenanceDashboard() {
+  return <div className="page-content"><h1>Maintenance Manager Dashboard</h1></div>
+}
+function ResourceDashboard() {
+  return <div className="page-content"><h1>Resource Manager Dashboard</h1></div>
+}
+function BookingManagerDashboard() {
+  return <div className="page-content"><h1>Booking Manager Dashboard</h1></div>
+}
+
 
 function App() {
   const location = useLocation()
@@ -38,6 +52,12 @@ function App() {
           {/* Protected routes — require login */}
           <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
           <Route path="/bookings" element={<RequireAuth><BookingPage /></RequireAuth>} />
+          {/* Role-specific dashboards */}
+          <Route path="/technician-dashboard"  element={<RequireAuth><TechnicianDashboard /></RequireAuth>} />
+          <Route path="/maintenance-dashboard" element={<RequireAuth><MaintenanceDashboard /></RequireAuth>} />
+          <Route path="/resource-dashboard"    element={<RequireAuth><ResourceDashboard /></RequireAuth>} />
+          <Route path="/booking-dashboard"     element={<RequireAuth><BookingManagerDashboard /></RequireAuth>} />
+
 
           {/* Admin routes */}
           <Route
