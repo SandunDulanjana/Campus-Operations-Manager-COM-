@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 
@@ -55,32 +55,22 @@ function Navbar() {
   const { user, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isResourceOpen, setIsResourceOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+
   const isAdminRoute = location.pathname.startsWith('/admin')
   const profileAreaRef = useRef(null)
   const resourceAreaRef = useRef(null)
 
-  const initials = user?.name
-  ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
-  : '?'
-
-  function handleLogout() {
-    logout()
-    setIsMenuOpen(false)
-    navigate('/login')
-  }
-
-  if (!user) return null
-
+  // ✅ ALL HOOKS FIRST
   useEffect(() => {
     function handlePointerDown(event) {
       if (profileAreaRef.current && !profileAreaRef.current.contains(event.target)) {
         setIsMenuOpen(false)
       }
-
       if (resourceAreaRef.current && !resourceAreaRef.current.contains(event.target)) {
         setIsResourceOpen(false)
       }
@@ -102,6 +92,20 @@ function Navbar() {
       document.removeEventListener('keydown', handleEscape)
     }
   }, [])
+
+  function handleLogout() {
+    logout()
+    setIsMenuOpen(false)
+    navigate('/login')
+  }
+
+  // Early return - must be AFTER all hooks
+  if (!user) return null
+
+  // Safe calculations (after we know user exists)
+  const initials = user.name
+    ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+    : '?'
 
   return (
     <>
@@ -147,80 +151,41 @@ function Navbar() {
 
               {isMenuOpen && (
                 <div className="profile-menu" role="menu">
-                  {/* Profile — always shown */}
-                  <Link
-                    to="/profile"
-                    role="menuitem"
-                    className="menu-item"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/profile" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                     My Profile
                   </Link>
 
-                  {/* TECHNICIAN → Maintain Dashboard */}
                   {user.role === 'TECHNICIAN' && (
-                    <Link
-                      to="/maintain-dashboard"
-                      role="menuitem"
-                      className="menu-item"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link to="/maintain-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                       Maintain Dashboard
                     </Link>
                   )}
 
-                  {/* MANAGER → Manager Dashboard */}
                   {user.role === 'MANAGER' && (
-                    <Link
-                      to="/manager-dashboard"
-                      role="menuitem"
-                      className="menu-item"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link to="/manager-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                       Manager Dashboard
                     </Link>
                   )}
 
-                  {/* ADMIN → both Admin + Maintain Dashboard */}
                   {user.role === 'ADMIN' && !isAdminRoute && (
-                    <Link
-                      to="/admin"
-                      role="menuitem"
-                      className="menu-item"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link to="/admin" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                       Admin Dashboard
                     </Link>
                   )}
+
                   {user.role === 'ADMIN' && (
-                    <Link
-                      to="/maintain-dashboard"
-                      role="menuitem"
-                      className="menu-item"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link to="/maintain-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                       Maintain Dashboard
                     </Link>
                   )}
 
                   {isAdminRoute && (
-                    <Link
-                      to="/"
-                      role="menuitem"
-                      className="menu-item"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link to="/" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                       Home
                     </Link>
                   )}
 
-                  {/* Logout — always shown */}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="menu-item"
-                    onClick={handleLogout}
-                  >
+                  <button type="button" role="menuitem" className="menu-item" onClick={handleLogout}>
                     Logout
                   </button>
                 </div>
@@ -231,6 +196,7 @@ function Navbar() {
 
         {!isAdminRoute && (
           <div className="sub-header">
+            {/* Your sub-header nav and search remain the same */}
             <nav className="sub-nav" aria-label="Primary navigation">
               <Link to="/" className="home-icon-link" title="Home">
                 <span className="nav-icon" aria-hidden="true">⌂</span>
@@ -291,5 +257,4 @@ function Navbar() {
     </>
   )
 }
-
 export default Navbar
