@@ -15,11 +15,14 @@ import OAuthCallback from './auth/OAuthCallback'
 import { useAuth } from './context/useAuth';   // or './context/useAuth.js'
 import './App.css'
 
+
+
 function App() {
   const location = useLocation()
   const { user } = useAuth()
   const isAdminRoute = location.pathname.startsWith('/admin')
   const isLoginRoute = location.pathname === '/login' || location.pathname.startsWith('/oauth2')
+
 
   return (
     <div className={isAdminRoute ? 'app-shell admin-mode' : 'app-shell'}>
@@ -30,7 +33,7 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
-          <Route path="/oauth2/callback" element={<OAuthCallback />} />
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
 
           {/* Protected routes — require login */}
           <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />

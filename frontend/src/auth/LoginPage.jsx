@@ -37,8 +37,8 @@ function LoginPage() {
   }
 
   function handleGoogleLogin() {
-    // This redirects to Spring Security's Google OAuth2 flow
-    window.location.href = 'http://localhost:8081/oauth2/authorize/google'
+    // FIXED: Correct Spring Security OAuth2 endpoint
+    window.location.href = 'http://localhost:8081/oauth2/authorization/google'
   }
 
   return (
