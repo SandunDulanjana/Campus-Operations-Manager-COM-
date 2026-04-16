@@ -53,19 +53,18 @@ function LoginPage() {
 
   return (
     <div className="login-page">
-      <div className="login-card login-card-softened">
-        <div className="login-brand login-brand-softened">
+      <div className="login-card">
+        <div className="login-brand">
           <span className="brand-mark" aria-hidden="true">
             <LoginBrandIcon />
           </span>
           <div>
             <p className="brand-title">Smart Campus</p>
-            <p className="brand-subtitle">Operations Hub</p>
+            <p className="brand-subtitle">CourseWeb</p>
           </div>
         </div>
 
-        <h1 className="login-title login-title-softened">Sign in to your account</h1>
-        <p className="login-form-text">Use your campus username and password or continue with Google.</p>
+        <h1 className="login-title">Sign in to your account</h1>
 
         {error && <p className="login-error">{error}</p>}
 
