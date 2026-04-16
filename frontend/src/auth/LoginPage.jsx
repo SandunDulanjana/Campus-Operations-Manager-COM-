@@ -57,6 +57,7 @@ function LoginPage() {
         {error && <p className="login-error">{error}</p>}
 
         <form className="login-form" onSubmit={handleSubmit}>
+        <div className="login-inputs-row">
           <label>
             Campus Username
             <input
@@ -81,10 +82,15 @@ function LoginPage() {
             />
           </label>
 
-          <button type="submit" className="primary-btn login-submit-btn" disabled={loading}>
+          <button 
+            type="submit" 
+            className="primary-btn login-submit-btn" 
+            disabled={loading}
+          >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
-        </form>
+        </div>
+      </form>
 
         <div className="login-divider">
           <span>or</span>
