@@ -16,7 +16,8 @@ import { useAuth } from './context/useAuth';   // or './context/useAuth.js'
 import './App.css'
 // At the top, add import:
 import ProfilePage from './profile/ProfilePage'
-
+import ForgotPasswordPage from './auth/ForgotPasswordPage'
+import ResetPasswordPage from './auth/ResetPasswordPage'
 // Inside <Routes>, add after the /bookings route:
 
 
@@ -40,7 +41,10 @@ function App() {
   const location = useLocation()
   const { user } = useAuth()
   const isAdminRoute = location.pathname.startsWith('/admin')
-  const isLoginRoute = location.pathname === '/login' || location.pathname.startsWith('/oauth2')
+  const isLoginRoute = location.pathname === '/login'
+  || location.pathname.startsWith('/oauth2')
+  || location.pathname === '/forgot-password'
+  || location.pathname === '/reset-password'
 
 
   return (
@@ -62,6 +66,9 @@ function App() {
           <Route path="/maintenance-dashboard" element={<RequireAuth><MaintenanceDashboard /></RequireAuth>} />
           <Route path="/resource-dashboard"    element={<RequireAuth><ResourceDashboard /></RequireAuth>} />
           <Route path="/booking-dashboard"     element={<RequireAuth><BookingManagerDashboard /></RequireAuth>} />
+
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password"  element={<ResetPasswordPage />} />
 
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
           

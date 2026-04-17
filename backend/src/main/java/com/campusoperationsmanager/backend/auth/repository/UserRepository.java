@@ -11,6 +11,7 @@ import com.campusoperationsmanager.backend.auth.model.User;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Optional<User> findByGoogleId(String googleId);
-    Optional<User> findByUsername(String username); // NEW: for campus login
+    Optional<User> findByUsername(String username);
     boolean existsByEmail(String email);
+    Optional<User> findByResetKeyword(String resetKeyword); // ← NEW for forgot password
 }
