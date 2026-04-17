@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8081/api';   // Change if your backend port/route is different
+const OAUTH_START_URL = 'http://localhost:8081/oauth2/authorization/google'
 
 // Login with username + password
     export const loginWithCredentials = async (username, password) => {
@@ -18,5 +19,5 @@ const API_URL = 'http://localhost:8081/api';   // Change if your backend port/ro
 
     // Optional: Google login start (if you want to keep it as a function)
     export const startGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
+    window.location.href = OAUTH_START_URL;
     };

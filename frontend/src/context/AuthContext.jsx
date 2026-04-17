@@ -5,6 +5,7 @@ const AuthContext = createContext(null)
 
 const TOKEN_KEY = 'campus-jwt-token'
 const USER_KEY = 'campus-user'
+const AUTH_ME_URL = 'http://localhost:8081/api/auth/me'
 
 // On first load, try to restore user from localStorage
 function getStoredAuth() {
@@ -23,6 +24,7 @@ export function AuthProvider({ children }) {
   const stored = getStoredAuth()
   const [user, setUser] = useState(stored.user)       // { id, name, email, role, ... }
   const [token, setToken] = useState(stored.token)    // JWT string
+  const [authReady, setAuthReady] = useState(!stored.token)
 
   // Whenever token changes, set it as the default Authorization header for all axios calls
   useEffect(() => {
@@ -33,12 +35,65 @@ export function AuthProvider({ children }) {
     }
   }, [token])
 
+  useEffect(() => {
+    if (!token) {
+      setAuthReady(true)
+      return undefined
+    }
+
+    let isMounted = true
+
+    axios
+      .get(AUTH_ME_URL)
+      .then((response) => {
+        if (!isMounted) return
+        localStorage.setItem(USER_KEY, JSON.stringify(response.data))
+        setUser(response.data)
+        setAuthReady(true)
+      })
+      .catch(() => {
+        if (!isMounted) return
+        localStorage.removeItem(TOKEN_KEY)
+        localStorage.removeItem(USER_KEY)
+        axios.defaults.headers.common['Authorization'] = undefined
+        setToken(null)
+        setUser(null)
+        setAuthReady(true)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [token])
+
+  useEffect(() => {
+    const interceptorId = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem(TOKEN_KEY)
+          localStorage.removeItem(USER_KEY)
+          delete axios.defaults.headers.common.Authorization
+          setToken(null)
+          setUser(null)
+          setAuthReady(true)
+        }
+        return Promise.reject(error)
+      },
+    )
+
+    return () => {
+      axios.interceptors.response.eject(interceptorId)
+    }
+  }, [])
+
   // login() is called by LoginPage after a successful API response
   function login(userData, jwtToken) {
     localStorage.setItem(TOKEN_KEY, jwtToken)
     localStorage.setItem(USER_KEY, JSON.stringify(userData))
     setToken(jwtToken)
     setUser(userData)
+    setAuthReady(true)
     // Set the token on the axios header immediately
     axios.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`
   }
@@ -50,19 +105,18 @@ export function AuthProvider({ children }) {
     axios.defaults.headers.common['Authorization'] = undefined
     setToken(null)
     setUser(null)
+    setAuthReady(true)
   }
 
-  // After the logout() function, add:
-    function updateUser(updatedUserData) {
-      localStorage.setItem(USER_KEY, JSON.stringify(updatedUserData))
-      setUser(updatedUserData)
-    }
+  function updateUser(updatedUserData) {
+    localStorage.setItem(USER_KEY, JSON.stringify(updatedUserData))
+    setUser(updatedUserData)
+  }
 
-    // Then in the useMemo value, add updateUser:
-    const value = useMemo(
-      () => ({ user, token, login, logout, updateUser }),
-      [user, token]
-    )
+  const value = useMemo(
+    () => ({ user, token, authReady, login, logout, updateUser }),
+    [user, token, authReady]
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

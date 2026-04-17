@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { loginWithCredentials, startGoogleLogin } from '../api/authApi';
+import { startGoogleLogin } from '../api/authApi';
 import { useAuth } from '../context/useAuth'
 
 function LoginBrandIcon() {
@@ -99,7 +99,6 @@ function LoginPage() {
               type="submit"
               className="primary-btn login-submit-btn"
               disabled={loading}
-              onClick={() => loginWithCredentials(username, password)}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>

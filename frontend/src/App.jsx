@@ -38,7 +38,7 @@ function BookingManagerDashboard() {
 
 function App() {
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, authReady } = useAuth()
   const isAdminRoute = location.pathname.startsWith('/admin')
   const isLoginRoute = location.pathname === '/login' || location.pathname.startsWith('/oauth2')
 
@@ -51,7 +51,10 @@ function App() {
       <main className={isAdminRoute ? 'page-content admin-page-content' : 'page-content'}>
         <Routes>
           {/* Public routes */}
-          <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
+          <Route
+            path="/login"
+            element={!authReady ? null : user ? <Navigate to="/" replace /> : <LoginPage />}
+          />
           <Route path="/oauth/callback" element={<OAuthCallback />} />
 
           {/* Protected routes — require login */}
