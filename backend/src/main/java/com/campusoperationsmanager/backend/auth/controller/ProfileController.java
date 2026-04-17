@@ -1,16 +1,22 @@
 package com.campusoperationsmanager.backend.auth.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.campusoperationsmanager.backend.auth.dto.UpdatePasswordRequest;
 import com.campusoperationsmanager.backend.auth.dto.UpdateProfileRequest;
 import com.campusoperationsmanager.backend.auth.dto.UserDTO;
 import com.campusoperationsmanager.backend.auth.model.User;
 import com.campusoperationsmanager.backend.auth.service.UserService;
+
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -28,23 +34,32 @@ public class ProfileController {
 
     /** PUT /api/profile — update name / phone / department */
     @PutMapping
-    public ResponseEntity<UserDTO> updateProfile(
+    public ResponseEntity<?> updateProfile(
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody UpdateProfileRequest request) {
-        User updated = userService.updateProfile(userId, request);
-        return ResponseEntity.ok(userService.toDTO(updated));
+        try {
+            User updated = userService.updateProfile(userId, request);
+            return ResponseEntity.ok(userService.toDTO(updated));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
-    /** PUT /api/profile/password — change password (local accounts + Google users setting one) */
+    /** PUT /api/profile/password — change password */
     @PutMapping("/password")
-    public ResponseEntity<String> updatePassword(
+    public ResponseEntity<?> updatePassword(
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody UpdatePasswordRequest request) {
-        userService.updatePassword(userId, request);
-        return ResponseEntity.ok("Password updated successfully");
+        try {
+            userService.updatePassword(userId, request);
+            return ResponseEntity.ok("Password updated successfully");
+        } catch (RuntimeException ex) {
+            // Returns 400 with the plain error message string so frontend can display it
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
     }
 
-    /** PUT /api/profile/picture — upload profile picture as base64 data-URL */
+    /** PUT /api/profile/picture — upload profile picture */
     @PutMapping("/picture")
     public ResponseEntity<UserDTO> updateProfilePicture(
             @AuthenticationPrincipal Long userId,
@@ -55,6 +70,6 @@ public class ProfileController {
 
     @Data
     static class ProfilePictureRequest {
-        private String imageData;   // "data:image/jpeg;base64,..."
+        private String imageData;
     }
 }

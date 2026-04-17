@@ -10,13 +10,15 @@ import lombok.Data;
 public class UserDTO {
     private Long id;
     private String email;
-    private String username;       // read-only in UI
+    private String username;
     private String name;
     private String profilePicture;
     private String phone;
     private String department;
     private String role;
     private boolean enabled;
-    private boolean hasPassword;   // false = Google-only account (no campus password yet)
+    private boolean hasPassword;
     private LocalDateTime createdAt;
+    private boolean twoFactorEnabled;
+    private String twoFactorMethod;    // "SMS", "TOTP", or null
 }

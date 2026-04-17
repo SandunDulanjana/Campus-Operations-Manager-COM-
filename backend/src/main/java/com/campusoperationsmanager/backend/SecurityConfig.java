@@ -38,9 +38,11 @@ public class SecurityConfig {
             .sessionManagement(s -> 
                     s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // IMPORTANT: Permit all OAuth2 related endpoints
                 .requestMatchers("/oauth2/**", "/login/**", "/login/oauth2/code/**").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/verify-2fa").permitAll()
+                .requestMatchers("/api/auth/forgot-password").permitAll()   // ← ADD
+                .requestMatchers("/api/auth/reset-password").permitAll()    // ← ADD
                 .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

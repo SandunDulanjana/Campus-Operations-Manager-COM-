@@ -80,6 +80,42 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 
+    @Column(name = "two_factor_enabled", nullable = false)
+    @Builder.Default
+    private boolean twoFactorEnabled = false;
+
+    // "SMS" or "TOTP" — null when disabled
+    @Column(name = "two_factor_method", length = 10)
+    private String twoFactorMethod;
+
+    // Encrypted TOTP secret (for Authenticator app)
+    @Column(name = "totp_secret", length = 100)
+    private String totpSecret;
+
+    // Temporary SMS OTP (dev demo — in production send via Twilio)
+    @Column(name = "sms_otp_code", length = 10)
+    private String smsOtpCode;
+
+    @Column(name = "sms_otp_expiry")
+    private LocalDateTime smsOtpExpiry;
+
+    // ─── Phone verification (before SMS 2FA setup) ────────────────────────────────
+    @Column(name = "pending_phone", length = 20)
+    private String pendingPhone;
+
+    @Column(name = "phone_verify_code", length = 10)
+    private String phoneVerifyCode;
+
+    @Column(name = "phone_verify_expiry")
+    private LocalDateTime phoneVerifyExpiry;
+
+    // ─── Password reset ───────────────────────────────────────────────────────────
+    @Column(name = "reset_keyword", length = 20)
+    private String resetKeyword;
+
+    @Column(name = "reset_keyword_expiry")
+    private LocalDateTime resetKeywordExpiry;
+
     public enum Role {
         USER,
         MAINTENANCEMNG,

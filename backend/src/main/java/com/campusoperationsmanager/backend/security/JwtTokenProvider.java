@@ -1,13 +1,18 @@
 package com.campusoperationsmanager.backend.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.util.Date;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
@@ -61,4 +66,42 @@ public class JwtTokenProvider {
         }
         return false;
     }
+
+    /**
+ * Generates a short-lived (5 min) token for 2FA pending state.
+ * This is NOT a full auth token — it only has scope "pending_2fa".
+ */
+public String generatePendingTwoFactorToken(Long userId) {
+    return Jwts.builder()
+            .claim("userId", userId)
+            .claim("scope", "pending_2fa")
+            .issuedAt(new Date(System.currentTimeMillis()))
+            .expiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000L))
+            .signWith(getSigningKey())
+            .compact();
+}
+
+/**
+ * Extracts userId from a pending 2FA token.
+ * Returns null if the token is invalid, expired, or not a pending_2fa token.
+ */
+public Long extractUserIdFromPendingToken(String token) {
+    try {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        if (!"pending_2fa".equals(claims.get("scope", String.class))) {
+            return null;
+        }
+        Object userIdObj = claims.get("userId");
+        if (userIdObj instanceof Integer) return ((Integer) userIdObj).longValue();
+        if (userIdObj instanceof Long)    return (Long) userIdObj;
+        return null;
+    } catch (Exception e) {
+        return null;
+    }
+    }
+    
 }
