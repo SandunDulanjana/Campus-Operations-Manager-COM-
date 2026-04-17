@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../context/useAuth'
 import { updateProfile, updatePassword, updateProfilePicture } from '../api/profileApi'
+import { formatRoleLabel } from '../utils/roleLabels'
 
 // ── small icon helpers ────────────────────────────────────────────────────────
 function Icon({ kind }) {
@@ -53,7 +54,7 @@ function RoleBadge({ role }) {
   const s = ROLE_COLOURS[role] ?? ROLE_COLOURS.USER
   return (
     <span className="profile-role-badge" style={{ background: s.bg, color: s.color, borderColor: s.border }}>
-      {role}
+      {formatRoleLabel(role)}
     </span>
   )
 }

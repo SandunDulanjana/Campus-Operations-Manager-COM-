@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
+import { formatRoleLabel } from '../utils/roleLabels'
 
 function HeaderIcon({ kind }) {
   if (kind === 'bell') {
@@ -154,7 +155,7 @@ function Navbar() {
                   : <span className="avatar">{initials}</span>
                 }</span>
                 <span className="profile-copy">
-                  <span className="profile-eyebrow">{user.role}</span>
+                  <span className="profile-eyebrow">{formatRoleLabel(user.role)}</span>
                   <span className="profile-name">{user.name}</span>
                 </span>
                 <span className={`profile-chevron${isMenuOpen ? ' open' : ''}`} aria-hidden="true">
