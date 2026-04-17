@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.campusoperationsmanager.backend.auth.dto.UpdatePasswordRequest;
+import com.campusoperationsmanager.backend.auth.dto.UpdateProfileRequest;
 import com.campusoperationsmanager.backend.auth.dto.UserDTO;
 import com.campusoperationsmanager.backend.auth.model.User;
 import com.campusoperationsmanager.backend.auth.repository.UserRepository;
@@ -81,14 +83,57 @@ public class UserService {
     }
 
     public UserDTO toDTO(User user) {
-        return UserDTO.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .name(user.getName())
-                .profilePicture(user.getProfilePicture())
-                .role(user.getRole().name())
-                .enabled(user.isEnabled())
-                .createdAt(user.getCreatedAt())
-                .build();
+    return UserDTO.builder()
+            .id(user.getId())
+            .email(user.getEmail())
+            .username(user.getUsername())
+            .name(user.getName())
+            .profilePicture(user.getProfilePicture())
+            .phone(user.getPhone())
+            .department(user.getDepartment())
+            .role(user.getRole().name())
+            .enabled(user.isEnabled())
+            .hasPassword(user.getPassword() != null)
+            .createdAt(user.getCreatedAt())
+            .build();
+}
+
+    // ─── Profile update ───────────────────────────────────────────────────────────
+
+    public User updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = getUserById(userId);
+        user.setName(request.getName().trim());
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone().isBlank() ? null : request.getPhone().trim());
+        }
+        if (request.getDepartment() != null) {
+            user.setDepartment(request.getDepartment().isBlank() ? null : request.getDepartment().trim());
+        }
+        log.info("Profile updated → user: {}", user.getEmail());
+        return userRepository.save(user);
     }
+
+    public void updatePassword(Long userId, UpdatePasswordRequest request) {
+        User user = getUserById(userId);
+
+        if (user.getPassword() != null) {
+            // Local account: verify current password first
+            if (request.getCurrentPassword() == null ||
+                    !passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                throw new RuntimeException("Current password is incorrect");
+            }
+        }
+        // Google-only user setting a password for the first time: no current-password check
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        log.info("Password updated → user: {}", user.getEmail());
+    }
+
+    public User updateProfilePicture(Long userId, String imageData) {
+        User user = getUserById(userId);
+        user.setProfilePicture(imageData);
+        return userRepository.save(user);
+    }
+
 }

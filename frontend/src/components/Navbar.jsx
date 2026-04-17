@@ -149,7 +149,10 @@ function Navbar() {
                 aria-haspopup="menu"
                 aria-expanded={isMenuOpen}
               >
-                <span className="avatar">{initials}</span>
+                <span className="avatar">{user.profilePicture
+                  ? <img src={user.profilePicture} alt={user.name} className="avatar avatar-photo" />
+                  : <span className="avatar">{initials}</span>
+                }</span>
                 <span className="profile-copy">
                   <span className="profile-eyebrow">{user.role}</span>
                   <span className="profile-name">{user.name}</span>

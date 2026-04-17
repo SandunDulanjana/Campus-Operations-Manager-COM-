@@ -43,12 +43,18 @@ public class User {
 
     private String name;
 
-    @Column(name = "profile_picture")
+    @Column(name = "profile_picture", columnDefinition = "TEXT")
     private String profilePicture;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Column(length = 20)
+    private String phone;
+
+    @Column(length = 100)
+    private String department;
 
     @Column(nullable = false)
     @Builder.Default
