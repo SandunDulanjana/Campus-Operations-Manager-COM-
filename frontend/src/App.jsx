@@ -14,6 +14,11 @@ import LoginPage from './auth/LoginPage'
 import OAuthCallback from './auth/OAuthCallback'
 import { useAuth } from './context/useAuth';   // or './context/useAuth.js'
 import './App.css'
+// At the top, add import:
+import ProfilePage from './profile/ProfilePage'
+
+// Inside <Routes>, add after the /bookings route:
+
 
 
 // Role dashboard placeholder pages (create these files later)
@@ -58,7 +63,8 @@ function App() {
           <Route path="/resource-dashboard"    element={<RequireAuth><ResourceDashboard /></RequireAuth>} />
           <Route path="/booking-dashboard"     element={<RequireAuth><BookingManagerDashboard /></RequireAuth>} />
 
-
+          <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+          
           {/* Admin routes */}
           <Route
             path="/admin"

@@ -52,10 +52,17 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
-  const value = useMemo(
-    () => ({ user, token, login, logout }),
-    [user, token]
-  )
+  // After the logout() function, add:
+    function updateUser(updatedUserData) {
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUserData))
+      setUser(updatedUserData)
+    }
+
+    // Then in the useMemo value, add updateUser:
+    const value = useMemo(
+      () => ({ user, token, login, logout, updateUser }),
+      [user, token]
+    )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
