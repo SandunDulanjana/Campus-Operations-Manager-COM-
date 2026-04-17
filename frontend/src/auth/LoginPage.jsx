@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { loginWithCredentials, startGoogleLogin } from '../api/authApi';
 import { useAuth } from '../context/useAuth'
 
 function LoginBrandIcon() {
@@ -47,8 +48,8 @@ function LoginPage() {
   }
 
   function handleGoogleLogin() {
-    // FIXED: Correct Spring Security OAuth2 endpoint
-    window.location.href = 'http://localhost:8081/oauth2/authorization/google'
+    startGoogleLogin(); // This will now do a proper full redirect
+
   }
 
   return (
@@ -98,6 +99,7 @@ function LoginPage() {
               type="submit"
               className="primary-btn login-submit-btn"
               disabled={loading}
+              onClick={() => loginWithCredentials(username, password)}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
