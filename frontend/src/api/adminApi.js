@@ -53,3 +53,8 @@ export async function rejectRegistration(userId, reason) {
   const res = await axios.post(`${BASE}/users/${userId}/reject`, { reason })
   return res.data
 }
+
+// ─── Permanent delete (only for disabled users) ───────────────────────────────
+export async function permanentDeleteUser(userId) {
+  await axios.delete(`${BASE}/users/${userId}/permanent`)
+}

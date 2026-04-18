@@ -363,4 +363,17 @@ public class UserService {
             )
         );
     }
+
+        // ─── Permanent delete (only for already-deactivated accounts) ────────────────
+    public void permanentDeleteUser(Long userId) {
+        User user = getUserById(userId);
+        if (user.isEnabled()) {
+            throw new RuntimeException(
+                "Only deactivated accounts can be permanently deleted. " +
+                "Please deactivate the user first.");
+        }
+        userRepository.deleteById(userId);
+        log.info("User permanently deleted: id={} email={}", userId, user.getEmail());
+    }
+
 }

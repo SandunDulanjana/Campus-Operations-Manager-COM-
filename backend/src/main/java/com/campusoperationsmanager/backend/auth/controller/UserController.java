@@ -72,6 +72,18 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{id}/permanent")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> permanentDeleteUser(@PathVariable Long id) {
+        try {
+            userService.permanentDeleteUser(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+
     @Data
     public static class RoleUpdateRequest {
         @NotBlank(message = "Role is required")
