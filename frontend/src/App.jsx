@@ -23,6 +23,7 @@ import CreateTicketPage from './ticket/CreateTicketPage'
 import MyTicketsPage    from './ticket/MyTicketsPage'
 import TicketDetailPage from './ticket/TicketDetailPage'
 import TechnicianDashboard from './ticket/TechnicianDashboard'
+import AdminTicketsPage from './admin/AdminTicketsPage'
 
 
 
@@ -96,6 +97,7 @@ function App() {
             <Route path="bookings" element={<AdminBookingsPage />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="resources" element={<AdminResourcesPage />} />
+            <Route path="tickets" element={<AdminTicketsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
