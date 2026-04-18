@@ -70,6 +70,9 @@ export default function ForgotPasswordPage() {
               </button>
             </form>
             <p style={{ textAlign: 'center', marginTop: '1.2rem', fontSize: '0.88rem' }}>
+              <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none', marginRight: '0.75rem' }}>
+                Home
+              </Link>
               <Link to="/login" style={{ color: 'var(--brand-600)', fontWeight: 600, textDecoration: 'none' }}>
                 ← Back to login
               </Link>
@@ -122,6 +125,9 @@ export default function ForgotPasswordPage() {
               Enter Reset Keyword →
             </Link>
             <p style={{ textAlign: 'center', fontSize: '0.88rem' }}>
+              <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none', marginRight: '0.75rem' }}>
+                Home
+              </Link>
               <Link to="/login" style={{ color: 'var(--brand-600)', fontWeight: 600, textDecoration: 'none' }}>
                 ← Back to login
               </Link>

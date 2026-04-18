@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import homeImage1 from '../assets/home_image/1.jpg'
 import homeImage2 from '../assets/home_image/2.jpg'
 import homeImage3 from '../assets/home_image/3.jpg'
@@ -43,13 +44,23 @@ function HomePage() {
   return (
     <section className="home-page">
       <div
+        id="landing-overview"
         className="home-hero-card"
         style={{
           backgroundImage: `linear-gradient(110deg, rgba(56, 60, 68, 0.55), rgba(5, 13, 32, 0)), url(${HERO_IMAGES[activeImageIndex]})`,
         }}
       >
         <div className="home-hero-copy">
-          <h1>Welcome to the Smart Campus</h1>
+          <p className="home-hero-kicker">Public Landing</p>
+          <h1>Campus operations, bookings, and coordination in one secure hub.</h1>
+          <p>
+            Explore the platform first. When users sign in, they move into a dedicated dashboard
+            instead of looping back to marketing content.
+          </p>
+          <div className="home-hero-actions">
+            <Link to="/login" className="home-hero-primary">Login</Link>
+            <a href="#landing-resources" className="home-hero-secondary">Explore Resources</a>
+          </div>
         </div>
 
         <button
@@ -80,7 +91,9 @@ function HomePage() {
 
       <SloganIntroSection />
 
-      <ResourceShowcase />
+      <div id="landing-resources">
+        <ResourceShowcase />
+      </div>
     </section>
   )
 }

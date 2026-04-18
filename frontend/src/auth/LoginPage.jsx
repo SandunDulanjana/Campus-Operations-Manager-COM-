@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { loginWithCredentials } from '../api/authApi'
 import { verifyTwoFactorLogin } from '../api/twoFactorApi'
 import { useAuth } from '../context/useAuth'
@@ -51,7 +51,7 @@ function LoginPage() {
         id: data.id, name: data.name, email: data.email,
         role: data.role, profilePicture: data.profilePicture,
       }, data.token)
-      navigate('/')
+      navigate('/app')
     } catch (err) {
       setError(err?.response?.data || 'Invalid username or password')
     } finally {
@@ -69,7 +69,7 @@ function LoginPage() {
         id: data.id, name: data.name, email: data.email,
         role: data.role, profilePicture: data.profilePicture,
       }, data.token)
-      navigate('/')
+      navigate('/app')
     } catch (err) {
       setError(err?.response?.data || 'Invalid verification code. Please try again.')
     } finally {
@@ -87,6 +87,9 @@ function LoginPage() {
             <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>Operations Hub</p>
           </div>
         </div>
+        <p className="login-back-link">
+          <Link to="/">← Back to campus overview</Link>
+        </p>
 
         {!twoFactorStep ? (
           // ── Step 1: Credentials ──────────────────────────────────────────
@@ -129,10 +132,10 @@ function LoginPage() {
 
               {/* ← ADD THIS BLOCK */}
               <div style={{ textAlign: 'right', marginTop: '0.5rem' }}>
-                <a href="/forgot-password" 
+                <Link to="/forgot-password" 
                   style={{ fontSize: '0.85rem', color: 'var(--brand-600)', textDecoration: 'none', fontWeight: 600 }}>
                   Forgot password?
-                </a>
+                </Link>
               </div>
               
             </form>

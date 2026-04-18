@@ -116,6 +116,10 @@ export default function ResetPasswordPage() {
               </button>
             </form>
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.88rem' }}>
+              <Link to="/" style={{ color: 'var(--text-muted)', fontWeight: 500, textDecoration: 'none' }}>
+                Home
+              </Link>
+              {' · '}
               <Link to="/forgot-password" style={{ color: 'var(--brand-600)', fontWeight: 600, textDecoration: 'none' }}>
                 Request a new keyword
               </Link>
@@ -137,6 +141,9 @@ export default function ResetPasswordPage() {
             <Link to="/login" className="profile-save-btn" style={{ display: 'inline-flex', justifyContent: 'center', textDecoration: 'none' }}>
               Go to Login
             </Link>
+            <p style={{ marginTop: '0.85rem' }}>
+              <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Back to home</Link>
+            </p>
           </div>
         )}
       </div>

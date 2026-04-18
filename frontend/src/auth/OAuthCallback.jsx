@@ -30,9 +30,9 @@ function OAuthCallback() {
         // Call login (this saves to localStorage + updates context)
         login(userData, token);
 
-        // Redirect to home AFTER login state is updated
+        // Redirect to dashboard AFTER login state is updated
         setTimeout(() => {
-          navigate('/', { replace: true });
+          navigate('/app', { replace: true });
         }, 200);
       })
       .catch((err) => {
