@@ -12,6 +12,28 @@ import {
   uploadAttachment,
 } from '../api/ticketApi'
 
+// Red border + shadow style for invalid fields
+const ERROR_STYLE = {
+  borderColor: '#dc2626',
+  boxShadow: '0 0 0 3px rgba(220,38,38,0.12)',
+}
+
+// Small red error message shown below a field
+function FieldError({ message }) {
+  if (!message) return null
+  return (
+    <span style={{
+      color: '#dc2626',
+      fontSize: '0.78rem',
+      marginTop: '0.2rem',
+      display: 'block',
+      fontWeight: 500,
+    }}>
+      ⚠ {message}
+    </span>
+  )
+}
+
 function CreateTicketPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -30,6 +52,9 @@ function CreateTicketPage() {
     contactEmail: user?.email || '',
     contactPhone: '',
   })
+
+  // Tracks which fields have validation errors
+  const [fieldErrors, setFieldErrors] = useState({})
 
   const [files, setFiles]       = useState([])
   const [previews, setPreviews] = useState([])
@@ -56,6 +81,10 @@ function CreateTicketPage() {
 
   function updateField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }))
+    // Clear the error for this field as user types
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: '' }))
+    }
   }
 
   function handleResourceChange(resourceId) {
@@ -83,11 +112,37 @@ function CreateTicketPage() {
     setPreviews(previews.filter((_, i) => i !== index))
   }
 
+  // ── Client-side validation before calling API ─────────────
+  function validateForm() {
+    const errors = {}
+    if (!form.title.trim())        errors.title        = 'Title is required'
+    if (!form.description.trim())  errors.description  = 'Description is required'
+    if (!form.category)            errors.category     = 'Please select a category'
+    if (!form.priority)            errors.priority     = 'Please select a priority'
+    if (!form.location.trim())     errors.location     = 'Location is required'
+    if (!form.contactName.trim())  errors.contactName  = 'Your name is required'
+    if (!form.contactEmail.trim()) errors.contactEmail = 'Email is required'
+    return errors
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
     setOk('')
+
+    // Run validation — show red borders if anything is empty
+    const errors = validateForm()
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      setError('Please fill in all required fields highlighted below.')
+      // Scroll to top so user sees the error banner
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
+    setFieldErrors({})
     setLoading(true)
+
     try {
       const ticket = await createTicket(form)
       for (const file of files) {
@@ -96,9 +151,10 @@ function CreateTicketPage() {
       setOk(`Ticket #${ticket.id} submitted successfully!`)
       setTimeout(() => navigate('/tickets/my'), 1500)
     } catch (err) {
-      const fieldErrors = err?.response?.data?.fieldErrors
-      if (fieldErrors) {
-        setError(Object.values(fieldErrors).join(', '))
+      const fieldErrs = err?.response?.data?.fieldErrors
+      if (fieldErrs) {
+        setFieldErrors(fieldErrs)
+        setError('Please fix the errors highlighted below.')
       } else {
         setError(err?.response?.data?.message || 'Failed to submit ticket. Please try again.')
       }
@@ -128,6 +184,7 @@ function CreateTicketPage() {
 
         <form className="booking-form" onSubmit={handleSubmit}>
 
+          {/* ── Title ── */}
           <label>
             Title *
             <input
@@ -135,33 +192,38 @@ function CreateTicketPage() {
               placeholder="e.g. Projector not working in Lab 3"
               value={form.title}
               onChange={(e) => updateField('title', e.target.value)}
-              required
+              style={fieldErrors.title ? ERROR_STYLE : {}}
             />
+            <FieldError message={fieldErrors.title} />
           </label>
 
+          {/* ── Description ── */}
           <label>
             Description *
             <textarea
               placeholder="Describe the problem clearly — what happened, when, and what you already tried..."
               value={form.description}
               onChange={(e) => updateField('description', e.target.value)}
-              required
+              style={fieldErrors.description ? ERROR_STYLE : {}}
             />
+            <FieldError message={fieldErrors.description} />
           </label>
 
+          {/* ── Category + Priority ── */}
           <div className="resource-form-grid">
             <label>
               Category *
               <select
                 value={form.category}
                 onChange={(e) => updateField('category', e.target.value)}
-                required
+                style={fieldErrors.category ? ERROR_STYLE : {}}
               >
                 <option value="">Select a category</option>
                 {TICKET_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{formatTicketLabel(c)}</option>
                 ))}
               </select>
+              <FieldError message={fieldErrors.category} />
             </label>
 
             <label>
@@ -169,16 +231,18 @@ function CreateTicketPage() {
               <select
                 value={form.priority}
                 onChange={(e) => updateField('priority', e.target.value)}
-                required
+                style={fieldErrors.priority ? ERROR_STYLE : {}}
               >
                 <option value="">Select priority</option>
                 {TICKET_PRIORITIES.map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
+              <FieldError message={fieldErrors.priority} />
             </label>
           </div>
 
+          {/* ── Resource + Location ── */}
           <div className="resource-form-grid">
             <label>
               Resource Name
@@ -208,11 +272,13 @@ function CreateTicketPage() {
                 placeholder="e.g. Lab 3 – Floor 2, Block A"
                 value={form.location}
                 onChange={(e) => updateField('location', e.target.value)}
-                required
+                style={fieldErrors.location ? ERROR_STYLE : {}}
               />
+              <FieldError message={fieldErrors.location} />
             </label>
           </div>
 
+          {/* ── Contact Details ── */}
           <p style={{ margin: '0.5rem 0 0', fontWeight: 700, color: '#374151', fontSize: '0.9rem' }}>
             Contact Details
             <span style={{ fontWeight: 400, color: '#9ca3af', fontSize: '0.82rem', marginLeft: '0.5rem' }}>
@@ -228,8 +294,9 @@ function CreateTicketPage() {
                 placeholder="Full name"
                 value={form.contactName}
                 onChange={(e) => updateField('contactName', e.target.value)}
-                required
+                style={fieldErrors.contactName ? ERROR_STYLE : {}}
               />
+              <FieldError message={fieldErrors.contactName} />
             </label>
 
             <label>
@@ -239,8 +306,9 @@ function CreateTicketPage() {
                 placeholder="your@email.com"
                 value={form.contactEmail}
                 onChange={(e) => updateField('contactEmail', e.target.value)}
-                required
+                style={fieldErrors.contactEmail ? ERROR_STYLE : {}}
               />
+              <FieldError message={fieldErrors.contactEmail} />
             </label>
 
             <label>
@@ -254,6 +322,7 @@ function CreateTicketPage() {
             </label>
           </div>
 
+          {/* ── Photo Evidence ── */}
           <div>
             <p style={{ margin: '0 0 0.5rem', fontWeight: 700, color: '#374151', fontSize: '0.9rem' }}>
               Photo Evidence
@@ -319,6 +388,7 @@ function CreateTicketPage() {
             )}
           </div>
 
+          {/* ── Submit ── */}
           <div className="booking-actions-row">
             <ActionButton kind="primary" type="submit" disabled={loading}>
               {loading ? 'Submitting...' : 'Submit Ticket'}
