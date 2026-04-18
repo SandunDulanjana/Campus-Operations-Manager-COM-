@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/forgot-password").permitAll()   // ← ADD
                 .requestMatchers("/api/auth/reset-password").permitAll()    // ← ADD
                 .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/tickets/*/attachments/*/data").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
