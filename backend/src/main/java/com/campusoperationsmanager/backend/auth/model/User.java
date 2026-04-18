@@ -16,6 +16,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+
+
 @Entity
 @Table(name = "users")
 @Data
@@ -68,11 +70,12 @@ public class User {
 
     public User() {}
 
-    @PrePersist
+   @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (role == null) role = Role.USER;
+        if (registrationStatus == null) registrationStatus = RegistrationStatus.ACTIVE; 
     }
 
     @PreUpdate
@@ -116,6 +119,15 @@ public class User {
     @Column(name = "reset_keyword_expiry")
     private LocalDateTime resetKeywordExpiry;
 
+    // ─── Invite-based onboarding ─────────────────────────────────────────────────
+    // WHY: Admin creates a pending user record. Token is single-use + 24h expiry.
+    //      Cleared to null once user completes setup (password or Google path).
+    @Column(name = "invite_token", length = 64)
+    private String inviteToken;
+
+    @Column(name = "invite_expiry")
+    private LocalDateTime inviteExpiry;
+
     public enum Role {
         USER,
         MAINTENANCEMNG,
@@ -123,5 +135,19 @@ public class User {
         BOOKINGMNG,
         ADMIN,
         TECHNICIAN
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "registration_status", columnDefinition = "VARCHAR(30) DEFAULT 'ACTIVE'")
+    @Builder.Default
+    private RegistrationStatus registrationStatus = RegistrationStatus.ACTIVE;
+
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
+
+    public enum RegistrationStatus {
+        ACTIVE,           // fully set up — can log in
+        PENDING_APPROVAL, // submitted University ID, waiting for admin
+        REJECTED          // admin rejected the registration
     }
 }

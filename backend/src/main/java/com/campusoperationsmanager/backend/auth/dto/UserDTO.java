@@ -20,5 +20,8 @@ public class UserDTO {
     private boolean hasPassword;
     private LocalDateTime createdAt;
     private boolean twoFactorEnabled;
-    private String twoFactorMethod;    // "SMS", "TOTP", or null
+    private String twoFactorMethod;  
+    private boolean invitePending;
+    private String registrationStatus;   // "ACTIVE" | "PENDING_APPROVAL" | "REJECTED"
+    private String rejectionReason;
 }

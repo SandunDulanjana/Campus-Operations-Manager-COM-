@@ -103,5 +103,43 @@ public Long extractUserIdFromPendingToken(String token) {
         return null;
     }
     }
+            /**
+         * Generates a 30-minute token for a brand-new Google user who has not yet
+         * submitted their University ID. Carries Google profile info so the frontend
+         * can POST it together with the University ID without re-doing OAuth.
+         */
+        public String generatePendingRegistrationToken(String email, String googleId,
+                                                        String name, String picture) {
+            return Jwts.builder()
+                    .claim("email",    email)
+                    .claim("googleId", googleId)
+                    .claim("name",     name != null ? name : "")
+                    .claim("picture",  picture != null ? picture : "")
+                    .claim("scope",    "pending_registration")
+                    .issuedAt(new Date())
+                    .expiration(new Date(System.currentTimeMillis() + 30 * 60 * 1000L))
+                    .signWith(getSigningKey())
+                    .compact();
+        }
+
+        /**
+         * Extracts Google profile info from a pending-registration token.
+         * Returns null if invalid, expired, or wrong scope.
+         */
+        public java.util.Map<String, String> extractPendingRegistrationInfo(String token) {
+            try {
+                Claims claims = Jwts.parser().verifyWith(getSigningKey()).build()
+                        .parseSignedClaims(token).getPayload();
+                if (!"pending_registration".equals(claims.get("scope", String.class))) return null;
+                java.util.Map<String, String> info = new java.util.HashMap<>();
+                info.put("email",    claims.get("email",    String.class));
+                info.put("googleId", claims.get("googleId", String.class));
+                info.put("name",     claims.get("name",     String.class));
+                info.put("picture",  claims.get("picture",  String.class));
+                return info;
+            } catch (Exception e) {
+                return null;
+            }
+        }
     
 }

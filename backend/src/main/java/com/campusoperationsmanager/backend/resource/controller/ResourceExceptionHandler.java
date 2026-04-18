@@ -1,11 +1,12 @@
 package com.campusoperationsmanager.backend.resource.controller;
-
-import com.campusoperationsmanager.backend.resource.service.ResourceNotFoundException;
-import com.campusoperationsmanager.backend.resource.service.ResourceValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.campusoperationsmanager.backend.resource.service.ResourceNotFoundException;
+import com.campusoperationsmanager.backend.resource.service.ResourceValidationException;
+import com.campusoperationsmanager.backend.shared.ApiErrorResponse;
 
 @RestControllerAdvice
 public class ResourceExceptionHandler {
