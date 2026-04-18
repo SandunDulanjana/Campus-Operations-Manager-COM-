@@ -22,6 +22,7 @@ import ResetPasswordPage from './auth/ResetPasswordPage'
 import CreateTicketPage from './ticket/CreateTicketPage'
 import MyTicketsPage    from './ticket/MyTicketsPage'
 import TicketDetailPage from './ticket/TicketDetailPage'
+import TechnicianDashboard from './ticket/TechnicianDashboard'
 
 
 
@@ -69,6 +70,7 @@ function App() {
           <Route path="/maintenance-dashboard" element={<RequireAuth><MaintenanceDashboard /></RequireAuth>} />
           <Route path="/resource-dashboard"    element={<RequireAuth><ResourceDashboard /></RequireAuth>} />
           <Route path="/booking-dashboard"     element={<RequireAuth><BookingManagerDashboard /></RequireAuth>} />
+          <Route path="/technician-dashboard" element={<RequireAuth><TechnicianDashboard /></RequireAuth>} />
          
           <Route path="/tickets"     element={<RequireAuth><MyTicketsPage /></RequireAuth>} />
           <Route path="/tickets/my"  element={<RequireAuth><MyTicketsPage /></RequireAuth>} />
