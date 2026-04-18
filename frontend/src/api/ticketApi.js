@@ -175,3 +175,10 @@ export function getPriorityBadgeClass(priority) {
     default:         return 'badge'
   }
 }
+
+// Fetch all users with TECHNICIAN role for the assign dropdown
+export async function fetchTechnicians() {
+  const response = await axios.get('http://localhost:8081/api/users')
+  // Filter to only TECHNICIAN role users
+  return response.data.filter((u) => u.role === 'TECHNICIAN')
+}

@@ -11,6 +11,7 @@ import {
   deleteAttachment,
   getAttachmentUrl,
   updateTicketStatus,
+  fetchTechnicians,
   ALLOWED_TRANSITIONS,
   formatTicketLabel,
   formatTicketDate,
@@ -38,6 +39,7 @@ function TicketDetailPage() {
   const [editingId, setEditingId]       = useState(null)
   const [editingText, setEditingText]   = useState('')
   const [commentLoading, setCommentLoad] = useState(false)
+  const [technicians, setTechnicians] = useState([])
 
   const isAdmin = user?.role === 'ADMIN'
   const isTech  = user?.role === 'TECHNICIAN'
@@ -47,6 +49,16 @@ function TicketDetailPage() {
     void loadTicket()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
+
+  // Load technicians for the assign dropdown
+    useEffect(() => {
+    if (isAdmin || isTech) {
+        fetchTechnicians()
+        .then(setTechnicians)
+        .catch(() => setTechnicians([]))  // Silent fail if no permission
+    }
+    }, [isAdmin, isTech])
+
 
   async function loadTicket() {
     setLoading(true)
@@ -219,18 +231,27 @@ function TicketDetailPage() {
                 </select>
               </label>
 
-              {newStatus === 'IN_PROGRESS' && (
-                <label>
-                  Assign To (email)
-                  <input
-                    type="email"
-                    placeholder="technician@sliit.lk"
-                    value={assignedTo}
-                    onChange={(e) => setAssignedTo(e.target.value)}
-                    style={{ maxWidth: 320 }}
-                  />
-                </label>
-              )}
+            {newStatus === 'IN_PROGRESS' && (
+            <label>
+                Assign Technician
+                <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                style={{ maxWidth: 360 }}
+                >
+                <option value="">
+                    {technicians.length === 0
+                    ? 'No technicians available'
+                    : '— Select a technician —'}
+                </option>
+                {technicians.map((tech) => (
+                    <option key={tech.id} value={tech.email}>
+                    {tech.name ? `${tech.name} (${tech.email})` : tech.email}
+                    </option>
+                ))}
+                </select>
+            </label>
+            )}
 
               {newStatus === 'RESOLVED' && (
                 <label>
