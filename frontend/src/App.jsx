@@ -27,9 +27,7 @@ import TechnicianDashboard from './ticket/TechnicianDashboard'
 
 
 // Role dashboard placeholder pages (create these files later)
-function TechnicianDashboard() {
-  return <div className="page-content"><h1>Technician Dashboard</h1></div>
-}
+
 function MaintenanceDashboard() {
   return <div className="page-content"><h1>Maintenance Manager Dashboard</h1></div>
 }
