@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   createPendingUser, fetchAllUsers, updateUserRole, deactivateUser,
-  fetchRegistrationRequests, approveRegistration, rejectRegistration
+  fetchRegistrationRequests, approveRegistration, rejectRegistration,permanentDeleteUser
 } from '../api/adminApi'
 import StatusBanner from '../components/ui/StatusBanner'
 
@@ -78,6 +78,18 @@ export default function AdminUsersPage() {
       await deactivateUser(userId)
       setUsers(prev => prev.map(u => u.id === userId ? {...u, enabled: false} : u))
     } catch { setUsersError('Deactivation failed.') }
+  }
+
+    async function handlePermanentDelete(userId, userName) {
+    if (!window.confirm(
+      `Permanently delete "${userName}"?\n\nThis CANNOT be undone. All data for this user will be removed.`
+    )) return
+    try {
+      await permanentDeleteUser(userId)
+      setUsers(prev => prev.filter(u => u.id !== userId))
+    } catch (err) {
+      setUsersError(err?.response?.data || 'Delete failed.')
+    }
   }
 
   function copyInviteUrl() {
@@ -184,10 +196,25 @@ export default function AdminUsersPage() {
                         </span>
                       </td>
                       <td style={{ padding:'0.65rem 0.8rem' }}>
-                        {u.enabled && (
-                          <button onClick={() => handleDeactivate(u.id)}
-                            style={{ fontSize:'0.8rem', color:'#dc2626', background:'none', border:'none', cursor:'pointer', fontWeight:600, padding:0 }}>
+                        {u.enabled ? (
+                          /* Active user — show Deactivate */
+                          <button
+                            onClick={() => handleDeactivate(u.id)}
+                            style={{ fontSize:'0.8rem', color:'#dc2626', background:'none', border:'none', cursor:'pointer', fontWeight:600, padding:0 }}
+                          >
                             Deactivate
+                          </button>
+                        ) : (
+                          /* Disabled user — show Delete permanently */
+                          <button
+                            onClick={() => handlePermanentDelete(u.id, u.name)}
+                            style={{
+                              fontSize:'0.8rem', color:'#fff', background:'#dc2626',
+                              border:'none', cursor:'pointer', fontWeight:600,
+                              padding:'0.25rem 0.65rem', borderRadius:'0.4rem'
+                            }}
+                          >
+                            🗑 Delete
                           </button>
                         )}
                       </td>
