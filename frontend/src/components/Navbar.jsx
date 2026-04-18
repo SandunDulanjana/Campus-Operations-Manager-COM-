@@ -275,6 +275,21 @@ function Navbar() {
                   </div>
                 )}
               </div>
+              {/* ── Module C: Tickets nav link ── */}
+              <Link
+                to="/tickets/my"
+                className="sub-link-btn"
+                style={{ textDecoration: 'none' }}
+              >
+                <span className="nav-icon-shell" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: '1rem', height: '1rem', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                    <rect x="9" y="3" width="6" height="4" rx="1" />
+                    <path d="M9 12h6M9 16h4" />
+                  </svg>
+                </span>
+                <span>Tickets</span>
+              </Link>
             </nav>
 
             <button
