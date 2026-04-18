@@ -25,8 +25,11 @@ import TicketDetailPage from './ticket/TicketDetailPage'
 import TechnicianDashboard from './ticket/TechnicianDashboard'
 import EnterUniversityIdPage from './auth/EnterUniversityIdPage'
 import SetupAccountPage from './auth/SetupAccountPage'
+import AdminTicketsPage from './admin/AdminTicketsPage'
 
 
+
+// Role dashboard placeholder pages (create these files later)
 
 function MaintenanceDashboard() {
   return <div className="page-content"><h1>Maintenance Manager Dashboard</h1></div>
@@ -102,6 +105,7 @@ function App() {
             <Route path="bookings" element={<AdminBookingsPage />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="resources" element={<AdminResourcesPage />} />
+            <Route path="tickets" element={<AdminTicketsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
