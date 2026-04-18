@@ -79,19 +79,23 @@ function TicketDetailPage() {
     setError('')
     setStatusLoad(true)
     try {
-      await updateTicketStatus(id, {
+    await updateTicketStatus(id, {
         status:          newStatus,
-        assignedToEmail: newStatus === 'IN_PROGRESS' ? assignedTo       : undefined,
-        resolutionNotes: newStatus === 'RESOLVED'    ? resolutionNotes  : undefined,
-        rejectionReason: newStatus === 'REJECTED'    ? rejectionReason  : undefined,
-      })
+        assignedToEmail: newStatus === 'IN_PROGRESS' && assignedTo ? assignedTo : undefined,
+        resolutionNotes: newStatus === 'RESOLVED' && resolutionNotes ? resolutionNotes : undefined,
+        rejectionReason: newStatus === 'REJECTED' && rejectionReason ? rejectionReason : undefined,
+        })
       setOk('Status updated successfully!')
       setShowStatus(false)
       setNotes('')
       setReason('')
       await loadTicket()
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to update status')
+     const backendMsg = err?.response?.data?.message
+        || err?.response?.data?.error
+        || err?.message
+        || 'Failed to update status'
+        setError(backendMsg)
     } finally {
       setStatusLoad(false)
     }
