@@ -91,7 +91,17 @@ function LoginPage() {
         {!twoFactorStep ? (
           // ── Step 1: Credentials ──────────────────────────────────────────
           <>
-            <p style={{ margin: '0 0 1.2rem', color: '#374151', fontWeight: 600 }}>Sign in to your account</p>
+            <p style={{ margin: '0 0 1rem', color: '#374151', fontWeight: 600 }}>Sign in to your account</p>
+
+        {/* Info banner for new users */}
+        <div style={{
+          background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.75rem',
+          padding: '0.75rem 1rem', marginBottom: '1.1rem',
+          fontSize: '0.84rem', color: '#1e40af', lineHeight: 1.55
+        }}>
+          <strong>New user?</strong> Use <em>Continue with Google</em> below and enter your
+          University ID to request access. Your account will be activated after admin approval.
+        </div>
             {error && <p className="login-error">{error}</p>}
             <form className="login-form" onSubmit={handleSubmit}>
               <div className="login-inputs-row">

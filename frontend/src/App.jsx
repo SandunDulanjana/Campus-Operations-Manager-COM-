@@ -23,6 +23,8 @@ import CreateTicketPage from './ticket/CreateTicketPage'
 import MyTicketsPage    from './ticket/MyTicketsPage'
 import TicketDetailPage from './ticket/TicketDetailPage'
 import TechnicianDashboard from './ticket/TechnicianDashboard'
+import EnterUniversityIdPage from './auth/EnterUniversityIdPage'
+import SetupAccountPage from './auth/SetupAccountPage'
 import AdminTicketsPage from './admin/AdminTicketsPage'
 
 
@@ -48,6 +50,8 @@ function App() {
   || location.pathname.startsWith('/oauth2')
   || location.pathname === '/forgot-password'
   || location.pathname === '/reset-password'
+  || location.pathname === '/setup-account'
+  || location.pathname === '/enter-university-id'
 
 
   return (
@@ -57,9 +61,13 @@ function App() {
 
       <main className={isAdminRoute ? 'page-content admin-page-content' : 'page-content'}>
         <Routes>
+
+          <Route path="/setup-account" element={<SetupAccountPage />} />
+
           {/* Public routes */}
           <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
           <Route path="/oauth/callback" element={<OAuthCallback />} />
+          <Route path="/enter-university-id" element={<EnterUniversityIdPage />} />
 
           {/* Protected routes — require login */}
           <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
