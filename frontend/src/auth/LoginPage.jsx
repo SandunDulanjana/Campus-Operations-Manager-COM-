@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { loginWithCredentials } from '../api/authApi'
 import { verifyTwoFactorLogin } from '../api/twoFactorApi'
 import { useAuth } from '../context/useAuth'
@@ -15,23 +15,36 @@ function LoginBrandIcon() {
 }
 
 function LoginPage() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const { login }          = useAuth()
+  const navigate           = useNavigate()
+  const location           = useLocation()
+  const [searchParams]     = useSearchParams()
 
-  // ── step 1: credentials ────────────────────────────────────────────────────
-  const [username, setUsername]   = useState('')
-  const [password, setPassword]   = useState('')
-  const [error, setError]         = useState('')
-  const [loading, setLoading]     = useState(false)
+  // ── step 1: credentials ──────────────────────────────────────────────────
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError]       = useState('')
+  const [loading, setLoading]   = useState(false)
 
-  // ── step 2: 2FA code ───────────────────────────────────────────────────────
-  const [twoFactorStep, setTwoFactorStep]       = useState(false)
-  const [twoFactorMethod, setTwoFactorMethod]   = useState('')
-  const [tempToken, setTempToken]               = useState('')
-  const [devCode, setDevCode]                   = useState('')   // dev-mode only
-  const [tfCode, setTfCode]                     = useState('')
-  const [tfLoading, setTfLoading]               = useState(false)
+  // ── step 2: 2FA code ─────────────────────────────────────────────────────
+  const [twoFactorStep,   setTwoFactorStep]   = useState(false)
+  const [twoFactorMethod, setTwoFactorMethod] = useState('')
+  const [tempToken,       setTempToken]       = useState('')
+  const [devCode,         setDevCode]         = useState('')
+  const [tfCode,          setTfCode]          = useState('')
+  const [tfLoading,       setTfLoading]       = useState(false)
 
+  // ── helper: where to go after login ──────────────────────────────────────
+  // Handles two cases:
+  //   1. 401 interceptor  → /login?returnTo=%2Fbookings
+  //   2. RequireAuth      → /login with location.state.from
+  function getDestination() {
+    const returnTo = searchParams.get('returnTo')
+    if (returnTo) return decodeURIComponent(returnTo)
+    return location.state?.from?.pathname || '/'
+  }
+
+  // ── normal login ──────────────────────────────────────────────────────────
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
@@ -42,7 +55,7 @@ function LoginPage() {
       if (data.requiresTwoFactor) {
         setTwoFactorMethod(data.twoFactorMethod)
         setTempToken(data.tempToken)
-        if (data.devCode) setDevCode(data.devCode) // dev only
+        if (data.devCode) setDevCode(data.devCode)
         setTwoFactorStep(true)
         return
       }
@@ -51,7 +64,7 @@ function LoginPage() {
         id: data.id, name: data.name, email: data.email,
         role: data.role, profilePicture: data.profilePicture,
       }, data.token)
-      navigate('/')
+      navigate(getDestination(), { replace: true })   // ← fixed
     } catch (err) {
       setError(err?.response?.data || 'Invalid username or password')
     } finally {
@@ -59,6 +72,7 @@ function LoginPage() {
     }
   }
 
+  // ── 2FA verify ────────────────────────────────────────────────────────────
   async function handleVerify2FA(event) {
     event.preventDefault()
     setError('')
@@ -69,7 +83,7 @@ function LoginPage() {
         id: data.id, name: data.name, email: data.email,
         role: data.role, profilePicture: data.profilePicture,
       }, data.token)
-      navigate('/')
+      navigate(getDestination(), { replace: true })   // ← fixed
     } catch (err) {
       setError(err?.response?.data || 'Invalid verification code. Please try again.')
     } finally {
@@ -89,20 +103,20 @@ function LoginPage() {
         </div>
 
         {!twoFactorStep ? (
-          // ── Step 1: Credentials ──────────────────────────────────────────
           <>
             <p style={{ margin: '0 0 1rem', color: '#374151', fontWeight: 600 }}>Sign in to your account</p>
 
-        {/* Info banner for new users */}
-        <div style={{
-          background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.75rem',
-          padding: '0.75rem 1rem', marginBottom: '1.1rem',
-          fontSize: '0.84rem', color: '#1e40af', lineHeight: 1.55
-        }}>
-          <strong>New user?</strong> Use <em>Continue with Google</em> below and enter your
-          University ID to request access. Your account will be activated after admin approval.
-        </div>
+            <div style={{
+              background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '0.75rem',
+              padding: '0.75rem 1rem', marginBottom: '1.1rem',
+              fontSize: '0.84rem', color: '#1e40af', lineHeight: 1.55
+            }}>
+              <strong>New user?</strong> Use <em>Continue with Google</em> below and enter your
+              University ID to request access. Your account will be activated after admin approval.
+            </div>
+
             {error && <p className="login-error">{error}</p>}
+
             <form className="login-form" onSubmit={handleSubmit}>
               <div className="login-inputs-row">
                 <label>
@@ -136,18 +150,13 @@ function LoginPage() {
               >
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>
-
-              {/* ← ADD THIS BLOCK */}
               <div style={{ textAlign: 'right', marginTop: '0.5rem' }}>
-                <a href="/forgot-password" 
+                <a href="/forgot-password"
                   style={{ fontSize: '0.85rem', color: 'var(--brand-600)', textDecoration: 'none', fontWeight: 600 }}>
                   Forgot password?
                 </a>
               </div>
-              
             </form>
-            
-            
 
             <div className="login-divider">or</div>
             <button
@@ -165,7 +174,6 @@ function LoginPage() {
             </button>
           </>
         ) : (
-          // ── Step 2: 2FA Code ─────────────────────────────────────────────
           <>
             <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
               <div style={{
@@ -188,7 +196,6 @@ function LoginPage() {
               </p>
             </div>
 
-            {/* Dev mode notice */}
             {devCode && (
               <div style={{
                 background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '0.65rem',

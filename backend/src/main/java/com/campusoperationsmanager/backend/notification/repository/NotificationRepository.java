@@ -9,13 +9,11 @@ import com.campusoperationsmanager.backend.notification.model.AppNotification;
 
 public interface NotificationRepository extends JpaRepository<AppNotification, Long> {
 
-    // Get all notifications targeted at a specific email
-    List<AppNotification> findByRecipientEmailOrderByCreatedAtDesc(String recipientEmail);
+    // ← uses field "targetEmail" from AppNotification — matches getTargetEmail()
+    List<AppNotification> findByTargetEmailAndPublishedTrueOrderByCreatedAtDesc(String targetEmail);
 
-    // Get all broadcast notifications (recipientEmail is null)
-    @Query("SELECT n FROM AppNotification n WHERE n.read = false AND n.recipientEmail IS NULL ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM AppNotification n WHERE n.published = true AND n.targetEmail IS NULL ORDER BY n.createdAt DESC")
     List<AppNotification> findAllPublishedBroadcasts();
 
-    // Admin: get ALL notifications (including drafts)
     List<AppNotification> findAllByOrderByCreatedAtDesc();
 }

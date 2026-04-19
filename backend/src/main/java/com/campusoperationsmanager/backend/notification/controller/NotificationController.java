@@ -40,49 +40,45 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final UserService userService;
 
-    // ── GET /api/notifications ── my notifications ─────────────────────────
+    // ── GET /api/notifications ── my notifications ────────────────────────────
     @GetMapping
     public ResponseEntity<List<NotificationDTO>> getMyNotifications(
             @AuthenticationPrincipal Long userId) {
-
         User user = requireUser(userId);
         List<NotificationDTO> notifications = notificationService
                 .getNotificationsForUser(user.getEmail(), user.getRole().name());
         return ResponseEntity.ok(notifications);
     }
 
-    // ── GET /api/notifications/unread-count ──────────────────────────────────
+    // ── GET /api/notifications/unread-count ───────────────────────────────────
     @GetMapping("/unread-count")
     public ResponseEntity<Map<String, Long>> getUnreadCount(
             @AuthenticationPrincipal Long userId) {
-
         User user = requireUser(userId);
         long count = notificationService.countUnread(user.getEmail(), user.getRole().name());
         return ResponseEntity.ok(Map.of("count", count));
     }
 
-    // ── PATCH /api/notifications/{id}/read ───────────────────────────────────
+    // ── PATCH /api/notifications/{id}/read ────────────────────────────────────
     @PatchMapping("/{id}/read")
     public ResponseEntity<Map<String, String>> markAsRead(
             @PathVariable Long id,
             @AuthenticationPrincipal Long userId) {
-
         User user = requireUser(userId);
         notificationService.markAsRead(id, user.getEmail());
         return ResponseEntity.ok(Map.of("message", "Marked as read"));
     }
 
-    // ── PATCH /api/notifications/read-all ────────────────────────────────────
+    // ── PATCH /api/notifications/read-all ─────────────────────────────────────
     @PatchMapping("/read-all")
     public ResponseEntity<Map<String, String>> markAllAsRead(
             @AuthenticationPrincipal Long userId) {
-
         User user = requireUser(userId);
         notificationService.markAllAsRead(user.getEmail(), user.getRole().name());
         return ResponseEntity.ok(Map.of("message", "All marked as read"));
     }
 
-    // ── ADMIN: POST /api/notifications (create broadcast) ───────────────────
+    // ── ADMIN: POST /api/notifications (create broadcast) ────────────────────
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createBroadcast(
@@ -105,27 +101,25 @@ public class NotificationController {
                 } else {
                     log.warn("Unknown principal type: {}", principal.getClass().getName());
                 }
-                log.debug("Extracted admin userId: {} from principal type: {}", userId, principal.getClass().getSimpleName());
             }
 
             if (userId == null) {
-                String type = (authentication != null && authentication.getPrincipal() != null) 
-                              ? authentication.getPrincipal().getClass().getName() : "null";
+                String type = (authentication != null && authentication.getPrincipal() != null)
+                        ? authentication.getPrincipal().getClass().getName() : "null";
                 throw new IllegalStateException("Could not extract admin user ID. Principal type: " + type);
             }
 
             User user = requireUser(userId);
-            NotificationDTO dto = notificationService.createBroadcast(request, user.getEmail(), userId);
+            // ↓ FIXED: was passing 3 args (request, user.getEmail(), userId) — userId is not needed
+            NotificationDTO dto = notificationService.createBroadcast(request, user.getEmail());
 
-            log.info("Broadcast notification created successfully by admin: {} (ID: {})", 
-                     user.getEmail(), userId);
+            log.info("Broadcast notification created by admin: {} (ID: {})", user.getEmail(), userId);
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 
         } catch (Exception e) {
             log.error("Failed to create broadcast notification: {}", e.getMessage(), e);
             StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
+            e.printStackTrace(new PrintWriter(sw));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of(
                             "error", "Internal Server Error",
@@ -165,7 +159,7 @@ public class NotificationController {
         return userService.getUserById(userId);
     }
 
-    // ── Exception handler ─────────────────────────────────────────────────────
+    // ── Exception handlers ────────────────────────────────────────────────────
     @ExceptionHandler(NotificationNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(NotificationNotFoundException ex) {
         return ResponseEntity.status(404).body(Map.of("error", ex.getMessage()));

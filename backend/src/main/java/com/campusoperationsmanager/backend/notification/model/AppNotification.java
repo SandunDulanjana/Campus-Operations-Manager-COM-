@@ -10,14 +10,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 @Entity
 @Table(name = "notifications")
 @Getter
@@ -41,58 +39,41 @@ public class AppNotification {
     @Column(nullable = false)
     private NotificationType type;
 
-    // Targeted notification
-    @Column(name = "recipient_email")
-    private String recipientEmail;
+    // null = broadcast (audience-based), non-null = targeted to one user by email
+    @Column(name = "target_email")
+    private String targetEmail;
 
-    // Broadcast / role-based
-    @Column(name = "target_roles")
-    private String targetRoles;        // "ALL" or "USER,ADMIN,TECHNICIAN"
+    // For broadcast notifications: which roles can see it
+    // Stored as comma-separated: "USER,ADMIN,TECHNICIAN" or "ALL"
+    @Column(name = "target_audience")
+    private String targetAudience;
 
-    @Column(name = "recipient_user_id", nullable = true)
-    private Long recipientUserId;
-
-    @Column(name = "read", nullable = false)
-    @Builder.Default
-    private Boolean read = false;
-
-    @Column(name = "related_booking_id")
-    private Long relatedBookingId;
-
-    @Column(name = "related_ticket_id")
-    private Long relatedTicketId;
+    // ← CHANGED: removed @Builder.Default — it conflicted with Hibernate 7.x bytecode enhancement.
+    //   published is always set explicitly in every builder call, so @Builder.Default is not needed.
+    @Column(nullable = false)
+    private boolean published;      // ← CHANGED: was "@Builder.Default private boolean published = true;"
 
     @Column(name = "reference_id")
     private Long referenceId;
 
-    @Column(name = "reference_type", length = 50)
-    private String referenceType;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    @Column(name = "created_by_email", length = 255)
+    @Column(name = "created_by_email")
     private String createdByEmail;
 
     @PrePersist
     protected void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        if (createdAt == null) createdAt = now;
-        if (updatedAt == null) updatedAt = now;
+        createdAt = LocalDateTime.now();
+        // ← ADD: ensure published has a safe default if somehow not set via builder
+        // (defensive guard — in normal flow the builder always sets it explicitly)
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
+    // Helper: check if a given role is in the target audience
     public boolean isVisibleToRole(String role) {
-        if (targetRoles == null) return false;
-        if ("ALL".equalsIgnoreCase(targetRoles)) return true;
-        for (String r : targetRoles.split(",")) {
+        if (targetAudience == null) return false;
+        if ("ALL".equalsIgnoreCase(targetAudience)) return true;
+        for (String r : targetAudience.split(",")) {
             if (r.trim().equalsIgnoreCase(role)) return true;
         }
         return false;

@@ -15,27 +15,27 @@ public class NotificationDTO {
     private String title;
     private String message;
     private NotificationType type;
-    private String targetEmail;
-    private String targetAudience;
+    private String targetEmail;       // ← matches AppNotification.targetEmail
+    private String targetAudience;    // ← matches AppNotification.targetAudience
     private boolean published;
     private Long referenceId;
     private String createdByEmail;
     private LocalDateTime createdAt;
-    private boolean read;  // computed per user
+    private boolean read;             // ← computed per user, passed as parameter — NOT from AppNotification
 
     public static NotificationDTO from(AppNotification n, boolean read) {
-    return NotificationDTO.builder()
-            .id(n.getId())
-            .title(n.getTitle())
-            .message(n.getMessage())
-            .type(n.getType())
-            .targetEmail(n.getRecipientEmail())        // ← changed
-            .targetAudience(n.getTargetRoles())        // ← changed
-            .published(n.getRead() != null ? !n.getRead() : true)  // or adjust logic
-            .referenceId(n.getReferenceId())
-            .createdByEmail(n.getCreatedByEmail())
-            .createdAt(n.getCreatedAt())
-            .read(read)                                // per-user read status
-            .build();
-}
+        return NotificationDTO.builder()
+                .id(n.getId())
+                .title(n.getTitle())
+                .message(n.getMessage())
+                .type(n.getType())
+                .targetEmail(n.getTargetEmail())        // ← FIXED: was n.getRecipientEmail()
+                .targetAudience(n.getTargetAudience())  // ← FIXED: was n.getTargetRoles()
+                .published(n.isPublished())
+                .referenceId(n.getReferenceId())
+                .createdByEmail(n.getCreatedByEmail())
+                .createdAt(n.getCreatedAt())
+                .read(read)                             // ← FIXED: was n.getRead() — read comes from the parameter
+                .build();
+    }
 }

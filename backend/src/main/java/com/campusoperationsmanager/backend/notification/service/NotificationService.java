@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;    // ← ADD THIS IMPORT
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campusoperationsmanager.backend.notification.dto.CreateNotificationRequest;
@@ -28,55 +29,40 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationReadRepository notificationReadRepository;
 
-    // ═══════════════════════════════════════════════
-    // ADMIN: Create broadcast notification
-    // ═══════════════════════════════════════════════
+    // ── Admin: Create broadcast notification ─────────────────────────────────
     @Transactional
-    public NotificationDTO createBroadcast(CreateNotificationRequest request, String adminEmail, Long adminUserId) {
-        log.info("Creating broadcast notification: title='{}', by='{}' (userId={})", 
-                 request.getTitle(), adminEmail, adminUserId);
-
+    public NotificationDTO createBroadcast(CreateNotificationRequest request, String adminEmail) {
         String audience = buildAudienceString(request.getAudienceRoles());
 
         AppNotification notification = AppNotification.builder()
                 .title(request.getTitle().trim())
                 .message(request.getMessage().trim())
                 .type(NotificationType.ADMIN_BROADCAST)
-                .targetRoles(audience)
-                .recipientUserId(adminUserId != null ? adminUserId : 0L)
-                .read(false)
+                .targetAudience(audience)
+                .published(request.isPublished())   // ← always explicitly set (no @Builder.Default needed)
                 .createdByEmail(adminEmail)
                 .build();
 
-        try {
-            AppNotification saved = notificationRepository.save(notification);
-            log.info("Broadcast created successfully: id={}", saved.getId());
-            return NotificationDTO.from(saved, false);
-        } catch (Exception e) {
-            log.error("Failed to save broadcast notification", e);
-            throw new RuntimeException("Failed to save notification: " + e.getMessage(), e);
-        }
+        AppNotification saved = notificationRepository.save(notification);
+        log.info("Admin broadcast created: id={} audience={} by={}", saved.getId(), audience, adminEmail);
+        return NotificationDTO.from(saved, false);
     }
 
-    // ═══════════════════════════════════════════════
-    // INTERNAL: Create targeted notification
-    // ═══════════════════════════════════════════════
-    @Transactional
+    // ── Internal: Create targeted notification (booking/ticket/comment events)
+    // ← CHANGED: Propagation.REQUIRES_NEW — runs in its OWN transaction so if this
+    //   fails it does NOT roll back the caller's transaction (e.g. TicketService.updateStatus)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)  // ← CHANGED from plain @Transactional
     public void createTargetedNotification(String targetEmail,
                                            String title,
                                            String message,
                                            NotificationType type,
                                            Long referenceId) {
-
-        Long recipientUserId = 0L;
-
         AppNotification notification = AppNotification.builder()
                 .title(title)
                 .message(message)
                 .type(type)
-                .recipientEmail(targetEmail)
-                .recipientUserId(recipientUserId)
-                .read(false)
+                .targetEmail(targetEmail)
+                .published(true)            // ← always explicitly set
                 .referenceId(referenceId)
                 .createdByEmail("system")
                 .build();
@@ -85,27 +71,24 @@ public class NotificationService {
         log.info("Targeted notification created: type={} to={} ref={}", type, targetEmail, referenceId);
     }
 
-    // ═══════════════════════════════════════════════
-    // USER: Get all visible notifications for a user
-    // ═══════════════════════════════════════════════
+    // ── User: Get all visible notifications ──────────────────────────────────
     @Transactional(readOnly = true)
     public List<NotificationDTO> getNotificationsForUser(String email, String role) {
         List<AppNotification> result = new ArrayList<>();
 
-        // 1. Targeted notifications for this user
-        result.addAll(notificationRepository.findAll().stream()
-                .filter(n -> email.equals(n.getRecipientEmail()))
-                .toList());
+        // 1. Targeted notifications (sent directly to this user)
+        result.addAll(notificationRepository
+                .findByTargetEmailAndPublishedTrueOrderByCreatedAtDesc(email));
 
-        // 2. Broadcast notifications visible to this role
-        notificationRepository.findAll().stream()
-                .filter(n -> n.getRecipientEmail() == null && n.isVisibleToRole(role))
+        // 2. Broadcast notifications visible to this user's role
+        notificationRepository.findAllPublishedBroadcasts().stream()
+                .filter(n -> n.isVisibleToRole(role))
                 .forEach(result::add);
 
         // Sort by createdAt desc
         result.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
 
-        // Get read IDs for this user
+        // Get set of read notification IDs for this user
         Set<Long> readIds = notificationReadRepository.findByUserEmail(email)
                 .stream()
                 .map(NotificationRead::getNotificationId)
@@ -116,19 +99,15 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════
-    // USER: Count unread notifications
-    // ═══════════════════════════════════════════════
+    // ── User: Count unread ────────────────────────────────────────────────────
     @Transactional(readOnly = true)
     public long countUnread(String email, String role) {
         return getNotificationsForUser(email, role).stream()
-                .filter(n -> !n.isRead())          // ← Fixed: use isRead() for boolean
+                .filter(n -> !n.isRead())
                 .count();
     }
 
-    // ═══════════════════════════════════════════════
-    // USER: Mark a notification as read
-    // ═══════════════════════════════════════════════
+    // ── User: Mark one as read ────────────────────────────────────────────────
     @Transactional
     public void markAsRead(Long notificationId, String email) {
         notificationRepository.findById(notificationId)
@@ -143,9 +122,7 @@ public class NotificationService {
         }
     }
 
-    // ═══════════════════════════════════════════════
-    // USER: Mark ALL notifications as read
-    // ═══════════════════════════════════════════════
+    // ── User: Mark all as read ────────────────────────────────────────────────
     @Transactional
     public void markAllAsRead(String email, String role) {
         List<NotificationDTO> notifications = getNotificationsForUser(email, role);
@@ -156,9 +133,7 @@ public class NotificationService {
         }
     }
 
-    // ═══════════════════════════════════════════════
-    // ADMIN: Get all notifications
-    // ═══════════════════════════════════════════════
+    // ── Admin: Get all notifications ──────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<NotificationDTO> getAllNotificationsAdmin() {
         return notificationRepository.findAllByOrderByCreatedAtDesc()
@@ -167,23 +142,16 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════
-    // ADMIN: Toggle visibility (using 'read' flag)
-    // ═══════════════════════════════════════════════
+    // ── Admin: Toggle published ───────────────────────────────────────────────
     @Transactional
     public NotificationDTO togglePublished(Long id) {
         AppNotification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new NotificationNotFoundException(id));
-
-        notification.setRead(!Boolean.TRUE.equals(notification.getRead()));
-
-        AppNotification saved = notificationRepository.save(notification);
-        return NotificationDTO.from(saved, false);
+        notification.setPublished(!notification.isPublished());
+        return NotificationDTO.from(notificationRepository.save(notification), false);
     }
 
-    // ═══════════════════════════════════════════════
-    // ADMIN: Delete a notification
-    // ═══════════════════════════════════════════════
+    // ── Admin: Delete notification ────────────────────────────────────────────
     @Transactional
     public void deleteNotification(Long id) {
         if (!notificationRepository.existsById(id)) {
@@ -192,9 +160,7 @@ public class NotificationService {
         notificationRepository.deleteById(id);
     }
 
-    // ═══════════════════════════════════════════════
-    // HELPER
-    // ═══════════════════════════════════════════════
+    // ── Helper ────────────────────────────────────────────────────────────────
     private String buildAudienceString(List<String> roles) {
         if (roles == null || roles.isEmpty() || roles.contains("ALL")) {
             return "ALL";

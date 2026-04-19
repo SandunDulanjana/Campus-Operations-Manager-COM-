@@ -2,7 +2,7 @@ package com.campusoperationsmanager.backend;
 
 import java.util.List;
 
-import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Bean;                                         // ← FIXED
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -35,8 +35,20 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(s -> 
+            .sessionManagement(s ->
                     s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+            // ── Tell Spring NOT to redirect API calls to OAuth login ──────────
+            // Without this, expired JWT on an API call causes a 302 redirect to
+            // Google, which the browser blocks as a CORS error.
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(401);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"Unauthorized. Please log in again.\"}");
+                })
+            )
+
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/invite/validate").permitAll()
                 .requestMatchers("/api/auth/invite/complete").permitAll()
@@ -47,41 +59,29 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/reset-password").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/tickets/*/attachments/*/data").permitAll()
-                // ↓ FIXED: split into precise rules so admin-only endpoints are properly guarded
-                .requestMatchers(HttpMethod.GET,    "/api/notifications/unread-count").authenticated()
-                .requestMatchers(HttpMethod.GET,    "/api/notifications").authenticated()
-                .requestMatchers(HttpMethod.GET,    "/api/notifications/admin/all").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH,  "/api/notifications/read-all").authenticated()
-                .requestMatchers(HttpMethod.PATCH,  "/api/notifications/*/read").authenticated()
-                .requestMatchers(HttpMethod.PATCH,  "/api/notifications/*/toggle-published").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST,   "/api/notifications").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/notifications/**").hasRole("ADMIN")
-                // ↑ END of notification rules
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/auth/submit-university-id").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
-                // Remove custom baseUri to use Spring defaults (recommended)
                 .successHandler(oAuth2SuccessHandler)
-                // You can keep .failureHandler if you have one
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-   @Bean
+    @Bean
     CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173"));
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(List.of("*"));
-    config.setExposedHeaders(List.of("Authorization", "Location"));  // ← Very important
-    config.setAllowCredentials(true);   // ← Must be true
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization", "Location"));
+        config.setAllowCredentials(true);
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return source;
-}
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }
