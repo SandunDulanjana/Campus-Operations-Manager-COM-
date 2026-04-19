@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 
+// ── CHANGE 1: Added 'notifications' entry to this array ──────────────────────
 const adminLinks = [
-  { to: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { to: '/admin/bookings', label: 'Bookings', icon: 'bookings' },
-  { to: '/admin/tickets',   label: 'Tickets',   icon: 'tickets'   },
-  { to: '/admin/users', label: 'Users', icon: 'users' },
-  { to: '/admin/resources', label: 'Resources', icon: 'resources' },
+  { to: '/admin/dashboard',     label: 'Dashboard',     icon: 'dashboard'     },
+  { to: '/admin/bookings',      label: 'Bookings',      icon: 'bookings'      },
+  { to: '/admin/tickets',       label: 'Tickets',       icon: 'tickets'       },
+  { to: '/admin/users',         label: 'Users',         icon: 'users'         },
+  { to: '/admin/resources',     label: 'Resources',     icon: 'resources'     },
+  { to: '/admin/notifications', label: 'Notifications', icon: 'notifications' }, // ← ADD THIS LINE
 ]
 
 function NavIcon({ kind }) {
@@ -31,14 +33,14 @@ function NavIcon({ kind }) {
   }
 
   if (kind === 'tickets') {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-      <rect x="9" y="3" width="6" height="4" rx="1" />
-      <path d="M9 12h6M9 16h4" />
-    </svg>
-  )
-}
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+        <rect x="9" y="3" width="6" height="4" rx="1" />
+        <path d="M9 12h6M9 16h4" />
+      </svg>
+    )
+  }
 
   if (kind === 'users') {
     return (
@@ -61,6 +63,17 @@ function NavIcon({ kind }) {
     )
   }
 
+  // ── CHANGE 2: Added this entire 'notifications' icon block ──────────────────
+  if (kind === 'notifications') {   // ← ADD THIS ENTIRE BLOCK (lines below until closing brace)
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 4a4 4 0 0 0-4 4v1.3c0 1.1-.36 2.18-1.02 3.05L5.6 14.1A1 1 0 0 0 6.4 15.7h11.2a1 1 0 0 0 .8-1.6l-1.38-1.75A5.07 5.07 0 0 1 16 9.3V8a4 4 0 0 0-4-4Z" />
+        <path d="M10 18a2 2 0 0 0 4 0" />
+      </svg>
+    )
+  }                                  // ← END OF ADDED BLOCK
+
+  // This default return was already here — NO CHANGE
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="8" />
@@ -68,6 +81,7 @@ function NavIcon({ kind }) {
   )
 }
 
+// Everything below this line is UNCHANGED from your original file
 function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
 

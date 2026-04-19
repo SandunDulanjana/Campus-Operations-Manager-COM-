@@ -38,18 +38,27 @@ public class SecurityConfig {
             .sessionManagement(s -> 
                     s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // WHY: Invite endpoints are public — new users don't have a JWT yet.
                 .requestMatchers("/api/auth/invite/validate").permitAll()
                 .requestMatchers("/api/auth/invite/complete").permitAll()
                 .requestMatchers("/oauth2/**", "/login/**", "/login/oauth2/code/**").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/verify-2fa").permitAll()
-                .requestMatchers("/api/auth/forgot-password").permitAll()   
-                .requestMatchers("/api/auth/reset-password").permitAll()    
+                .requestMatchers("/api/auth/forgot-password").permitAll()
+                .requestMatchers("/api/auth/reset-password").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/tickets/*/attachments/*/data").permitAll()
+                // ↓ FIXED: split into precise rules so admin-only endpoints are properly guarded
+                .requestMatchers(HttpMethod.GET,    "/api/notifications/unread-count").authenticated()
+                .requestMatchers(HttpMethod.GET,    "/api/notifications").authenticated()
+                .requestMatchers(HttpMethod.GET,    "/api/notifications/admin/all").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH,  "/api/notifications/read-all").authenticated()
+                .requestMatchers(HttpMethod.PATCH,  "/api/notifications/*/read").authenticated()
+                .requestMatchers(HttpMethod.PATCH,  "/api/notifications/*/toggle-published").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,   "/api/notifications").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/notifications/**").hasRole("ADMIN")
+                // ↑ END of notification rules
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/auth/submit-university-id").permitAll()  
+                .requestMatchers("/api/auth/submit-university-id").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

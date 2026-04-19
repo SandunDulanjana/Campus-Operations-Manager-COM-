@@ -1,21 +1,26 @@
 package com.campusoperationsmanager.backend.ticket.service;
 
-import com.campusoperationsmanager.backend.ticket.dto.CreateTicketRequest;
-import com.campusoperationsmanager.backend.ticket.dto.TicketResponse;
-import com.campusoperationsmanager.backend.ticket.dto.UpdateTicketStatusRequest;
-import com.campusoperationsmanager.backend.ticket.exception.TicketException;
-import com.campusoperationsmanager.backend.ticket.model.*;
-import com.campusoperationsmanager.backend.ticket.repository.TicketAttachmentRepository;
-import com.campusoperationsmanager.backend.ticket.repository.TicketCommentRepository;
-import com.campusoperationsmanager.backend.ticket.repository.TicketRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.campusoperationsmanager.backend.notification.model.NotificationType;
+import com.campusoperationsmanager.backend.notification.service.NotificationService;
+import com.campusoperationsmanager.backend.ticket.dto.CreateTicketRequest;
+import com.campusoperationsmanager.backend.ticket.dto.TicketResponse;
+import com.campusoperationsmanager.backend.ticket.dto.UpdateTicketStatusRequest;
+import com.campusoperationsmanager.backend.ticket.exception.TicketException;
+import com.campusoperationsmanager.backend.ticket.model.Ticket;
+import com.campusoperationsmanager.backend.ticket.model.TicketStatus;
+import com.campusoperationsmanager.backend.ticket.repository.TicketAttachmentRepository;
+import com.campusoperationsmanager.backend.ticket.repository.TicketCommentRepository;
+import com.campusoperationsmanager.backend.ticket.repository.TicketRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service              // Marks this as a Spring-managed service bean
 @RequiredArgsConstructor  // Lombok: constructor injection for all final fields
@@ -25,6 +30,7 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketCommentRepository commentRepository;
     private final TicketAttachmentRepository attachmentRepository;
+    private final NotificationService notificationService;
 
     // SLA Thresholds
     // If first response takes longer than 60 min → SLA breached
@@ -92,9 +98,9 @@ public class TicketService {
     // ═══════════════════════════════════════════════════════════
 
     public TicketResponse updateStatus(Long id,
-                                       UpdateTicketStatusRequest request,
-                                       String userEmail,
-                                       boolean isAdmin) {
+                                    UpdateTicketStatusRequest request,
+                                    String userEmail,
+                                    boolean isAdmin) {
         Ticket ticket = findOrThrow(id);
         TicketStatus newStatus = request.getStatus();
 
@@ -156,7 +162,22 @@ public class TicketService {
         }
 
         ticket.setStatus(newStatus);
-        return toResponse(ticketRepository.save(ticket));
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        // Send notification to ticket creator
+        try {
+            notificationService.createTargetedNotification(
+                    savedTicket.getCreatedByEmail(),
+                    "Ticket Status Updated",
+                    "Your ticket '" + savedTicket.getTitle() + "' status changed to " + newStatus.name().replace("_", " "),
+                    NotificationType.TICKET_STATUS_CHANGED,
+                    savedTicket.getId()
+            );
+        } catch (Exception e) {
+            // Don't let notification failure break the ticket flow
+        }
+
+        return toResponse(savedTicket);
     }
 
     // ═══════════════════════════════════════════════════════════

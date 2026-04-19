@@ -138,7 +138,7 @@ public class User {
     }
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "registration_status", columnDefinition = "VARCHAR(30) DEFAULT 'ACTIVE'")
+    @Column(name = "registration_status", length = 30)
     @Builder.Default
     private RegistrationStatus registrationStatus = RegistrationStatus.ACTIVE;
 
