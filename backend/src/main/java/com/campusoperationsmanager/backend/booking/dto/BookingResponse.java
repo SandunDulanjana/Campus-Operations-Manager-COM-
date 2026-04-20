@@ -13,6 +13,7 @@ public class BookingResponse {
     private String resourceName;
     private String resourceType;
     private Long userId;
+    private String userName;
     private LocalDate bookingDate;
     private LocalTime startTime;
     private LocalTime endTime;
@@ -24,13 +25,14 @@ public class BookingResponse {
     private Instant createdAt;
     private Instant updatedAt;
 
-    public static BookingResponse from(Booking booking) {
+    public static BookingResponse from(Booking booking, String userName) {
         BookingResponse response = new BookingResponse();
         response.id = booking.getId();
         response.resourceId = booking.getResourceId();
         response.resourceName = booking.getResourceName();
         response.resourceType = booking.getResourceType();
         response.userId = booking.getUserId();
+        response.userName = userName;
         response.bookingDate = booking.getBookingDate();
         response.startTime = booking.getStartTime();
         response.endTime = booking.getEndTime();
@@ -62,6 +64,10 @@ public class BookingResponse {
 
     public Long getUserId() {
         return userId;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     public LocalDate getBookingDate() {

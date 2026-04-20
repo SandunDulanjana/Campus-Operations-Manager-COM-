@@ -45,4 +45,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         @Param("startTime") LocalTime startTime,
         @Param("endTime") LocalTime endTime
     );
+
+    @Query("""
+        SELECT b FROM Booking b
+        WHERE b.resourceId = :resourceId
+          AND b.bookingDate = :bookingDate
+          AND b.status = 'APPROVED'
+          AND b.startTime < :endTime
+          AND b.endTime > :startTime
+        """)
+    List<Booking> findApprovedOverlaps(
+        @Param("resourceId") Long resourceId,
+        @Param("bookingDate") LocalDate bookingDate,
+        @Param("startTime") LocalTime startTime,
+        @Param("endTime") LocalTime endTime
+    );
 }

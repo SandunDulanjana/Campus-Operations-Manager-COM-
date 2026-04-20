@@ -30,3 +30,13 @@ export async function updateBookingStatus(bookingId, payload, user) {
   const response = await axios.patch(`${API_BASE_URL}/api/bookings/${bookingId}`, payload)
   return response.data
 }
+
+export async function fetchBookingDetails(bookingId) {
+  const response = await axios.get(`${API_BASE_URL}/api/bookings/${bookingId}`)
+  return response.data
+}
+
+export async function resubmitBooking(bookingId, payload) {
+  const response = await axios.post(`${API_BASE_URL}/api/bookings/${bookingId}/resubmit`, payload)
+  return response.data
+}
