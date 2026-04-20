@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchAllBookings, updateBookingStatus } from '../api/bookingApi'
+import { fetchAllBookings, fetchBookingDetails, updateBookingStatus } from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
 import { useAuth } from '../context/useAuth'
 import StatusBanner from '../components/ui/StatusBanner'
@@ -63,6 +63,8 @@ function AdminBookingsPage() {
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [selectedBookingDetails, setSelectedBookingDetails] = useState(null)
+  const [detailsLoading, setDetailsLoading] = useState(false)
 
   useEffect(() => {
     void loadResources()
@@ -177,6 +179,36 @@ function AdminBookingsPage() {
       setErrorMessage(getErrorMessage(error, 'Failed to reject booking'))
       setLoading(false)
     }
+  }
+
+  async function viewBookingDetails(bookingId) {
+    setDetailsLoading(true)
+    setErrorMessage('')
+
+    try {
+      const details = await fetchBookingDetails(bookingId)
+      setSelectedBookingDetails(details)
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to load booking details'))
+    } finally {
+      setDetailsLoading(false)
+    }
+  }
+
+  function closeBookingDetails() {
+    setSelectedBookingDetails(null)
+  }
+
+  function formatDateTime(value) {
+    if (!value) return '-'
+
+    return new Date(value).toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
   }
 
   return (
@@ -322,15 +354,20 @@ function AdminBookingsPage() {
                   <td>
                     {booking.status === 'PENDING' ? (
                       <div className="action-row">
-                        <ActionButton kind="approve" onClick={() => approveBooking(booking.id)} disabled={loading}>
+                       <ActionButton kind="approve" onClick={() => approveBooking(booking.id)} disabled={loading}>
                           Approve
                         </ActionButton>
                         <ActionButton kind="danger" onClick={() => rejectBooking(booking.id)} disabled={loading}>
                           Reject
                         </ActionButton>
+                        <ActionButton kind="ghost" onClick={() => viewBookingDetails(booking.id)} disabled={loading || detailsLoading}>
+                          View Details
+                        </ActionButton>
                       </div>
                     ) : (
-                      '-'
+                      <ActionButton kind="ghost" onClick={() => viewBookingDetails(booking.id)} disabled={detailsLoading}>
+                        View Details
+                      </ActionButton>
                     )}
                   </td>
                 </tr>
@@ -339,6 +376,110 @@ function AdminBookingsPage() {
           </table>
         </div>
       </div>
+
+      {selectedBookingDetails ? (
+        <div className="modal-backdrop" role="presentation" onClick={closeBookingDetails}>
+          <div className="modal-window booking-details-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>Booking Request Details</h2>
+                <p className="booking-details-modal__subhead">Review the full request before making a decision.</p>
+              </div>
+              <ActionButton kind="ghost" className="modal-close-icon" aria-label="Close" onClick={closeBookingDetails}>
+                &#10005;
+              </ActionButton>
+            </div>
+
+            <div className="booking-details-grid">
+              <div className="booking-details-card">
+                <h3>Requester</h3>
+                <dl>
+                  <div>
+                    <dt>User Name</dt>
+                    <dd>{selectedBookingDetails.booking.userName || 'Unknown User'}</dd>
+                  </div>
+                  <div>
+                    <dt>User ID</dt>
+                    <dd>{selectedBookingDetails.booking.userId}</dd>
+                  </div>
+                  <div>
+                    <dt>Status</dt>
+                    <dd><StatusBadge status={selectedBookingDetails.booking.status} /></dd>
+                  </div>
+                  <div>
+                    <dt>Review Note</dt>
+                    <dd>{selectedBookingDetails.booking.reviewReason || '-'}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="booking-details-card">
+                <h3>Booking Details</h3>
+                <dl>
+                  <div>
+                    <dt>Resource</dt>
+                    <dd>{selectedBookingDetails.booking.resourceName}</dd>
+                  </div>
+                  <div>
+                    <dt>Resource Type</dt>
+                    <dd>{selectedBookingDetails.booking.resourceType}</dd>
+                  </div>
+                  <div>
+                    <dt>Date</dt>
+                    <dd>{selectedBookingDetails.booking.bookingDate}</dd>
+                  </div>
+                  <div>
+                    <dt>Time</dt>
+                    <dd>{selectedBookingDetails.booking.startTime} - {selectedBookingDetails.booking.endTime}</dd>
+                  </div>
+                  <div>
+                    <dt>Purpose</dt>
+                    <dd>{selectedBookingDetails.booking.purpose}</dd>
+                  </div>
+                  <div>
+                    <dt>Expected Attendees</dt>
+                    <dd>{selectedBookingDetails.booking.expectedAttendees ?? '-'}</dd>
+                  </div>
+                  <div>
+                    <dt>Equipment Type</dt>
+                    <dd>{selectedBookingDetails.booking.equipmentType || '-'}</dd>
+                  </div>
+                  <div>
+                    <dt>Submitted</dt>
+                    <dd>{formatDateTime(selectedBookingDetails.booking.createdAt)}</dd>
+                  </div>
+                  <div>
+                    <dt>Last Updated</dt>
+                    <dd>{formatDateTime(selectedBookingDetails.booking.updatedAt)}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+
+            <div className="booking-details-card booking-history-card">
+              <h3>Request History</h3>
+              {selectedBookingDetails.history.length > 0 ? (
+                <div className="booking-history-list">
+                  {selectedBookingDetails.history.map((entry) => (
+                    <article key={entry.id} className="booking-history-item">
+                      <div className="booking-history-item__top">
+                        <strong>{entry.actorName}</strong>
+                        <span>{formatDateTime(entry.createdAt)}</span>
+                      </div>
+                      <p>
+                        {entry.fromStatus ? `${entry.fromStatus} -> ${entry.toStatus}` : entry.toStatus}
+                      </p>
+                      <small>{entry.note || 'No additional note provided.'}</small>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="booking-history-empty">No review history available yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }
