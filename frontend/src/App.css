@@ -1368,6 +1368,34 @@
   color: #475569;
 }
 
+.admin-bookings-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.95rem;
+  flex-wrap: wrap;
+}
+
+.admin-bookings-actions-row .primary-btn,
+.admin-bookings-actions-row .secondary-btn {
+  width: auto;
+  border-radius: 999px;
+  padding-left: 1.05rem;
+  padding-right: 1.05rem;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.admin-bookings-actions-row .secondary-btn {
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+}
+
+.admin-bookings-actions-row .secondary-btn:hover {
+  background: #f4f7f6;
+}
+
 .admin-section-card {
   padding: 1rem;
 }
@@ -2809,6 +2837,10 @@ tbody tr:hover td {
   .admin-filter-row {
     display: grid;
     flex-wrap: wrap;
+  }
+
+  .admin-bookings-actions-row {
+    justify-content: flex-start;
   }
 
   .admin-filter-row .primary-btn {
