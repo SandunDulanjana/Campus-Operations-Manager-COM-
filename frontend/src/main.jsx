@@ -9,7 +9,8 @@ import { AuthProvider } from './context/AuthContext'
 // ── Restore JWT on page refresh ───────────────────────────────────────────────
 // WHY: axios.defaults are cleared on refresh. This re-sets the header
 //      from localStorage so all API calls (including adminApi) are authenticated.
-const storedToken = localStorage.getItem('token')
+const TOKEN_KEY = 'campus-jwt-token'
+const storedToken = localStorage.getItem(TOKEN_KEY)
 if (storedToken) {
   axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
 }
@@ -33,6 +34,19 @@ axios.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// ── Interceptor: keep header in sync for every future request ─────────────────
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem(TOKEN_KEY)
+
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`
+  } else if (config.headers?.Authorization) {
+    delete config.headers.Authorization
+  }
+
+  return config
+})
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
