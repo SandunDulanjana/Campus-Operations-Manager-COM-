@@ -10,12 +10,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 @Entity
 @Table(name = "notifications")
 @Getter
@@ -48,10 +50,8 @@ public class AppNotification {
     @Column(name = "target_audience")
     private String targetAudience;
 
-    // ← CHANGED: removed @Builder.Default — it conflicted with Hibernate 7.x bytecode enhancement.
-    //   published is always set explicitly in every builder call, so @Builder.Default is not needed.
     @Column(nullable = false)
-    private boolean published;      // ← CHANGED: was "@Builder.Default private boolean published = true;"
+    private boolean published;
 
     @Column(name = "reference_id")
     private Long referenceId;
@@ -62,11 +62,28 @@ public class AppNotification {
     @Column(name = "created_by_email")
     private String createdByEmail;
 
+    // ── FIX 1: was missing — DB has read BOOLEAN NOT NULL ────────────────────
+    @Column(name = "read", nullable = false)
+    @Builder.Default
+    private boolean read = false;
+
+    // ── FIX 2: was missing — DB has recipient_user_id BIGINT (nullable after migration)
+    @Column(name = "recipient_user_id")
+    private Long recipientUserId;
+
+    // ── FIX 3: was missing — DB has updated_at TIMESTAMP NOT NULL ────────────
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        // ← ADD: ensure published has a safe default if somehow not set via builder
-        // (defensive guard — in normal flow the builder always sets it explicitly)
+        updatedAt = LocalDateTime.now(); // ← FIX 3: set on insert
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now(); // ← FIX 3: set on update
     }
 
     // Helper: check if a given role is in the target audience
