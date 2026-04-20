@@ -36,6 +36,14 @@ function BookingManagerDashboard() {
   return <div className="page-content"><h1>Booking Manager Dashboard</h1></div>
 }
 
+// CHANGE: helper to pick the correct post-login landing page per role
+function getRoleHome(user) {
+  if (!user) return '/'
+  if (user.role === 'ADMIN')       return '/admin/dashboard'
+  if (user.role === 'TECHNICIAN')  return '/technician-dashboard'
+  return '/'
+}
+
 function App() {
   const location = useLocation()
   const { user } = useAuth()
@@ -57,16 +65,18 @@ function App() {
           <Route path="/setup-account" element={<SetupAccountPage />} />
 
           {/* Public routes */}
-          <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
+          {/* CHANGE: when already logged in, redirect to role-specific home instead of always '/' */}
+          <Route path="/login" element={user ? <Navigate to={getRoleHome(user)} replace /> : <LoginPage />} />
           <Route path="/oauth/callback" element={<OAuthCallback />} />
           <Route path="/enter-university-id" element={<EnterUniversityIdPage />} />
 
-          {/* Protected routes */}
-          <Route path="/" element={<RequireAuth><HomePage /></RequireAuth>} />
+          {/* CHANGE: '/' is now public — any visitor can see the home page */}
+          <Route path="/" element={<HomePage />} />
+
+          {/* Protected routes — require login */}
           <Route path="/bookings" element={<RequireAuth><BookingPage /></RequireAuth>} />
 
           {/* Role-specific dashboards */}
-          {/* ↓ FIXED: removed duplicate /technician-dashboard route that was here twice */}
           <Route path="/technician-dashboard"  element={<RequireAuth><TechnicianDashboard /></RequireAuth>} />
           <Route path="/maintenance-dashboard" element={<RequireAuth><MaintenanceDashboard /></RequireAuth>} />
           <Route path="/resource-dashboard"    element={<RequireAuth><ResourceDashboard /></RequireAuth>} />
@@ -81,11 +91,6 @@ function App() {
           <Route path="/reset-password"  element={<ResetPasswordPage />} />
 
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
-
-          {/* ↓ DELETED: this was the broken line causing the redirect
-              <Route path="notifications" element={<AdminNotificationsPage />} />
-              It was outside the admin block, had no auth guard, and wrong path.
-              Moved correctly into the admin block below. */}
 
           {/* Admin routes */}
           <Route
@@ -104,8 +109,6 @@ function App() {
             <Route path="users"         element={<AdminUsersPage />} />
             <Route path="resources"     element={<AdminResourcesPage />} />
             <Route path="tickets"       element={<AdminTicketsPage />} />
-            {/* ↓ FIXED: moved here — inside the admin block, relative path "notifications"
-                        This correctly renders at /admin/notifications inside AdminLayout */}
             <Route path="notifications" element={<AdminNotificationsPage />} />
           </Route>
 

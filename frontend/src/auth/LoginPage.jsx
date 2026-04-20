@@ -34,14 +34,19 @@ function LoginPage() {
   const [tfCode,          setTfCode]          = useState('')
   const [tfLoading,       setTfLoading]       = useState(false)
 
-  // ── helper: where to go after login ──────────────────────────────────────
-  // Handles two cases:
-  //   1. 401 interceptor  → /login?returnTo=%2Fbookings
-  //   2. RequireAuth      → /login with location.state.from
-  function getDestination() {
+  // CHANGE: getDestination now accepts the logged-in user object so it can
+  // redirect ADMIN → /admin/dashboard and TECHNICIAN → /technician-dashboard.
+  // If there is a specific returnTo/from path (e.g. user tried to open /bookings
+  // before logging in), that still takes priority.
+  function getDestination(userData) {
     const returnTo = searchParams.get('returnTo')
     if (returnTo) return decodeURIComponent(returnTo)
-    return location.state?.from?.pathname || '/'
+    const fromPath = location.state?.from?.pathname
+    if (fromPath && fromPath !== '/login') return fromPath
+    // Role-based default landing page
+    if (userData?.role === 'ADMIN')      return '/admin/dashboard'
+    if (userData?.role === 'TECHNICIAN') return '/technician-dashboard'
+    return '/'
   }
 
   // ── normal login ──────────────────────────────────────────────────────────
@@ -60,11 +65,13 @@ function LoginPage() {
         return
       }
 
-      login({
+      const userData = {
         id: data.id, name: data.name, email: data.email,
         role: data.role, profilePicture: data.profilePicture,
-      }, data.token)
-      navigate(getDestination(), { replace: true })   // ← fixed
+      }
+      login(userData, data.token)
+      // CHANGE: pass userData so getDestination can read the role
+      navigate(getDestination(userData), { replace: true })
     } catch (err) {
       setError(err?.response?.data || 'Invalid username or password')
     } finally {
@@ -79,11 +86,13 @@ function LoginPage() {
     setTfLoading(true)
     try {
       const data = await verifyTwoFactorLogin(tempToken, tfCode)
-      login({
+      const userData = {
         id: data.id, name: data.name, email: data.email,
         role: data.role, profilePicture: data.profilePicture,
-      }, data.token)
-      navigate(getDestination(), { replace: true })   // ← fixed
+      }
+      login(userData, data.token)
+      // CHANGE: pass userData so getDestination can read the role
+      navigate(getDestination(userData), { replace: true })
     } catch (err) {
       setError(err?.response?.data || 'Invalid verification code. Please try again.')
     } finally {
@@ -201,7 +210,7 @@ function LoginPage() {
                 background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '0.65rem',
                 padding: '0.7rem 1rem', marginBottom: '1rem', fontSize: '0.85rem', color: '#92400e'
               }}>
-                <strong>🔧 Dev Mode:</strong> Your code is <strong style={{ letterSpacing: '0.12em' }}>{devCode}</strong>
+                <strong>📧 Dev Mode:</strong> Your code is <strong style={{ letterSpacing: '0.12em' }}>{devCode}</strong>
                 <span style={{ display: 'block', marginTop: '0.2rem', fontSize: '0.78rem', opacity: 0.75 }}>
                   In production this would be sent via SMS
                 </span>

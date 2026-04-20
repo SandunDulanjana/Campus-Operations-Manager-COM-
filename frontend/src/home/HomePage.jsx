@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import homeImage1 from '../assets/home_image/1.jpg'
 import homeImage2 from '../assets/home_image/2.jpg'
 import homeImage3 from '../assets/home_image/3.jpg'
@@ -42,14 +43,32 @@ function HomePage() {
 
   return (
     <section className="home-page">
+      {/* CHANGE: added id="landing-overview" for the navbar "Overview" anchor link */}
       <div
+        id="landing-overview"
         className="home-hero-card"
         style={{
           backgroundImage: `linear-gradient(110deg, rgba(56, 60, 68, 0.55), rgba(5, 13, 32, 0)), url(${HERO_IMAGES[activeImageIndex]})`,
         }}
       >
         <div className="home-hero-copy">
-          <h1>Welcome to the Smart Campus</h1>
+          {/* CHANGE: added kicker label */}
+          <p className="home-hero-kicker">Public Landing</p>
+
+          {/* CHANGE: updated headline to match the image */}
+          <h1>Campus operations, bookings, and coordination in one secure hub.</h1>
+
+          {/* CHANGE: added subtitle paragraph */}
+          <p className="home-hero-subtitle">
+            Explore the platform first. When users sign in, they move into a dedicated dashboard
+            instead of looping back to marketing content.
+          </p>
+
+          {/* CHANGE: added Login + Explore Resources CTA buttons */}
+          <div className="home-hero-actions">
+            <Link to="/login" className="home-hero-primary">Login</Link>
+            <a href="#landing-resources" className="home-hero-secondary">Explore Resources</a>
+          </div>
         </div>
 
         <button
@@ -80,7 +99,10 @@ function HomePage() {
 
       <SloganIntroSection />
 
-      <ResourceShowcase />
+      {/* CHANGE: added id="landing-resources" for the "Explore Resources" anchor link */}
+      <div id="landing-resources">
+        <ResourceShowcase />
+      </div>
     </section>
   )
 }

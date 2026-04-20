@@ -1,3 +1,5 @@
+/* FILE: frontend/src/App.css */
+
 :root {
   --bg-app: #f5f7f6;
   --bg-surface: #ffffff;
@@ -2524,7 +2526,6 @@ tbody tr:hover td {
   .resource-showcase-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
 }
 
 @media (max-width: 1440px) {
@@ -2675,7 +2676,6 @@ tbody tr:hover td {
   }
 }
 
-
 /* ============================================================
    PROFILE PAGE — 2FA HERO BADGE
    ============================================================ */
@@ -2700,7 +2700,6 @@ tbody tr:hover td {
    ============================================================ */
 
 .tfa-card {
-  /* spans both columns */
   grid-column: 1 / -1;
 }
 
@@ -2725,7 +2724,6 @@ tbody tr:hover td {
   white-space: nowrap;
 }
 
-/* ── Enabled state ── */
 .tfa-enabled-state {
   display: flex;
   align-items: center;
@@ -2805,14 +2803,12 @@ tbody tr:hover td {
 .tfa-disable-btn:hover { background: #fee2e2; }
 .tfa-disable-btn:disabled, .tfa-switch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Intro text ── */
 .tfa-intro-text {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.9rem;
 }
 
-/* ── Method cards ── */
 .tfa-methods {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2881,7 +2877,6 @@ tbody tr:hover td {
   flex-shrink: 0;
 }
 
-/* ── Setup flow ── */
 .tfa-setup-flow {
   display: grid;
   gap: 0.9rem;
@@ -2921,7 +2916,6 @@ tbody tr:hover td {
   color: var(--text-muted);
 }
 
-/* ── QR code ── */
 .tfa-qr-wrap {
   display: flex;
   flex-direction: column;
@@ -2955,7 +2949,6 @@ tbody tr:hover td {
   font-size: 0.82rem;
 }
 
-/* ── Dev banner ── */
 .tfa-dev-banner {
   display: flex;
   align-items: center;
@@ -2969,7 +2962,6 @@ tbody tr:hover td {
   color: #92400e;
 }
 
-/* ── Code input ── */
 .tfa-code-form {
   display: grid;
   gap: 0.85rem;
@@ -3015,7 +3007,6 @@ tbody tr:hover td {
 }
 .tfa-back-btn:hover { color: var(--text-strong); }
 
-/* ── Responsive ── */
 @media (max-width: 640px) {
   .tfa-methods {
     grid-template-columns: 1fr;
@@ -3027,4 +3018,78 @@ tbody tr:hover td {
   .tfa-code-input {
     max-width: 100%;
   }
+}
+
+/* ============================================================
+   HOME PAGE HERO — public landing additions (NEW)
+   ============================================================ */
+
+.home-hero-kicker {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.home-hero-subtitle {
+  margin: 0.85rem 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+  line-height: 1.65;
+  max-width: 54ch;
+}
+
+.home-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.home-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.72rem 1.8rem;
+  background: #ffffff;
+  color: #111827;
+  font-weight: 700;
+  font-size: 0.97rem;
+  border-radius: 999px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 140ms, transform 140ms;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.home-hero-primary:hover {
+  background: #f0fdf4;
+  transform: translateY(-1px);
+}
+
+.home-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.72rem 1.8rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.97rem;
+  border-radius: 999px;
+  text-decoration: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.38);
+  cursor: pointer;
+  transition: background 140ms, border-color 140ms, transform 140ms;
+  backdrop-filter: blur(4px);
+}
+
+.home-hero-secondary:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
 }
