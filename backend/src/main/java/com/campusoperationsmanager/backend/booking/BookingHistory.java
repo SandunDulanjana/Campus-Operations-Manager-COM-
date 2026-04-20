@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "booking_history")
@@ -37,6 +39,23 @@ public class BookingHistory {
 
     @Column(length = 500)
     private String note;
+
+    @Column
+    private LocalDate bookingDate;
+
+    @Column
+    private LocalTime startTime;
+
+    @Column
+    private LocalTime endTime;
+
+    @Column(length = 500)
+    private String purpose;
+
+    private Integer expectedAttendees;
+
+    @Column(length = 120)
+    private String equipmentType;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -96,6 +115,54 @@ public class BookingHistory {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public LocalDate getBookingDate() {
+        return bookingDate;
+    }
+
+    public void setBookingDate(LocalDate bookingDate) {
+        this.bookingDate = bookingDate;
+    }
+
+    public LocalTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
+    }
+
+    public Integer getExpectedAttendees() {
+        return expectedAttendees;
+    }
+
+    public void setExpectedAttendees(Integer expectedAttendees) {
+        this.expectedAttendees = expectedAttendees;
+    }
+
+    public String getEquipmentType() {
+        return equipmentType;
+    }
+
+    public void setEquipmentType(String equipmentType) {
+        this.equipmentType = equipmentType;
     }
 
     public Instant getCreatedAt() {

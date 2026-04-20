@@ -1,6 +1,8 @@
 package com.campusoperationsmanager.backend.booking;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,7 +14,6 @@ import org.springframework.stereotype.Service;
 import com.campusoperationsmanager.backend.auth.model.User;
 import com.campusoperationsmanager.backend.auth.repository.UserRepository;
 import com.campusoperationsmanager.backend.booking.dto.BookingDetailsResponse;
-import com.campusoperationsmanager.backend.booking.dto.BookingHistoryResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingStatusUpdateRequest;
 import com.campusoperationsmanager.backend.booking.dto.CreateBookingRequest;
@@ -62,38 +63,14 @@ public class BookingService {
             throw new BookingValidationException("Selected resource is OUT_OF_SERVICE");
         }
 
-        boolean hasConflict = bookingRepository.hasApprovedOverlap(
-            request.getResourceId(),
-            request.getBookingDate(),
-            request.getStartTime(),
-            request.getEndTime()
-        );
-
-        if (hasConflict) {
-            throw new BookingConflictException("Requested time range overlaps an approved booking");
-        }
-
-        boolean hasTimetableConflict = timetableService.hasConflict(
-            request.getResourceId(),
-            request.getBookingDate(),
-            request.getStartTime(),
-            request.getEndTime()
-        );
-
-        if (hasTimetableConflict) {
-            throw new BookingConflictException("Requested time range overlaps faculty timetable");
-        }
-
-        if (request.getExpectedAttendees() != null && resource.getCapacity() != null
-            && request.getExpectedAttendees() > resource.getCapacity()) {
-            throw new BookingValidationException("Expected attendees exceed resource capacity");
-        }
+        validateConflicts(request, resource, null);
 
         Booking booking = new Booking();
         booking.setResourceId(resource.getId());
         booking.setResourceName(resource.getName());
         booking.setResourceType(resource.getType().name());
         booking.setUserId(userId);
+        booking.setPreviousBookingId(null);
         booking.setBookingDate(request.getBookingDate());
         booking.setStartTime(request.getStartTime());
         booking.setEndTime(request.getEndTime());
@@ -103,27 +80,39 @@ public class BookingService {
         booking.setStatus(BookingStatus.PENDING);
 
         Booking saved = bookingRepository.save(booking);
-        recordHistory(saved.getId(), userId, null, BookingStatus.PENDING, "Booking request created");
+        recordHistory(saved.getId(), userId, null, BookingStatus.PENDING, "Booking request created", saved);
         return toResponse(saved, resolveUserNames(Set.of(saved.getUserId())));
     }
 
     public List<BookingResponse> getUserBookings(Long userId) {
-        List<Booking> bookings = bookingRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        return toResponses(bookings);
+        List<Booking> allBookings = bookingRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<Booking> latestOnly = keepLatestVersions(allBookings);
+        return toResponses(latestOnly);
     }
 
     public List<BookingResponse> getAllBookings(LocalDate date, String resourceType, BookingStatus status) {
-        List<Booking> bookings = bookingRepository.findAllWithFilters(date, normalizeText(resourceType), status);
-        return toResponses(bookings);
+        List<Booking> allBookings = bookingRepository.findAll();
+        List<Booking> latestOnly = keepLatestVersions(allBookings);
+
+        String normalizedResourceType = normalizeText(resourceType);
+
+        List<Booking> filtered = latestOnly.stream()
+            .filter(booking -> date == null || booking.getBookingDate().equals(date))
+            .filter(booking -> normalizedResourceType == null || normalizedResourceType.equals(booking.getResourceType()))
+            .filter(booking -> status == null || booking.getStatus() == status)
+            .sorted(Comparator.comparing(Booking::getCreatedAt).reversed())
+            .toList();
+
+        return toResponses(filtered);
     }
 
     public List<BookingResponse> getApprovedBookingsForWeek(LocalDate weekStart) {
         LocalDate weekEnd = weekStart.plusDays(6);
         List<Booking> bookings = bookingRepository.findByStatusAndBookingDateBetweenOrderByBookingDateAscStartTimeAsc(
-                BookingStatus.APPROVED,
-                weekStart,
-                weekEnd
-            );
+            BookingStatus.APPROVED,
+            weekStart,
+            weekEnd
+        );
         return toResponses(bookings);
     }
 
@@ -134,23 +123,28 @@ public class BookingService {
             throw new BookingValidationException("You can only view your own booking details");
         }
 
-        Map<Long, String> userNames = resolveUserNames(Set.of(booking.getUserId()));
-        List<BookingHistoryResponse> history = bookingHistoryRepository.findByBookingIdOrderByCreatedAtDesc(bookingId)
-            .stream()
-            .map(BookingHistoryResponse::from)
+        List<Booking> versionChain = getVersionChain(booking);
+
+        Set<Long> userIds = versionChain.stream().map(Booking::getUserId).collect(Collectors.toSet());
+        Map<Long, String> userNames = resolveUserNames(userIds);
+
+        List<BookingResponse> history = versionChain.stream()
+            .filter(version -> !Objects.equals(version.getId(), booking.getId()))
+            .sorted(Comparator.comparing(Booking::getCreatedAt).reversed())
+            .map(version -> toResponse(version, userNames))
             .toList();
 
         return new BookingDetailsResponse(toResponse(booking, userNames), history);
     }
 
     public BookingResponse resubmitBooking(Long bookingId, CreateBookingRequest request, Long actorUserId) {
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId));
+        Booking previousBooking = bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId));
 
-        if (!Objects.equals(booking.getUserId(), actorUserId)) {
+        if (!Objects.equals(previousBooking.getUserId(), actorUserId)) {
             throw new BookingValidationException("You can only resubmit your own booking");
         }
 
-        if (booking.getStatus() != BookingStatus.REJECTED) {
+        if (previousBooking.getStatus() != BookingStatus.REJECTED) {
             throw new BookingValidationException("Only REJECTED bookings can be resubmitted");
         }
 
@@ -165,24 +159,25 @@ public class BookingService {
             throw new BookingValidationException("Selected resource is OUT_OF_SERVICE");
         }
 
-        validateResubmissionConflicts(request, bookingId, resource);
+        validateConflicts(request, resource, null);
 
-        booking.setResourceId(resource.getId());
-        booking.setResourceName(resource.getName());
-        booking.setResourceType(resource.getType().name());
-        booking.setBookingDate(request.getBookingDate());
-        booking.setStartTime(request.getStartTime());
-        booking.setEndTime(request.getEndTime());
-        booking.setPurpose(request.getPurpose().trim());
-        booking.setExpectedAttendees(request.getExpectedAttendees());
-        booking.setEquipmentType(normalizeText(request.getEquipmentType()));
-        booking.setReviewReason(null);
+        Booking newVersion = new Booking();
+        newVersion.setResourceId(resource.getId());
+        newVersion.setResourceName(resource.getName());
+        newVersion.setResourceType(resource.getType().name());
+        newVersion.setUserId(actorUserId);
+        newVersion.setPreviousBookingId(previousBooking.getId());
+        newVersion.setBookingDate(request.getBookingDate());
+        newVersion.setStartTime(request.getStartTime());
+        newVersion.setEndTime(request.getEndTime());
+        newVersion.setPurpose(request.getPurpose().trim());
+        newVersion.setExpectedAttendees(request.getExpectedAttendees());
+        newVersion.setEquipmentType(normalizeText(request.getEquipmentType()));
+        newVersion.setStatus(BookingStatus.PENDING);
+        newVersion.setReviewReason(null);
 
-        BookingStatus previousStatus = booking.getStatus();
-        booking.setStatus(BookingStatus.PENDING);
-
-        Booking saved = bookingRepository.save(booking);
-        recordHistory(saved.getId(), actorUserId, previousStatus, BookingStatus.PENDING, "Booking request resubmitted");
+        Booking saved = bookingRepository.save(newVersion);
+        recordHistory(saved.getId(), actorUserId, BookingStatus.REJECTED, BookingStatus.PENDING, "Booking request resubmitted", saved);
         return toResponse(saved, resolveUserNames(Set.of(saved.getUserId())));
     }
 
@@ -191,7 +186,7 @@ public class BookingService {
         BookingStatus nextStatus = request.getStatus();
 
         if (nextStatus == BookingStatus.CANCELLED) {
-            if (!booking.getUserId().equals(actorUserId) && !isAdmin) {
+            if (!Objects.equals(booking.getUserId(), actorUserId) && !isAdmin) {
                 throw new BookingValidationException("You can only cancel your own booking");
             }
             if (booking.getStatus() != BookingStatus.APPROVED) {
@@ -207,7 +202,7 @@ public class BookingService {
                 "Booking Cancelled",
                 "Your booking for '" + saved.getResourceName() + "' on " + saved.getBookingDate() + " has been cancelled."
             );
-            recordHistory(saved.getId(), actorUserId, previousStatus, BookingStatus.CANCELLED, booking.getReviewReason());
+            recordHistory(saved.getId(), actorUserId, previousStatus, BookingStatus.CANCELLED, booking.getReviewReason(), saved);
             return toResponse(saved, resolveUserNames(Set.of(saved.getUserId())));
         }
 
@@ -239,7 +234,7 @@ public class BookingService {
                 "Booking Approved ✓",
                 "Your booking for '" + saved.getResourceName() + "' on " + saved.getBookingDate() + " has been approved."
             );
-            recordHistory(saved.getId(), actorUserId, previousStatus, BookingStatus.APPROVED, booking.getReviewReason());
+            recordHistory(saved.getId(), actorUserId, previousStatus, BookingStatus.APPROVED, booking.getReviewReason(), saved);
             return toResponse(saved, resolveUserNames(Set.of(saved.getUserId())));
         }
 
@@ -259,7 +254,7 @@ public class BookingService {
                 "Your booking for '" + saved.getResourceName() + "' on " + saved.getBookingDate()
                     + " was rejected. Reason: " + reason
             );
-            recordHistory(saved.getId(), actorUserId, previousStatus, BookingStatus.REJECTED, reason);
+            recordHistory(saved.getId(), actorUserId, previousStatus, BookingStatus.REJECTED, reason, saved);
             return toResponse(saved, resolveUserNames(Set.of(saved.getUserId())));
         }
 
@@ -295,13 +290,13 @@ public class BookingService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private void validateResubmissionConflicts(CreateBookingRequest request, Long bookingId, Resource resource) {
+    private void validateConflicts(CreateBookingRequest request, Resource resource, Long excludeBookingId) {
         boolean hasConflict = bookingRepository.findApprovedOverlaps(
             request.getResourceId(),
             request.getBookingDate(),
             request.getStartTime(),
             request.getEndTime()
-        ).stream().anyMatch(existing -> !existing.getId().equals(bookingId));
+        ).stream().anyMatch(existing -> excludeBookingId == null || !existing.getId().equals(excludeBookingId));
 
         if (hasConflict) {
             throw new BookingConflictException("Requested time range overlaps an approved booking");
@@ -324,6 +319,31 @@ public class BookingService {
         }
     }
 
+    private List<Booking> keepLatestVersions(List<Booking> bookings) {
+        Set<Long> parentIds = bookings.stream()
+            .map(Booking::getPreviousBookingId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+
+        return bookings.stream()
+            .filter(booking -> !parentIds.contains(booking.getId()))
+            .collect(Collectors.toList());
+    }
+
+    private List<Booking> getVersionChain(Booking booking) {
+        List<Booking> versions = new ArrayList<>();
+        Booking cursor = booking;
+        versions.add(cursor);
+
+        while (cursor.getPreviousBookingId() != null) {
+            cursor = bookingRepository.findById(cursor.getPreviousBookingId())
+                .orElseThrow(() -> new BookingValidationException("Booking history is incomplete"));
+            versions.add(cursor);
+        }
+
+        return versions;
+    }
+
     private List<BookingResponse> toResponses(List<Booking> bookings) {
         Map<Long, String> userNames = resolveUserNames(
             bookings.stream().map(Booking::getUserId).collect(Collectors.toSet())
@@ -337,6 +357,9 @@ public class BookingService {
     }
 
     private Map<Long, String> resolveUserNames(Set<Long> userIds) {
+        if (userIds.isEmpty()) {
+            return Map.of();
+        }
         return userRepository.findAllById(userIds).stream().collect(Collectors.toMap(User::getId, this::displayNameFor));
     }
 
@@ -352,7 +375,7 @@ public class BookingService {
         return user.getEmail();
     }
 
-    private void recordHistory(Long bookingId, Long actorUserId, BookingStatus fromStatus, BookingStatus toStatus, String note) {
+    private void recordHistory(Long bookingId, Long actorUserId, BookingStatus fromStatus, BookingStatus toStatus, String note, Booking bookingSnapshot) {
         BookingHistory history = new BookingHistory();
         history.setBookingId(bookingId);
         history.setActorUserId(actorUserId);
@@ -360,6 +383,16 @@ public class BookingService {
         history.setFromStatus(fromStatus);
         history.setToStatus(toStatus);
         history.setNote(normalizeText(note));
+
+        if (bookingSnapshot != null) {
+            history.setBookingDate(bookingSnapshot.getBookingDate());
+            history.setStartTime(bookingSnapshot.getStartTime());
+            history.setEndTime(bookingSnapshot.getEndTime());
+            history.setPurpose(bookingSnapshot.getPurpose());
+            history.setExpectedAttendees(bookingSnapshot.getExpectedAttendees());
+            history.setEquipmentType(bookingSnapshot.getEquipmentType());
+        }
+
         bookingHistoryRepository.save(history);
     }
 
