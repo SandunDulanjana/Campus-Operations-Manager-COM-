@@ -1,5 +1,13 @@
 package com.campusoperationsmanager.backend.ticket.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.campusoperationsmanager.backend.notification.model.NotificationType;
+import com.campusoperationsmanager.backend.notification.service.NotificationService;
 import com.campusoperationsmanager.backend.ticket.dto.CreateCommentRequest;
 import com.campusoperationsmanager.backend.ticket.dto.TicketResponse;
 import com.campusoperationsmanager.backend.ticket.exception.TicketException;
@@ -7,12 +15,8 @@ import com.campusoperationsmanager.backend.ticket.model.Ticket;
 import com.campusoperationsmanager.backend.ticket.model.TicketComment;
 import com.campusoperationsmanager.backend.ticket.repository.TicketCommentRepository;
 import com.campusoperationsmanager.backend.ticket.repository.TicketRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -21,10 +25,11 @@ public class CommentService {
 
     private final TicketCommentRepository commentRepository;
     private final TicketRepository ticketRepository;
+    private final NotificationService notificationService;
 
-    public TicketResponse.CommentResponse addComment(Long ticketId,
-                                                      CreateCommentRequest request,
-                                                      String authorEmail) {
+public TicketResponse.CommentResponse addComment(Long ticketId,
+                                                CreateCommentRequest request,
+                                                String authorEmail) {
         // Check ticket exists first
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> TicketException.notFound(ticketId));
@@ -34,13 +39,32 @@ public class CommentService {
                 .content(request.getContent())
                 .authorEmail(authorEmail)
                 .build();
+                
+        TicketComment saved = commentRepository.save(comment);
 
-        return toResponse(commentRepository.save(comment));
+        // After saving the comment, send notification to ticket owner IF commenter is not the owner
+        if (!authorEmail.equals(ticket.getCreatedByEmail())) {
+            try {
+                notificationService.createTargetedNotification(
+                        ticket.getCreatedByEmail(),
+                        "New Comment on Your Ticket",
+                        authorEmail + " commented on your ticket '" + ticket.getTitle() + "'",
+                        NotificationType.COMMENT_ADDED,
+                        ticket.getId()
+                );
+            } catch (Exception e) {
+                // Don't let notification failure break the comment flow
+            }
+        }
+
+        return toResponse(saved);
+                                            
     }
+    
 
     public TicketResponse.CommentResponse updateComment(Long commentId,
-                                                         CreateCommentRequest request,
-                                                         String userEmail) {
+                                                        CreateCommentRequest request,
+                                                        String userEmail) {
         TicketComment comment = findCommentOrThrow(commentId);
 
         // OWNERSHIP CHECK: only the person who wrote it can edit it

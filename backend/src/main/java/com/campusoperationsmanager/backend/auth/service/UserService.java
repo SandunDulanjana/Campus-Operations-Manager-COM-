@@ -32,6 +32,11 @@ public class UserService {
     @Value("${app.frontend-url:http://localhost:5173}")
     private String frontendUrl;
 
+    public User getUserByEmail(String email) {
+    return userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
     // ─── Core ─────────────────────────────────────────────────────────────────
 
     public User getUserById(Long id) {

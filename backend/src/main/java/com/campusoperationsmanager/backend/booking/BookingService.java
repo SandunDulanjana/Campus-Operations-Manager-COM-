@@ -1,16 +1,21 @@
 package com.campusoperationsmanager.backend.booking;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.campusoperationsmanager.backend.auth.repository.UserRepository;
 import com.campusoperationsmanager.backend.booking.dto.BookingResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingStatusUpdateRequest;
 import com.campusoperationsmanager.backend.booking.dto.CreateBookingRequest;
+import com.campusoperationsmanager.backend.notification.model.NotificationType;
+import com.campusoperationsmanager.backend.notification.service.NotificationService;
 import com.campusoperationsmanager.backend.resource.model.Resource;
 import com.campusoperationsmanager.backend.resource.model.ResourceStatus;
 import com.campusoperationsmanager.backend.resource.model.ResourceType;
 import com.campusoperationsmanager.backend.resource.service.ResourceService;
 import com.campusoperationsmanager.backend.timetable.TimetableService;
-import java.time.LocalDate;
-import java.util.List;
-import org.springframework.stereotype.Service;
 
 @Service
 public class BookingService {
@@ -18,15 +23,21 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final ResourceService resourceService;
     private final TimetableService timetableService;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     public BookingService(
         BookingRepository bookingRepository,
         ResourceService resourceService,
-        TimetableService timetableService
+        TimetableService timetableService,
+        NotificationService notificationService,
+        UserRepository userRepository
     ) {
         this.bookingRepository = bookingRepository;
         this.resourceService = resourceService;
         this.timetableService = timetableService;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
     public BookingResponse createBooking(CreateBookingRequest request, Long userId) {
@@ -124,7 +135,11 @@ public class BookingService {
             }
             booking.setStatus(BookingStatus.CANCELLED);
             booking.setReviewReason(normalizeText(request.getReviewReason()));
-            return BookingResponse.from(bookingRepository.save(booking));
+            Booking saved = bookingRepository.save(booking);
+            sendBookingNotification(saved, NotificationType.BOOKING_CANCELLED,
+                    "Booking Cancelled",
+                    "Your booking for '" + saved.getResourceName() + "' on " + saved.getBookingDate() + " has been cancelled.");
+            return BookingResponse.from(saved);
         }
 
         if (!isAdmin) {
@@ -147,7 +162,11 @@ public class BookingService {
             }
             booking.setStatus(BookingStatus.APPROVED);
             booking.setReviewReason(normalizeText(request.getReviewReason()));
-            return BookingResponse.from(bookingRepository.save(booking));
+            Booking saved = bookingRepository.save(booking);
+            sendBookingNotification(saved, NotificationType.BOOKING_APPROVED,
+                    "Booking Approved ✓",
+                    "Your booking for '" + saved.getResourceName() + "' on " + saved.getBookingDate() + " has been approved.");
+            return BookingResponse.from(saved);
         }
 
         if (nextStatus == BookingStatus.REJECTED) {
@@ -157,7 +176,12 @@ public class BookingService {
             }
             booking.setStatus(BookingStatus.REJECTED);
             booking.setReviewReason(reason);
-            return BookingResponse.from(bookingRepository.save(booking));
+            Booking saved = bookingRepository.save(booking);
+            sendBookingNotification(saved, NotificationType.BOOKING_REJECTED,
+                    "Booking Rejected",
+                    "Your booking for '" + saved.getResourceName() + "' on " + saved.getBookingDate()
+                            + " was rejected. Reason: " + reason);
+            return BookingResponse.from(saved);
         }
 
         throw new BookingValidationException("Unsupported status transition");
@@ -190,5 +214,18 @@ public class BookingService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void sendBookingNotification(Booking booking, NotificationType type,
+                                        String title, String message) {
+        try {
+            // Look up the user email by userId
+            userRepository.findById(booking.getUserId()).ifPresent(user ->
+                    notificationService.createTargetedNotification(
+                            user.getEmail(), title, message, type, booking.getId())
+            );
+        } catch (Exception e) {
+            // Don't let notification failure break the booking flow
+        }
     }
 }
