@@ -24,6 +24,20 @@ const DEFAULT_FORM = {
 const SLOT_START_HOUR = 6
 const SLOT_END_HOUR = 22
 
+function getErrorMessage(error, fallbackMessage) {
+  const status = error?.response?.status
+
+  if (status === 401) {
+    return 'Session expired or missing. Please log in again.'
+  }
+
+  if (status === 403) {
+    return 'You do not have permission to access bookings.'
+  }
+
+  return error?.response?.data?.error || fallbackMessage
+}
+
 function BookingPage() {
   const { user } = useAuth()
   const [resources, setResources] = useState([])
@@ -94,8 +108,8 @@ function BookingPage() {
     try {
       const data = await fetchResources()
       setResources(data.filter((resource) => resource.status === 'ACTIVE'))
-    } catch {
-      setErrorMessage('Failed to load resources')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to load resources'))
     }
   }
 
@@ -103,8 +117,8 @@ function BookingPage() {
     try {
       const data = await fetchMyBookings(user)
       setMyBookings(data)
-    } catch {
-      setErrorMessage('Failed to load bookings')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to load bookings'))
     }
   }
 
@@ -162,7 +176,7 @@ function BookingPage() {
       setSuccessMessage('Booking request created with status PENDING')
       await loadMyBookings()
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to create booking request')
+      setErrorMessage(getErrorMessage(error, 'Failed to create booking request'))
     } finally {
       setLoading(false)
     }
@@ -183,7 +197,7 @@ function BookingPage() {
       setSuccessMessage('Booking cancelled successfully')
       await loadMyBookings()
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to cancel booking')
+      setErrorMessage(getErrorMessage(error, 'Failed to cancel booking'))
     } finally {
       setLoading(false)
     }
@@ -200,7 +214,7 @@ function BookingPage() {
       const result = await uploadTimetable(uploadFile, user)
       setUploadResult(result)
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to upload timetable')
+      setErrorMessage(getErrorMessage(error, 'Failed to upload timetable'))
     } finally {
       setUploading(false)
     }
@@ -223,7 +237,7 @@ function BookingPage() {
 
       setWeeklyBookings([...approvedBookings, ...normalizedTimetableSlots])
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to load bookings')
+      setErrorMessage(getErrorMessage(error, 'Failed to load bookings'))
     }
   }
 

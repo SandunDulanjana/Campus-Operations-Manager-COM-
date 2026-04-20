@@ -13,6 +13,20 @@ const DEFAULT_FILTERS = {
   status: '',
 }
 
+function getErrorMessage(error, fallbackMessage) {
+  const status = error?.response?.status
+
+  if (status === 401) {
+    return 'Session expired or missing. Please log in again.'
+  }
+
+  if (status === 403) {
+    return 'You do not have permission to view admin bookings.'
+  }
+
+  return error?.response?.data?.error || fallbackMessage
+}
+
 function AdminBookingsPage() {
   const { user } = useAuth()
   const [bookings, setBookings] = useState([])
@@ -43,8 +57,8 @@ function AdminBookingsPage() {
     try {
       const data = await fetchResources()
       setResources(data)
-    } catch {
-      setErrorMessage('Failed to load resources')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to load resources'))
     }
   }
 
@@ -74,7 +88,7 @@ function AdminBookingsPage() {
 
       setBookings(filtered)
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to load admin bookings')
+      setErrorMessage(getErrorMessage(error, 'Failed to load admin bookings'))
     } finally {
       setLoading(false)
     }
@@ -103,7 +117,7 @@ function AdminBookingsPage() {
       setSuccessMessage('Booking approved')
       await loadBookings()
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to approve booking')
+      setErrorMessage(getErrorMessage(error, 'Failed to approve booking'))
       setLoading(false)
     }
   }
@@ -124,7 +138,7 @@ function AdminBookingsPage() {
       setRejectReasons((current) => ({ ...current, [bookingId]: '' }))
       await loadBookings()
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to reject booking')
+      setErrorMessage(getErrorMessage(error, 'Failed to reject booking'))
       setLoading(false)
     }
   }
