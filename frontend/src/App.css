@@ -1456,6 +1456,21 @@
   border-radius: 0.82rem;
 }
 
+.admin-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.admin-filter-actions .primary-btn,
+.admin-filter-actions .ghost-btn {
+  width: auto;
+  min-width: 120px;
+  height: 2.75rem;
+  border-radius: 0.82rem;
+}
+
 .admin-resource-filter-row {
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -2843,6 +2858,17 @@ tbody tr:hover td {
   }
 
   .admin-filter-row .primary-btn {
+    width: 100%;
+  }
+
+  .admin-filter-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-filter-actions .primary-btn,
+  .admin-filter-actions .ghost-btn {
     width: 100%;
   }
 

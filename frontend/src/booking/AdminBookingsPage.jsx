@@ -138,25 +138,25 @@ function AdminBookingsPage() {
     }
   }
 
-  async function loadBookings() {
+  async function loadBookings(activeFilters = filters) {
     setLoading(true)
     setErrorMessage('')
     try {
       const response = await fetchAllBookings(
         {
-          resourceType: filters.resourceType || undefined,
-          status: filters.status || undefined,
+          resourceType: activeFilters.resourceType || undefined,
+          status: activeFilters.status || undefined,
         },
         user,
       )
 
       const filtered = response.filter((booking) => {
-        if (filters.selectedDate) {
-          return booking.bookingDate === filters.selectedDate
+        if (activeFilters.selectedDate) {
+          return booking.bookingDate === activeFilters.selectedDate
         }
 
-        if (filters.selectedMonth) {
-          return booking.bookingDate.startsWith(filters.selectedMonth)
+        if (activeFilters.selectedMonth) {
+          return booking.bookingDate.startsWith(activeFilters.selectedMonth)
         }
 
         return true
@@ -181,7 +181,13 @@ function AdminBookingsPage() {
 
   async function applyFilters(event) {
     event.preventDefault()
-    await loadBookings()
+    await loadBookings(filters)
+  }
+
+  async function resetFilters() {
+    const clearedFilters = { ...DEFAULT_FILTERS }
+    setFilters(clearedFilters)
+    await loadBookings(clearedFilters)
   }
 
   async function approveBooking(bookingId) {
@@ -452,9 +458,14 @@ function AdminBookingsPage() {
           </select>
         </label>
 
-        <ActionButton kind="primary" type="submit" disabled={loading}>
-          {loading ? 'Loading...' : 'Apply'}
-        </ActionButton>
+        <div className="admin-filter-actions">
+          <ActionButton kind="primary" type="submit" disabled={loading}>
+            {loading ? 'Loading...' : 'Apply'}
+          </ActionButton>
+          <ActionButton kind="ghost" type="button" disabled={loading} onClick={() => { void resetFilters() }}>
+            Reset
+          </ActionButton>
+        </div>
       </form>
 
       <div className="table-panel">
