@@ -6,6 +6,33 @@ import StatusBanner from '../components/ui/StatusBanner'
 import StatusBadge from '../components/ui/StatusBadge'
 import ActionButton from '../components/ui/ActionButton'
 
+function BookingStatIcon({ kind }) {
+  if (kind === 'pending') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M12 7.6v4.7l3 1.8" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+      </svg>
+    )
+  }
+
+  if (kind === 'approved') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <path d="m8.7 12.2 2.2 2.3 4.5-4.7" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4.5" y="6" width="15" height="13" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8 4.5v3M16 4.5v3M4.8 9.5h14.4" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  )
+}
+
 const DEFAULT_FILTERS = {
   selectedDate: '',
   selectedMonth: '',
@@ -51,6 +78,15 @@ function AdminBookingsPage() {
   const resourceTypes = useMemo(
     () => [...new Set(resources.map((resource) => resource.type))].sort(),
     [resources],
+  )
+
+  const bookingStats = useMemo(
+    () => ({
+      total: bookings.length,
+      pending: bookings.filter((booking) => booking.status === 'PENDING').length,
+      approved: bookings.filter((booking) => booking.status === 'APPROVED').length,
+    }),
+    [bookings],
   )
 
   async function loadResources() {
@@ -154,6 +190,38 @@ function AdminBookingsPage() {
 
       <StatusBanner type="error" message={errorMessage} />
       <StatusBanner type="success" message={successMessage} />
+
+      <div className="admin-stat-grid booking-stat-grid">
+        <article className="admin-stat-card booking-stat-card">
+          <div className="booking-stat-card__icon booking-stat-card__icon--total">
+            <BookingStatIcon kind="total" />
+          </div>
+          <div>
+            <p>Total Bookings</p>
+            <h2>{bookingStats.total}</h2>
+          </div>
+        </article>
+
+        <article className="admin-stat-card booking-stat-card">
+          <div className="booking-stat-card__icon booking-stat-card__icon--pending">
+            <BookingStatIcon kind="pending" />
+          </div>
+          <div>
+            <p>Pending Bookings</p>
+            <h2>{bookingStats.pending}</h2>
+          </div>
+        </article>
+
+        <article className="admin-stat-card booking-stat-card">
+          <div className="booking-stat-card__icon booking-stat-card__icon--approved">
+            <BookingStatIcon kind="approved" />
+          </div>
+          <div>
+            <p>Approved Bookings</p>
+            <h2>{bookingStats.approved}</h2>
+          </div>
+        </article>
+      </div>
 
       <form className="admin-filter-row" onSubmit={applyFilters}>
         <label>
