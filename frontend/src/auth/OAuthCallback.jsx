@@ -14,6 +14,16 @@ function OAuthCallback() {
   const pendingToken = searchParams.get('pendingToken')
   const reason       = searchParams.get('reason')
 
+  function getRoleHome(userData) {
+    if (!userData) return '/'
+    if (userData.role === 'ADMIN') return '/admin/dashboard'
+    if (userData.role === 'TECHNICIAN') return '/technician-dashboard'
+    if (userData.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
+    if (userData.role === 'RECOURSEMNG') return '/resource-dashboard'
+    if (userData.role === 'BOOKINGMNG') return '/booking-dashboard'
+    return '/'
+  }
+
   useEffect(() => {
     if (hasProcessed.current) return
     hasProcessed.current = true
@@ -39,11 +49,7 @@ function OAuthCallback() {
     axios.get('http://localhost:8081/api/auth/me')
       .then(res => {
         login(res.data, token)
-        // CHANGE: redirect based on role instead of always going to '/'
-        const role = res.data?.role
-        let destination = '/'
-        if (role === 'ADMIN')      destination = '/admin/dashboard'
-        if (role === 'TECHNICIAN') destination = '/technician-dashboard'
+        const destination = getRoleHome(res.data)
         setTimeout(() => navigate(destination, { replace: true }), 200)
       })
       .catch(() => navigate('/login', { replace: true }))

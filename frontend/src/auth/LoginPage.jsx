@@ -34,6 +34,16 @@ function LoginPage() {
   const [tfCode,          setTfCode]          = useState('')
   const [tfLoading,       setTfLoading]       = useState(false)
 
+  function getRoleHome(userData) {
+    if (!userData) return '/'
+    if (userData.role === 'ADMIN') return '/admin/dashboard'
+    if (userData.role === 'TECHNICIAN') return '/technician-dashboard'
+    if (userData.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
+    if (userData.role === 'RECOURSEMNG') return '/resource-dashboard'
+    if (userData.role === 'BOOKINGMNG') return '/booking-dashboard'
+    return '/'
+  }
+
   // CHANGE: getDestination now accepts the logged-in user object so it can
   // redirect ADMIN → /admin/dashboard and TECHNICIAN → /technician-dashboard.
   // If there is a specific returnTo/from path (e.g. user tried to open /bookings
@@ -43,10 +53,7 @@ function LoginPage() {
     if (returnTo) return decodeURIComponent(returnTo)
     const fromPath = location.state?.from?.pathname
     if (fromPath && fromPath !== '/login') return fromPath
-    // Role-based default landing page
-    if (userData?.role === 'ADMIN')      return '/admin/dashboard'
-    if (userData?.role === 'TECHNICIAN') return '/technician-dashboard'
-    return '/'
+    return getRoleHome(userData)
   }
 
   // ── normal login ──────────────────────────────────────────────────────────
