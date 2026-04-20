@@ -34,6 +34,8 @@ public class Booking {
     @Column(nullable = false)
     private Long userId;
 
+    private Long previousBookingId;
+
     @Column(nullable = false)
     private LocalDate bookingDate;
 
@@ -112,6 +114,14 @@ public class Booking {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getPreviousBookingId() {
+        return previousBookingId;
+    }
+
+    public void setPreviousBookingId(Long previousBookingId) {
+        this.previousBookingId = previousBookingId;
     }
 
     public LocalDate getBookingDate() {

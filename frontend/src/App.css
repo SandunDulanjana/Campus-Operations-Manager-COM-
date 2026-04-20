@@ -1320,19 +1320,47 @@
   border-radius: 0.9rem;
   background: #f8fafc;
   padding: 0.9rem;
+  display: grid;
+  gap: 0.6rem;
 }
 
 .booking-history-item__top {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.15rem;
   color: #475569;
   font-size: 0.88rem;
 }
 
-.booking-history-item p,
-.booking-history-item small,
+.booking-history-item__status {
+  margin: 0;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.booking-history-item__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.booking-history-item__details div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.booking-history-item__details span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.booking-history-item__details strong {
+  color: #334155;
+  font-size: 0.92rem;
+}
+
 .booking-history-empty {
   margin: 0;
   color: #475569;

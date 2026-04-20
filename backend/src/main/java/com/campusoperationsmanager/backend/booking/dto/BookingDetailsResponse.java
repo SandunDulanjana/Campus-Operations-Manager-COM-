@@ -5,9 +5,9 @@ import java.util.List;
 public class BookingDetailsResponse {
 
     private BookingResponse booking;
-    private List<BookingHistoryResponse> history;
+    private List<BookingResponse> history;
 
-    public BookingDetailsResponse(BookingResponse booking, List<BookingHistoryResponse> history) {
+    public BookingDetailsResponse(BookingResponse booking, List<BookingResponse> history) {
         this.booking = booking;
         this.history = history;
     }
@@ -16,7 +16,7 @@ public class BookingDetailsResponse {
         return booking;
     }
 
-    public List<BookingHistoryResponse> getHistory() {
+    public List<BookingResponse> getHistory() {
         return history;
     }
 }

@@ -211,6 +211,11 @@ function AdminBookingsPage() {
     })
   }
 
+  function formatTimeRange(startTime, endTime) {
+    if (!startTime || !endTime) return '-'
+    return `${startTime.slice(0, 5)} - ${endTime.slice(0, 5)}`
+  }
+
   return (
     <section className="admin-bookings-page">
       <div className="panel-header">
@@ -322,7 +327,7 @@ function AdminBookingsPage() {
             <tbody>
               {bookings.map((booking) => (
                 <tr key={booking.id}>
-                  <td>{booking.userId}</td>
+                  <td>{booking.userName || booking.userId}</td>
                   <td>
                     {booking.resourceName}
                     <small className="muted">{booking.resourceType}</small>
@@ -463,13 +468,38 @@ function AdminBookingsPage() {
                   {selectedBookingDetails.history.map((entry) => (
                     <article key={entry.id} className="booking-history-item">
                       <div className="booking-history-item__top">
-                        <strong>{entry.actorName}</strong>
+                        <strong>{entry.userName || 'Unknown User'}</strong>
                         <span>{formatDateTime(entry.createdAt)}</span>
                       </div>
-                      <p>
-                        {entry.fromStatus ? `${entry.fromStatus} -> ${entry.toStatus}` : entry.toStatus}
+                      <p className="booking-history-item__status">
+                        {entry.status}
                       </p>
-                      <small>{entry.note || 'No additional note provided.'}</small>
+                      <div className="booking-history-item__details">
+                        <div>
+                          <span>Date</span>
+                          <strong>{entry.bookingDate || '-'}</strong>
+                        </div>
+                        <div>
+                          <span>Time</span>
+                          <strong>{formatTimeRange(entry.startTime, entry.endTime)}</strong>
+                        </div>
+                        <div>
+                          <span>Purpose</span>
+                          <strong>{entry.purpose || '-'}</strong>
+                        </div>
+                        <div>
+                          <span>Attendees</span>
+                          <strong>{entry.expectedAttendees ?? '-'}</strong>
+                        </div>
+                        <div>
+                          <span>Equipment</span>
+                          <strong>{entry.equipmentType || '-'}</strong>
+                        </div>
+                        <div>
+                          <span>Reason</span>
+                          <strong>{entry.reviewReason || 'No review reason provided.'}</strong>
+                        </div>
+                      </div>
                     </article>
                   ))}
                 </div>
