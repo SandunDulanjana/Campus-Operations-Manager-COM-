@@ -46,7 +46,7 @@ function HomePage() {
       {/* CHANGE: added id="landing-overview" for the navbar "Overview" anchor link */}
       <div
         id="landing-overview"
-        className="home-hero-card"
+        className="home-hero-card landing-anchor-target"
         style={{
           backgroundImage: `linear-gradient(110deg, rgba(56, 60, 68, 0.55), rgba(5, 13, 32, 0)), url(${HERO_IMAGES[activeImageIndex]})`,
         }}
@@ -100,7 +100,7 @@ function HomePage() {
       <SloganIntroSection />
 
       {/* CHANGE: added id="landing-resources" for the "Explore Resources" anchor link */}
-      <div id="landing-resources">
+      <div id="landing-resources" className="landing-anchor-target">
         <ResourceShowcase />
       </div>
     </section>
