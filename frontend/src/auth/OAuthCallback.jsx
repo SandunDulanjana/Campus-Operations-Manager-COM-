@@ -14,22 +14,32 @@ function OAuthCallback() {
   const pendingToken = searchParams.get('pendingToken')
   const reason       = searchParams.get('reason')
 
+  function getRoleHome(userData) {
+    if (!userData) return '/'
+    if (userData.role === 'ADMIN') return '/admin/dashboard'
+    if (userData.role === 'TECHNICIAN') return '/technician-dashboard'
+    if (userData.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
+    if (userData.role === 'RECOURSEMNG') return '/resource-dashboard'
+    if (userData.role === 'BOOKINGMNG') return '/booking-dashboard'
+    return '/'
+  }
+
   useEffect(() => {
     if (hasProcessed.current) return
     hasProcessed.current = true
 
-    // ── New user: needs to enter University ID ─────────────────────────────
+    // ── New user: needs to enter University ID ──────────────────────────────
     if (status === 'needs_university_id' && pendingToken) {
       navigate(`/enter-university-id?pendingToken=${encodeURIComponent(pendingToken)}`, { replace: true })
       return
     }
 
-    // ── Non-token statuses are handled by the JSX below (no redirect) ─────
+    // ── Non-token statuses are handled by the JSX below (no redirect) ───────
     if (status === 'pending_approval' || status === 'rejected' || status === 'disabled') {
-      return  // render the status UI below
+      return
     }
 
-    // ── Normal login ───────────────────────────────────────────────────────
+    // ── Normal login ─────────────────────────────────────────────────────────
     if (!token) {
       navigate('/login', { replace: true })
       return
@@ -39,12 +49,13 @@ function OAuthCallback() {
     axios.get('http://localhost:8081/api/auth/me')
       .then(res => {
         login(res.data, token)
-        setTimeout(() => navigate('/', { replace: true }), 200)
+        const destination = getRoleHome(res.data)
+        setTimeout(() => navigate(destination, { replace: true }), 200)
       })
       .catch(() => navigate('/login', { replace: true }))
   }, [status, token, pendingToken, login, navigate])
 
-  // ── Pending approval screen ──────────────────────────────────────────────
+  // ── Pending approval screen ─────────────────────────────────────────────
   if (status === 'pending_approval') {
     return (
       <div className="login-page">
@@ -90,15 +101,17 @@ function OAuthCallback() {
     )
   }
 
-  // ── Disabled / loading ───────────────────────────────────────────────────
+  // ── Disabled account screen (rest of existing JSX unchanged) ────────────
   if (status === 'disabled') {
     return (
       <div className="login-page">
         <div className="login-card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🔒</div>
-          <h2 style={{ margin: '0 0 0.5rem' }}>Account Disabled</h2>
-          <p style={{ color: '#6b7280' }}>This account has been disabled. Contact your administrator.</p>
-          <Link to="/login" style={{ display: 'inline-block', marginTop: '1.2rem', color: 'var(--brand-600)', fontWeight: 600, textDecoration: 'none' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🚫</div>
+          <h2 style={{ margin: '0 0 0.5rem', color: '#dc2626' }}>Account Disabled</h2>
+          <p style={{ color: '#6b7280', lineHeight: 1.6 }}>
+            Your account has been disabled. Please contact your administrator.
+          </p>
+          <Link to="/login" style={{ display: 'inline-block', marginTop: '1rem', color: 'var(--brand-600)', fontWeight: 600, textDecoration: 'none' }}>
             ← Back to login
           </Link>
         </div>
@@ -106,12 +119,10 @@ function OAuthCallback() {
     )
   }
 
-  // ── Loading / processing ─────────────────────────────────────────────────
   return (
     <div className="login-page">
       <div className="login-card" style={{ textAlign: 'center' }}>
-        <p style={{ color: '#6b7280' }}>Signing you in with Google…</p>
-        <p style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Please wait a moment…</p>
+        <p style={{ color: '#6b7280' }}>Signing you in…</p>
       </div>
     </div>
   )

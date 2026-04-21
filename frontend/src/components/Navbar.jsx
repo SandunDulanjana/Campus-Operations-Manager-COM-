@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react'  // ← CHANGED: added useCallback
+// FILE: frontend/src/components/Navbar.jsx
+
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
-// ← ADD: import notification API functions
 import {
   fetchMyNotifications,
   fetchUnreadCount,
@@ -72,18 +73,16 @@ function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // ← ADD: notification state
   const [notifOpen, setNotifOpen]         = useState(false)
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount]     = useState(0)
   const [notifLoading, setNotifLoading]   = useState(false)
-  const notifRef = useRef(null) // ← ADD
+  const notifRef = useRef(null)
 
   const isAdminRoute = location.pathname.startsWith('/admin')
   const profileAreaRef = useRef(null)
   const resourceAreaRef = useRef(null)
 
-  // ← ADD: load unread count on mount and every 30s
   const loadUnreadCount = useCallback(async () => {
     if (!user) return
     try {
@@ -98,7 +97,6 @@ function Navbar() {
     return () => clearInterval(interval)
   }, [loadUnreadCount])
 
-  // ← ADD: close notification panel when clicking outside
   useEffect(() => {
     if (!notifOpen) return
     function handler(e) {
@@ -110,7 +108,6 @@ function Navbar() {
     return () => document.removeEventListener('mousedown', handler)
   }, [notifOpen])
 
-  // UNCHANGED: existing outside-click handler
   useEffect(() => {
     function handlePointerDown(event) {
       if (profileAreaRef.current && !profileAreaRef.current.contains(event.target)) {
@@ -125,7 +122,7 @@ function Navbar() {
         setIsMenuOpen(false)
         setIsResourceOpen(false)
         setIsSearchOpen(false)
-        setNotifOpen(false) // ← ADD: also close notif panel on Escape
+        setNotifOpen(false)
       }
     }
     document.addEventListener('mousedown', handlePointerDown)
@@ -136,7 +133,6 @@ function Navbar() {
     }
   }, [])
 
-  // ← ADD: open panel and load notifications
   async function openNotifPanel() {
     setNotifOpen(true)
     setNotifLoading(true)
@@ -147,14 +143,12 @@ function Navbar() {
     finally { setNotifLoading(false) }
   }
 
-  // ← ADD: mark one as read
   async function handleMarkRead(id) {
     await markNotificationRead(id)
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
     setUnreadCount(prev => Math.max(0, prev - 1))
   }
 
-  // ← ADD: mark all as read
   async function handleMarkAllRead() {
     await markAllNotificationsRead()
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
@@ -167,7 +161,74 @@ function Navbar() {
     navigate('/login')
   }
 
-  if (!user) return null
+  // ── CHANGE: guest navbar now shows Overview + Resources links + Login pill ──
+  if (!user) {
+    return (
+      <header className="site-header">
+        <div className="top-header">
+          <Link to="/" className="brand" aria-label="Go to home page">
+            <span className="brand-mark" aria-hidden="true">
+              <HeaderIcon kind="brand" />
+            </span>
+            <div>
+              <p className="brand-title">Smart Campus</p>
+              <p className="brand-subtitle">Operations Hub</p>
+            </div>
+          </Link>
+
+          <nav aria-label="Public landing navigation" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            
+            <a  href="#landing-overview"
+              style={{
+                color: 'var(--text-strong)',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '0.6rem',
+              }}
+            >
+              Overview
+            </a>
+            
+            <a  href="#landing-resources"
+              style={{
+                color: 'var(--text-strong)',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '0.6rem',
+              }}
+            >
+              Resources
+            </a>
+            <Link
+              to="/login"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textDecoration: 'none',
+                padding: '0.55rem 1.4rem',
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                borderRadius: '999px',
+                background: 'linear-gradient(135deg, var(--brand-600) 0%, var(--accent-700) 100%)',
+                color: '#ffffff',
+                marginLeft: '0.5rem',
+                boxShadow: '0 6px 18px rgba(20,108,105,0.22)',
+                transition: 'transform 140ms, box-shadow 140ms',
+              }}
+            >
+              Login
+            </Link>
+          </nav>
+        </div>
+      </header>
+    )
+  }
+  // ── END CHANGE ──
 
   const initials = user.name
     ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
@@ -188,7 +249,6 @@ function Navbar() {
           </Link>
 
           <div className="top-actions">
-            {/* ← CHANGED: entire bell button replaced with notification panel */}
             <div style={{ position: 'relative' }} ref={notifRef}>
               <button
                 type="button"
@@ -199,13 +259,11 @@ function Navbar() {
                 <span className="nav-icon-shell" aria-hidden="true">
                   <HeaderIcon kind="bell" />
                 </span>
-                {/* ← ADD: live unread badge */}
                 {unreadCount > 0 && (
                   <span className="notify-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
                 )}
               </button>
 
-              {/* ← ADD: notification dropdown panel */}
               {notifOpen && (
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 0.6rem)', right: 0,
@@ -214,7 +272,6 @@ function Navbar() {
                   boxShadow: '0 20px 44px rgba(16,33,43,0.14)',
                   zIndex: 100, display: 'flex', flexDirection: 'column', overflow: 'hidden',
                 }}>
-                  {/* Panel header */}
                   <div style={{ padding: '1rem 1.1rem 0.75rem', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
                       Notifications{' '}
@@ -234,7 +291,6 @@ function Navbar() {
                     )}
                   </div>
 
-                  {/* Panel list */}
                   <div style={{ overflowY: 'auto', flex: 1 }}>
                     {notifLoading ? (
                       <p style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>Loading…</p>
@@ -281,7 +337,6 @@ function Navbar() {
                 </div>
               )}
             </div>
-            {/* ← END of notification panel change */}
 
             <div className="profile-area" ref={profileAreaRef}>
               <button
@@ -335,11 +390,6 @@ function Navbar() {
                   {user.role === 'ADMIN' && !isAdminRoute && (
                     <Link to="/admin" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                       Admin Dashboard
-                    </Link>
-                  )}
-                  {user.role === 'ADMIN' && (
-                    <Link to="/maintain-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Maintain Dashboard
                     </Link>
                   )}
                   {isAdminRoute && (
@@ -436,7 +486,6 @@ function Navbar() {
   )
 }
 
-// ← ADD: helper functions below (add before export default)
 function getNotifIcon(type) {
   switch (type) {
     case 'BOOKING_APPROVED':      return '✅'
