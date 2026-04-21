@@ -7,6 +7,7 @@ import HomePage from './home/HomePage'
 import AdminLayout from './admin/AdminLayout'
 import RequireAdmin from './admin/RequireAdmin'
 import RequireAuth from './auth/RequireAuth'
+import RequireRole from './auth/RequireRole'
 import AdminUsersPage from './admin/AdminUsersPage'
 import AdminResourcesPage from './admin/AdminResourcesPage'
 import AdminDashboardHome from './admin/AdminDashboardHome'
@@ -41,6 +42,9 @@ function getRoleHome(user) {
   if (!user) return '/'
   if (user.role === 'ADMIN')       return '/admin/dashboard'
   if (user.role === 'TECHNICIAN')  return '/technician-dashboard'
+  if (user.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
+  if (user.role === 'RECOURSEMNG') return '/resource-dashboard'
+  if (user.role === 'BOOKINGMNG') return '/booking-dashboard'
   return '/'
 }
 
@@ -49,6 +53,7 @@ function App() {
   const { user } = useAuth()
   const isAdminRoute = location.pathname.startsWith('/admin')
   const isLoginRoute = location.pathname === '/login'
+    || location.pathname === '/oauth/callback'
     || location.pathname.startsWith('/oauth2')
     || location.pathname === '/forgot-password'
     || location.pathname === '/reset-password'
@@ -77,10 +82,22 @@ function App() {
           <Route path="/bookings" element={<RequireAuth><BookingPage /></RequireAuth>} />
 
           {/* Role-specific dashboards */}
-          <Route path="/technician-dashboard"  element={<RequireAuth><TechnicianDashboard /></RequireAuth>} />
-          <Route path="/maintenance-dashboard" element={<RequireAuth><MaintenanceDashboard /></RequireAuth>} />
-          <Route path="/resource-dashboard"    element={<RequireAuth><ResourceDashboard /></RequireAuth>} />
-          <Route path="/booking-dashboard"     element={<RequireAuth><BookingManagerDashboard /></RequireAuth>} />
+          <Route
+            path="/technician-dashboard"
+            element={<RequireAuth><RequireRole allowedRoles={['TECHNICIAN']}><TechnicianDashboard /></RequireRole></RequireAuth>}
+          />
+          <Route
+            path="/maintenance-dashboard"
+            element={<RequireAuth><RequireRole allowedRoles={['MAINTENANCEMNG']}><MaintenanceDashboard /></RequireRole></RequireAuth>}
+          />
+          <Route
+            path="/resource-dashboard"
+            element={<RequireAuth><RequireRole allowedRoles={['RECOURSEMNG']}><ResourceDashboard /></RequireRole></RequireAuth>}
+          />
+          <Route
+            path="/booking-dashboard"
+            element={<RequireAuth><RequireRole allowedRoles={['BOOKINGMNG']}><BookingManagerDashboard /></RequireRole></RequireAuth>}
+          />
 
           <Route path="/tickets"     element={<RequireAuth><MyTicketsPage /></RequireAuth>} />
           <Route path="/tickets/my"  element={<RequireAuth><MyTicketsPage /></RequireAuth>} />

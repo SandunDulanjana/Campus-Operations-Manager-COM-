@@ -3024,6 +3024,10 @@ tbody tr:hover td {
    HOME PAGE HERO — public landing additions (NEW)
    ============================================================ */
 
+.landing-anchor-target {
+  scroll-margin-top: 7.5rem;
+}
+
 .home-hero-kicker {
   margin: 0 0 0.75rem;
   font-size: 0.78rem;

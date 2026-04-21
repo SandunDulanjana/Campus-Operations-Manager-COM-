@@ -176,7 +176,7 @@ function Navbar() {
             </div>
           </Link>
 
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          <nav aria-label="Public landing navigation" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
             
             <a  href="#landing-overview"
               style={{
