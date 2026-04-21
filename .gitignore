@@ -4,6 +4,7 @@ backend/target/
 *.jar
 
 # Frontend
+node_modules/
 frontend/node_modules/
 frontend/dist/
 frontend/.env
@@ -13,3 +14,11 @@ frontend/.env
 .vscode/settings.json
 *.iml
 .DS_Store
+
+# Local AI tooling
+.agents/
+.codex/
+plugins/
+
+# Project notes
+prompt.md

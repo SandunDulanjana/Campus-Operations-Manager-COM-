@@ -1,0 +1,13 @@
+[dev_services]
+frontend = ["bash", "-lc", "cd frontend && npm run dev -- --host 0.0.0.0"]
+backend = ["bash", "-lc", "cd backend && ./mvnw spring-boot:run"]
+
+[commands]
+lint = ["bash", "-lc", "cd frontend && npm run lint"]
+test = ["bash", "-lc", "cd backend && ./mvnw test -B"]
+
+[browser]
+url = "http://localhost:5173"
+
+[env]
+FORCE_COLOR = "3"

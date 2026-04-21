@@ -1,0 +1,41 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor white
+skinparam packageStyle rectangle
+skinparam rectangle {
+  FontName Arial
+  FontColor #111827
+  BorderColor #334155
+  RoundCorner 12
+}
+
+package "Done" {
+  rectangle "ResourceType" as RT #ECFDF5
+  rectangle "ResourceStatus" as RS #ECFDF5
+  rectangle "Resource" as R #ECFDF5
+  rectangle "ResourceRepository" as RR #ECFDF5
+
+  RT --> R
+  RS --> R
+  RR --> R
+}
+
+package "Next" {
+  rectangle "ResourceService" as S #FFF7ED
+  rectangle "ResourceController" as C #FFF7ED
+  rectangle "Validation" as V #FFF7ED
+  rectangle "REST API" as A #FFF7ED
+  rectangle "Frontend" as F #FFF7ED
+  rectangle "Tests" as T #FFF7ED
+}
+
+R --> S
+S --> C
+S --> V
+C --> A
+C --> F
+S --> T
+C --> T
+
+@enduml

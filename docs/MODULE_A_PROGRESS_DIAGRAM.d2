@@ -1,0 +1,79 @@
+direction: right
+
+vars: {
+  done_fill: "#ecfdf5"
+  done_stroke: "#16a34a"
+  next_fill: "#fff7ed"
+  next_stroke: "#ea580c"
+}
+
+Done: {
+  label: "Done"
+  style: {
+    fill: "#ffffff"
+    stroke: "#cbd5e1"
+  }
+
+  ResourceType: {
+    style.fill: ${done_fill}
+    style.stroke: ${done_stroke}
+  }
+  ResourceStatus: {
+    style.fill: ${done_fill}
+    style.stroke: ${done_stroke}
+  }
+  Resource: {
+    style.fill: ${done_fill}
+    style.stroke: ${done_stroke}
+  }
+  ResourceRepository: {
+    style.fill: ${done_fill}
+    style.stroke: ${done_stroke}
+  }
+
+  ResourceType -> Resource
+  ResourceStatus -> Resource
+  ResourceRepository -> Resource
+}
+
+Next: {
+  label: "Next"
+  style: {
+    fill: "#ffffff"
+    stroke: "#cbd5e1"
+  }
+
+  ResourceService: {
+    style.fill: ${next_fill}
+    style.stroke: ${next_stroke}
+  }
+  ResourceController: {
+    style.fill: ${next_fill}
+    style.stroke: ${next_stroke}
+  }
+  Validation: {
+    style.fill: ${next_fill}
+    style.stroke: ${next_stroke}
+  }
+  REST_API: {
+    label: "REST API"
+    style.fill: ${next_fill}
+    style.stroke: ${next_stroke}
+  }
+  Frontend: {
+    style.fill: ${next_fill}
+    style.stroke: ${next_stroke}
+  }
+  Tests: {
+    style.fill: ${next_fill}
+    style.stroke: ${next_stroke}
+  }
+}
+
+Done.Resource -> Next.ResourceService
+Next.ResourceService -> Next.ResourceController
+Next.ResourceService -> Next.Validation
+Next.ResourceController -> Next.REST_API
+Next.ResourceController -> Next.Frontend
+Next.ResourceService -> Next.Tests
+Next.ResourceController -> Next.Tests
