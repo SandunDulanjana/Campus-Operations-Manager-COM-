@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useAuth } from '../context/useAuth'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +30,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
+import CampusMark from '@/components/icons/CampusMark'
 import {
   BellIcon,
   BoxesIcon,
@@ -39,7 +40,6 @@ import {
   LogOutIcon,
   SearchIcon,
   Settings2Icon,
-  ShieldIcon,
   TicketIcon,
   UserCogIcon,
   UsersIcon,
@@ -101,19 +101,19 @@ function AdminLayout() {
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader className="p-4">
           <Card size="sm" className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent">
-            <CardContent className="px-0 group-data-[collapsible=icon]:px-0">
+            <CardHeader className="px-0 group-data-[collapsible=icon]:px-0">
               <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-background text-foreground shadow-sm">
-                  <ShieldIcon />
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border bg-background text-foreground shadow-sm">
+                  <CampusMark className="size-7" />
                 </div>
                 <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                  <p className="truncate text-sm font-semibold text-sidebar-foreground">Smart Campus</p>
-                  <span className="truncate text-xs uppercase tracking-[0.24em] text-sidebar-foreground/60">
+                  <CardTitle className="truncate text-[1.05rem] font-semibold text-sidebar-foreground">Smart Campus</CardTitle>
+                  <CardDescription className="truncate text-[0.67rem] font-medium uppercase tracking-[0.18em] text-sidebar-foreground/60">
                     Operations Hub
-                  </span>
+                  </CardDescription>
                 </div>
               </div>
-            </CardContent>
+            </CardHeader>
           </Card>
         </SidebarHeader>
 
