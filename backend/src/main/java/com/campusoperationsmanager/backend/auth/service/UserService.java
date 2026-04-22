@@ -17,6 +17,8 @@ import com.campusoperationsmanager.backend.auth.dto.UpdateProfileRequest;
 import com.campusoperationsmanager.backend.auth.dto.UserDTO;
 import com.campusoperationsmanager.backend.auth.model.User;
 import com.campusoperationsmanager.backend.auth.repository.UserRepository;
+import com.campusoperationsmanager.backend.notification.model.NotificationType;
+import com.campusoperationsmanager.backend.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,16 +30,18 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    // ── CHANGE 2: inject NotificationService ─────────────────────────────────
+    private final NotificationService notificationService;
 
     @Value("${app.frontend-url:http://localhost:5173}")
     private String frontendUrl;
 
     public User getUserByEmail(String email) {
-    return userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 
-    // ─── Core ─────────────────────────────────────────────────────────────────
+    // ── Core ──────────────────────────────────────────────────────────────────
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
@@ -66,7 +70,7 @@ public class UserService {
         log.info("User deactivated: {}", user.getEmail());
     }
 
-    // ─── Google OAuth helpers ─────────────────────────────────────────────────
+    // ── Google OAuth helpers ──────────────────────────────────────────────────
 
     public User consumeInviteViaGoogle(Long userId, String googleId, String name, String picture) {
         User user = getUserById(userId);
@@ -86,7 +90,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // Keep as safety wrapper — not used by OAuth handler anymore
     public User findOrCreateUser(String email, String name, String googleId, String picture) {
         return userRepository.findByEmail(email)
                 .orElseGet(() -> userRepository.save(User.builder()
@@ -96,7 +99,7 @@ public class UserService {
                         .build()));
     }
 
-    // ─── Login ────────────────────────────────────────────────────────────────
+    // ── Login ─────────────────────────────────────────────────────────────────
 
     public User login(String username, String rawPassword) {
         User user = userRepository.findByUsername(username)
@@ -108,7 +111,7 @@ public class UserService {
         return user;
     }
 
-    // ─── DTO mapping ──────────────────────────────────────────────────────────
+    // ── DTO mapping ───────────────────────────────────────────────────────────
 
     public UserDTO toDTO(User user) {
         return UserDTO.builder()
@@ -126,14 +129,13 @@ public class UserService {
                 .twoFactorEnabled(user.isTwoFactorEnabled())
                 .twoFactorMethod(user.getTwoFactorMethod())
                 .invitePending(user.getInviteToken() != null)
-                // ↓ Registration status fields — belong HERE not in the builder
                 .registrationStatus(user.getRegistrationStatus() != null
                         ? user.getRegistrationStatus().name() : "ACTIVE")
                 .rejectionReason(user.getRejectionReason())
                 .build();
     }
 
-    // ─── Profile update ───────────────────────────────────────────────────────
+    // ── Profile update ────────────────────────────────────────────────────────
 
     public User updateProfile(Long userId, UpdateProfileRequest request) {
         User user = getUserById(userId);
@@ -146,7 +148,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // ─── Password change ──────────────────────────────────────────────────────
+    // ── Password change ───────────────────────────────────────────────────────
 
     public void updatePassword(Long userId, UpdatePasswordRequest request) {
         User user = getUserById(userId);
@@ -167,7 +169,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // ─── Forgot / Reset password ──────────────────────────────────────────────
+    // ── Forgot / Reset password ───────────────────────────────────────────────
 
     private static final String KEYWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int KEYWORD_LENGTH = 8;
@@ -190,7 +192,7 @@ public class UserService {
         user.setResetKeyword(keyword);
         user.setResetKeywordExpiry(LocalDateTime.now().plusMinutes(KEYWORD_EXPIRY_MINUTES));
         userRepository.save(user);
-        log.info("Password reset keyword generated for: {} [DEV — keyword: {}]",
+        log.info("Password reset keyword generated for: {} [DEV – keyword: {}]",
                 user.getEmail(), keyword);
         return keyword;
     }
@@ -217,7 +219,7 @@ public class UserService {
         log.info("Password reset via keyword for: {}", user.getEmail());
     }
 
-    // ─── Invite: Admin creates a pending user ────────────────────────────────
+    // ── Invite: Admin creates a pending user ──────────────────────────────────
 
     private static final int TOKEN_BYTE_LENGTH = 36;
 
@@ -237,7 +239,6 @@ public class UserService {
         for (byte b : bytes) sb.append(String.format("%02x", b));
         String token = sb.toString();
 
-        // ✅ FIXED: only valid User entity fields here — no DTO fields, no self-references
         User user = User.builder()
                 .email(email)
                 .name(req.getName().trim())
@@ -249,7 +250,7 @@ public class UserService {
                         ? req.getDepartment().trim() : null)
                 .inviteToken(token)
                 .inviteExpiry(LocalDateTime.now().plusHours(24))
-                .registrationStatus(User.RegistrationStatus.ACTIVE)  // admin-invited = pre-approved
+                .registrationStatus(User.RegistrationStatus.ACTIVE)
                 .build();
 
         User saved = userRepository.save(user);
@@ -259,7 +260,7 @@ public class UserService {
         return Map.entry(saved, inviteUrl);
     }
 
-    // ─── Invite: Validate token ───────────────────────────────────────────────
+    // ── Invite: Validate token ────────────────────────────────────────────────
 
     public User validateInviteToken(String token) {
         User user = userRepository.findByInviteToken(token)
@@ -271,7 +272,7 @@ public class UserService {
         return user;
     }
 
-    // ─── Invite: Complete setup with a password ───────────────────────────────
+    // ── Invite: Complete setup with a password ────────────────────────────────
 
     public User completeInviteWithPassword(String token, String password) {
         User user = validateInviteToken(token);
@@ -284,10 +285,10 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // ─── Self-registration (Google new user flow) ─────────────────────────────
+    // ── Self-registration (Google new user flow) ──────────────────────────────
 
     public User createRegistrationRequest(String email, String googleId,
-                                          String name, String picture, String universityId) {
+                                        String name, String picture, String universityId) {
         if (universityId == null || universityId.isBlank())
             throw new RuntimeException("University ID is required.");
         String cleanId = universityId.trim();
@@ -304,9 +305,37 @@ public class UserService {
                 .registrationStatus(User.RegistrationStatus.PENDING_APPROVAL)
                 .enabled(false)
                 .build();
-        userRepository.save(user);
+        User saved = userRepository.save(user);
         log.info("New registration request: email={} universityId={}", email, cleanId);
-        return user;
+
+        // ── CHANGE 3: notify all admin users about the new registration request ──
+        try {
+            String adminTitle   = "📋 New Registration Request";
+            String adminMessage = name + " (" + email + ") submitted a registration request "
+                    + "with University ID: " + cleanId
+                    + ". Please review and approve or reject from the Admin → Users panel.";
+
+            userRepository.findAll().stream()
+                    .filter(u -> u.getRole() == User.Role.ADMIN && u.isEnabled())
+                    .forEach(admin -> {
+                        try {
+                            notificationService.createTargetedNotification(
+                                    admin.getEmail(),
+                                    adminTitle,
+                                    adminMessage,
+                                    NotificationType.REGISTRATION_REQUEST,
+                                    saved.getId()
+                            );
+                        } catch (Exception ignored) {
+                            // individual send failure must not block registration
+                        }
+                    });
+        } catch (Exception e) {
+            // Never let notification failure prevent the user from registering
+            log.warn("Failed to send admin registration-request notifications: {}", e.getMessage());
+        }
+
+        return saved;
     }
 
     public List<User> getPendingRegistrations() {
@@ -326,18 +355,18 @@ public class UserService {
         user.setRejectionReason(null);
         userRepository.save(user);
 
-        log.info("Registration APPROVED: {} [DEV — dummyPwd: {}]", user.getEmail(), dummyPassword);
+        log.info("Registration APPROVED: {} [DEV – dummyPwd: {}]", user.getEmail(), dummyPassword);
         return Map.of(
             "message", "User approved.",
             "devEmail", Map.of(
                 "to",      user.getEmail(),
                 "subject", "Your Smart Campus account is approved!",
                 "body",    "Hello " + user.getName() + ",\n\n"
-                         + "Your registration has been approved.\n"
-                         + "University ID : " + user.getUsername() + "\n"
-                         + "Temp Password : " + dummyPassword + "\n\n"
-                         + "Please log in and change your password.",
-                "devNote", "⚠️ Dev mode — wire a real email service for production"
+                        + "Your registration has been approved.\n"
+                        + "University ID : " + user.getUsername() + "\n"
+                        + "Temp Password : " + dummyPassword + "\n\n"
+                        + "Please log in and change your password.",
+                "devNote", "⚠️ Dev mode – wire a real email service for production"
             )
         );
     }
@@ -361,15 +390,15 @@ public class UserService {
                 "to",      user.getEmail(),
                 "subject", "Your Smart Campus registration",
                 "body",    "Hello " + user.getName() + ",\n\n"
-                         + "Your registration request has been declined.\n"
-                         + "Reason: " + reason + "\n\n"
-                         + "Contact your administrator if you think this is a mistake.",
-                "devNote", "⚠️ Dev mode — wire a real email service for production"
+                        + "Your registration request has been declined.\n"
+                        + "Reason: " + reason + "\n\n"
+                        + "Contact your administrator if you think this is a mistake.",
+                "devNote", "⚠️ Dev mode – wire a real email service for production"
             )
         );
     }
 
-        // ─── Permanent delete (only for already-deactivated accounts) ────────────────
+    // ── Permanent delete (only for already-deactivated accounts) ─────────────
     public void permanentDeleteUser(Long userId) {
         User user = getUserById(userId);
         if (user.isEnabled()) {
@@ -380,5 +409,4 @@ public class UserService {
         userRepository.deleteById(userId);
         log.info("User permanently deleted: id={} email={}", userId, user.getEmail());
     }
-
 }

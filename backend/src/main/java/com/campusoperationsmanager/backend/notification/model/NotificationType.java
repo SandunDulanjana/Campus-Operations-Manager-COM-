@@ -6,5 +6,6 @@ public enum NotificationType {
     BOOKING_CANCELLED,
     TICKET_STATUS_CHANGED,
     COMMENT_ADDED,
-    ADMIN_BROADCAST   // manually published by admin
+    ADMIN_BROADCAST,        // manually published by admin
+    REGISTRATION_REQUEST    // NEW: new user submitted university ID, waiting for admin approval
 }
