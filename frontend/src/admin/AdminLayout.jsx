@@ -163,8 +163,8 @@ function AdminLayout() {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="min-h-svh bg-muted/30">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/90 px-4 backdrop-blur md:px-6">
+      <SidebarInset className="min-h-svh bg-background">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-6">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
             <div className="hidden md:block">

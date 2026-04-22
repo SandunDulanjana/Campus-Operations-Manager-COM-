@@ -919,10 +919,7 @@
   padding: 0;
   overflow: hidden;
   min-height: 0;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 28%),
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 24%),
-    linear-gradient(180deg, #09090b 0%, #111113 100%);
+  background: var(--background);
 }
 
 .admin-shell {
