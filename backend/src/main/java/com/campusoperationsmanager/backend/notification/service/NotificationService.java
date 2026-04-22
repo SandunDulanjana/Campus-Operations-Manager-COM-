@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Propagation;    // ← ADD THIS IMPORT
 import org.springframework.transaction.annotation.Transactional;
 
 import com.campusoperationsmanager.backend.notification.dto.CreateNotificationRequest;
@@ -28,8 +28,6 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationReadRepository notificationReadRepository;
-    // ── NEW: injected for email delivery ─────────────────────────────────────
-    private final EmailNotificationService emailNotificationService;
 
     // ── Admin: Create broadcast notification ─────────────────────────────────
     @Transactional
@@ -41,7 +39,7 @@ public class NotificationService {
                 .message(request.getMessage().trim())
                 .type(NotificationType.ADMIN_BROADCAST)
                 .targetAudience(audience)
-                .published(request.isPublished())
+                .published(request.isPublished())   // ← always explicitly set (no @Builder.Default needed)
                 .createdByEmail(adminEmail)
                 .build();
 
@@ -50,30 +48,27 @@ public class NotificationService {
         return NotificationDTO.from(saved, false);
     }
 
-    // ── Internal: Create targeted notification (booking / ticket / comment / registration)
-    // REQUIRES_NEW so a failure here does NOT roll back the caller's transaction.
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    // ── Internal: Create targeted notification (booking/ticket/comment events)
+    // ← CHANGED: Propagation.REQUIRES_NEW — runs in its OWN transaction so if this
+    //   fails it does NOT roll back the caller's transaction (e.g. TicketService.updateStatus)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)  // ← CHANGED from plain @Transactional
     public void createTargetedNotification(String targetEmail,
                                            String title,
                                            String message,
                                            NotificationType type,
                                            Long referenceId) {
-        // 1. Save in-app notification (always)
         AppNotification notification = AppNotification.builder()
                 .title(title)
                 .message(message)
                 .type(type)
                 .targetEmail(targetEmail)
-                .published(true)
+                .published(true)            // ← always explicitly set
                 .referenceId(referenceId)
                 .createdByEmail("system")
                 .build();
 
         notificationRepository.save(notification);
-        log.info("Targeted notification saved: type={} to={} ref={}", type, targetEmail, referenceId);
-
-        // 2. Send email notification (non-blocking – EmailNotificationService catches its own exceptions)
-        emailNotificationService.sendNotificationEmail(targetEmail, title, message, type, referenceId);
+        log.info("Targeted notification created: type={} to={} ref={}", type, targetEmail, referenceId);
     }
 
     // ── User: Get all visible notifications ──────────────────────────────────
@@ -81,15 +76,19 @@ public class NotificationService {
     public List<NotificationDTO> getNotificationsForUser(String email, String role) {
         List<AppNotification> result = new ArrayList<>();
 
+        // 1. Targeted notifications (sent directly to this user)
         result.addAll(notificationRepository
                 .findByTargetEmailAndPublishedTrueOrderByCreatedAtDesc(email));
 
+        // 2. Broadcast notifications visible to this user's role
         notificationRepository.findAllPublishedBroadcasts().stream()
                 .filter(n -> n.isVisibleToRole(role))
                 .forEach(result::add);
 
+        // Sort by createdAt desc
         result.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
 
+        // Get set of read notification IDs for this user
         Set<Long> readIds = notificationReadRepository.findByUserEmail(email)
                 .stream()
                 .map(NotificationRead::getNotificationId)

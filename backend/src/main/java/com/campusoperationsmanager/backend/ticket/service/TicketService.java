@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.campusoperationsmanager.backend.auth.model.User;
-import com.campusoperationsmanager.backend.auth.repository.UserRepository;
 import com.campusoperationsmanager.backend.notification.model.NotificationType;
 import com.campusoperationsmanager.backend.notification.service.NotificationService;
 import com.campusoperationsmanager.backend.ticket.dto.CreateTicketRequest;
@@ -24,18 +22,20 @@ import com.campusoperationsmanager.backend.ticket.repository.TicketRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
-@RequiredArgsConstructor
-@Transactional
+@Service              // Marks this as a Spring-managed service bean
+@RequiredArgsConstructor  // Lombok: constructor injection for all final fields
+@Transactional        // All methods run inside a DB transaction by default
 public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final TicketCommentRepository commentRepository;
     private final TicketAttachmentRepository attachmentRepository;
     private final NotificationService notificationService;
-    private final UserRepository userRepository;
 
+    // SLA Thresholds
+    // If first response takes longer than 60 min → SLA breached
     private static final long SLA_FIRST_RESPONSE_MINUTES = 60;
+    // If resolution takes longer than 2 days → SLA breached
     private static final long SLA_RESOLUTION_MINUTES = 2880;
 
     // ═══════════════════════════════════════════════════════════
@@ -57,47 +57,14 @@ public class TicketService {
                 .status(TicketStatus.OPEN)
                 .build();
 
-        Ticket savedTicket = ticketRepository.save(ticket);
-
-        // ── CHANGE: notify all enabled admins about the new ticket ───────────────
-        try {
-            String adminTitle   = "📩 New Ticket Submitted";
-            String adminMessage = "A new ticket #" + savedTicket.getId()
-                    + " has been submitted by " + userEmail
-                    + " — '" + savedTicket.getTitle() + "'"
-                    + " | Category: " + savedTicket.getCategory().name()
-                    + " | Priority: " + savedTicket.getPriority().name()
-                    + " | Location: " + savedTicket.getLocation()
-                    + ". Please review and assign a technician.";
-
-            userRepository.findAll().stream()
-                    .filter(u -> u.getRole() == User.Role.ADMIN && u.isEnabled())
-                    .forEach(admin -> {
-                        try {
-                            notificationService.createTargetedNotification(
-                                    admin.getEmail(),
-                                    adminTitle,
-                                    adminMessage,
-                                    NotificationType.TICKET_STATUS_CHANGED,
-                                    savedTicket.getId()
-                            );
-                        } catch (Exception ignored) {
-                            // individual send failure must not block ticket creation
-                        }
-                    });
-        } catch (Exception e) {
-            // Never let notification failure prevent ticket creation
-        }
-        // ── END CHANGE ───────────────────────────────────────────────────────────
-
-        return toResponse(savedTicket);
+        return toResponse(ticketRepository.save(ticket));
     }
 
     // ═══════════════════════════════════════════════════════════
     // READ
     // ═══════════════════════════════════════════════════════════
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true) // Optimization: no write lock needed
     public TicketResponse getById(Long id) {
         return toResponse(findOrThrow(id));
     }
@@ -127,19 +94,20 @@ public class TicketService {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // UPDATE STATUS
+    // UPDATE STATUS (Core workflow logic)
     // ═══════════════════════════════════════════════════════════
 
     public TicketResponse updateStatus(Long id,
-                                       UpdateTicketStatusRequest request,
-                                       String userEmail,
-                                       boolean isAdmin) {
+                                    UpdateTicketStatusRequest request,
+                                    String userEmail,
+                                    boolean isAdmin) {
         Ticket ticket = findOrThrow(id);
         TicketStatus newStatus = request.getStatus();
 
+        // 1. Check if this transition is allowed
         validateTransition(ticket.getStatus(), newStatus, isAdmin);
 
-        // SLA: record first response time
+        // 2. SLA: record first response time (when ticket leaves OPEN state)
         if (ticket.getStatus() == TicketStatus.OPEN
                 && newStatus != TicketStatus.OPEN
                 && ticket.getFirstResponseAt() == null) {
@@ -153,28 +121,24 @@ public class TicketService {
             }
         }
 
-        // Capture assigned technician email before switch so we can notify after save
-        String technicianEmailToNotify = null;
-
+        // 3. Handle each transition's specific requirements
         switch (newStatus) {
 
             case IN_PROGRESS -> {
-                if (request.getAssignedToEmail() != null
-                        && !request.getAssignedToEmail().isBlank()) {
-                    String newTechEmail = request.getAssignedToEmail().trim();
-                    ticket.setAssignedToEmail(newTechEmail);
-                    technicianEmailToNotify = newTechEmail;
+                // Assign a technician
+                if (request.getAssignedToEmail() != null && !request.getAssignedToEmail().isBlank()) {
+                    ticket.setAssignedToEmail(request.getAssignedToEmail());
                 }
             }
 
             case RESOLVED -> {
-                if (request.getResolutionNotes() == null
-                        || request.getResolutionNotes().isBlank()) {
-                    throw TicketException.badRequest(
-                            "Resolution notes are required when resolving a ticket");
+                // Resolution notes are REQUIRED
+                if (request.getResolutionNotes() == null || request.getResolutionNotes().isBlank()) {
+                    throw TicketException.badRequest("Resolution notes are required when resolving a ticket");
                 }
                 ticket.setResolutionNotes(request.getResolutionNotes());
 
+                // SLA: record resolution time
                 LocalDateTime now = LocalDateTime.now();
                 ticket.setResolvedAt(now);
                 long minutesToResolve = ChronoUnit.MINUTES.between(ticket.getCreatedAt(), now);
@@ -184,11 +148,11 @@ public class TicketService {
             }
 
             case REJECTED -> {
+                // Only admin can reject, and reason is REQUIRED
                 if (!isAdmin) {
                     throw TicketException.forbidden("reject tickets (admin only)");
                 }
-                if (request.getRejectionReason() == null
-                        || request.getRejectionReason().isBlank()) {
+                if (request.getRejectionReason() == null || request.getRejectionReason().isBlank()) {
                     throw TicketException.badRequest("Rejection reason is required");
                 }
                 ticket.setRejectionReason(request.getRejectionReason());
@@ -200,71 +164,17 @@ public class TicketService {
         ticket.setStatus(newStatus);
         Ticket savedTicket = ticketRepository.save(ticket);
 
-        // Notify ticket creator about status change
+        // Send notification to ticket creator
         try {
             notificationService.createTargetedNotification(
                     savedTicket.getCreatedByEmail(),
                     "Ticket Status Updated",
-                    "Your ticket '" + savedTicket.getTitle() + "' status changed to "
-                            + newStatus.name().replace("_", " "),
+                    "Your ticket '" + savedTicket.getTitle() + "' status changed to " + newStatus.name().replace("_", " "),
                     NotificationType.TICKET_STATUS_CHANGED,
                     savedTicket.getId()
             );
         } catch (Exception e) {
             // Don't let notification failure break the ticket flow
-        }
-
-        // Notify assigned technician when admin assigns them
-        if (technicianEmailToNotify != null) {
-            try {
-                notificationService.createTargetedNotification(
-                        technicianEmailToNotify,
-                        "🔧 You Have Been Assigned a Ticket",
-                        "You have been assigned to ticket #" + savedTicket.getId()
-                                + " — '" + savedTicket.getTitle() + "'"
-                                + " | Priority: " + savedTicket.getPriority().name()
-                                + " | Location: " + savedTicket.getLocation()
-                                + ". Please review and take action.",
-                        NotificationType.TICKET_STATUS_CHANGED,
-                        savedTicket.getId()
-                );
-            } catch (Exception e) {
-                // Don't let notification failure break the ticket flow
-            }
-        }
-
-        // Notify all admins when a technician (non-admin) acts on a ticket
-        if (!isAdmin) {
-            String statusLabel = newStatus.name().replace("_", " ");
-            String adminMessage = "Technician '" + userEmail + "' updated ticket #"
-                    + savedTicket.getId() + " '" + savedTicket.getTitle()
-                    + "' to " + statusLabel + ".";
-
-            if (newStatus == TicketStatus.RESOLVED) {
-                adminMessage += " Resolution notes: "
-                        + (savedTicket.getResolutionNotes() != null
-                                ? savedTicket.getResolutionNotes() : "—")
-                        + ". You may now close this ticket.";
-            }
-
-            final String finalAdminMessage = adminMessage;
-            try {
-                userRepository.findAll().stream()
-                        .filter(u -> u.getRole() == User.Role.ADMIN && u.isEnabled())
-                        .forEach(admin -> {
-                            try {
-                                notificationService.createTargetedNotification(
-                                        admin.getEmail(),
-                                        "🔧 Ticket Updated by Technician",
-                                        finalAdminMessage,
-                                        NotificationType.TICKET_STATUS_CHANGED,
-                                        savedTicket.getId()
-                                );
-                            } catch (Exception ignored) { }
-                        });
-            } catch (Exception e) {
-                // Don't let notification failure break the ticket flow
-            }
         }
 
         return toResponse(savedTicket);
@@ -277,33 +187,44 @@ public class TicketService {
     public void deleteTicket(Long id) {
         Ticket ticket = findOrThrow(id);
         ticketRepository.delete(ticket);
+        // Cascade will automatically delete comments and attachments
     }
 
     // ═══════════════════════════════════════════════════════════
     // PRIVATE HELPERS
     // ═══════════════════════════════════════════════════════════
 
+    // Validate the status workflow: OPEN→IN_PROGRESS→RESOLVED→CLOSED
     private void validateTransition(TicketStatus current, TicketStatus next, boolean isAdmin) {
         boolean allowed = switch (current) {
-            case OPEN        -> next == TicketStatus.IN_PROGRESS || next == TicketStatus.REJECTED;
-            case IN_PROGRESS -> next == TicketStatus.RESOLVED    || next == TicketStatus.REJECTED;
+            // From OPEN: can go to IN_PROGRESS, or REJECTED (admin)
+            case OPEN       -> next == TicketStatus.IN_PROGRESS || next == TicketStatus.REJECTED;
+            // From IN_PROGRESS: can go to RESOLVED, or REJECTED (admin)
+            case IN_PROGRESS -> next == TicketStatus.RESOLVED  || next == TicketStatus.REJECTED;
+            // From RESOLVED: can only go to CLOSED
             case RESOLVED    -> next == TicketStatus.CLOSED;
+            // CLOSED and REJECTED are terminal — no further transitions
             case CLOSED, REJECTED -> false;
         };
 
         if (!allowed) {
             throw TicketException.conflict(
-                    "Cannot transition from " + current + " to " + next);
+                "Cannot transition from " + current + " to " + next
+            );
         }
     }
 
+    // Find ticket or throw a clean 404
     private Ticket findOrThrow(Long id) {
         return ticketRepository.findById(id)
                 .orElseThrow(() -> TicketException.notFound(id));
     }
 
+    // Map Ticket entity → TicketResponse DTO
+    // This runs for every ticket before sending to client
     private TicketResponse toResponse(Ticket ticket) {
 
+        // Calculate SLA durations
         Long minutesToFirstResponse = null;
         Long minutesToResolution = null;
 
@@ -316,6 +237,7 @@ public class TicketService {
                     ticket.getCreatedAt(), ticket.getResolvedAt());
         }
 
+        // Map comments
         List<TicketResponse.CommentResponse> comments = commentRepository
                 .findByTicketIdOrderByCreatedAtAsc(ticket.getId())
                 .stream()
@@ -328,6 +250,7 @@ public class TicketService {
                         .build())
                 .collect(Collectors.toList());
 
+        // Map attachments (metadata only, not fileData)
         List<TicketResponse.AttachmentInfo> attachments = attachmentRepository
                 .findByTicketId(ticket.getId())
                 .stream()
