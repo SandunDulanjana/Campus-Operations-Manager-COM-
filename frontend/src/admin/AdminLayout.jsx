@@ -3,6 +3,15 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useAuth } from '../context/useAuth'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import {
   Sidebar,
@@ -23,9 +32,11 @@ import {
 import {
   BellIcon,
   BoxesIcon,
+  CircleUserIcon,
   LayoutDashboardIcon,
   LogOutIcon,
   SearchIcon,
+  Settings2Icon,
   ShieldIcon,
   TicketIcon,
   UserCogIcon,
@@ -168,19 +179,46 @@ function AdminLayout() {
               <BellIcon />
             </Button>
             {user ? (
-              <button
-                type="button"
-                className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50"
-                onClick={() => navigate('/profile')}
-              >
-                <Avatar>
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-                <div className="hidden md:block">
-                  <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
-                  <span className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{user.role}</span>
-                </div>
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50"
+                  >
+                    <Avatar>
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="hidden md:block">
+                      <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
+                      <span className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{user.role}</span>
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-medium">{user.name || user.email}</span>
+                      <span className="text-xs text-muted-foreground">{user.email}</span>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <CircleUserIcon data-icon="inline-start" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <Settings2Icon data-icon="inline-start" />
+                      Account Settings
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOutIcon data-icon="inline-start" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : null}
           </div>
         </header>
