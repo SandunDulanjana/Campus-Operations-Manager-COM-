@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -87,7 +87,7 @@ function AdminLayout() {
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader className="p-4">
-          <div className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/40 p-3">
+          <div className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/40 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
             <div className="flex size-10 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
               <ShieldIcon />
             </div>
@@ -112,7 +112,7 @@ function AdminLayout() {
                       <SidebarMenuButton asChild isActive={pathname === link.to} size="lg" tooltip={link.label}>
                         <NavLink to={link.to}>
                           <Icon />
-                          <span>{link.label}</span>
+                          <span className="group-data-[collapsible=icon]:hidden">{link.label}</span>
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -127,7 +127,10 @@ function AdminLayout() {
 
         <SidebarFooter className="p-4">
           {user ? (
-            <div className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-3 group-data-[collapsible=icon]:justify-center">
+            <Link
+              to="/profile"
+              className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-3 no-underline transition-colors hover:bg-sidebar-accent/60 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
+            >
               <Avatar size="lg">
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
@@ -137,7 +140,7 @@ function AdminLayout() {
                   {user.role}
                 </span>
               </div>
-            </div>
+            </Link>
           ) : null}
           <Button variant="secondary" className="w-full justify-start group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:px-0" onClick={handleLogout}>
             <LogOutIcon data-icon="inline-start" />
@@ -165,7 +168,11 @@ function AdminLayout() {
               <BellIcon />
             </Button>
             {user ? (
-              <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2">
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50"
+                onClick={() => navigate('/profile')}
+              >
                 <Avatar>
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
@@ -173,7 +180,7 @@ function AdminLayout() {
                   <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
                   <span className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{user.role}</span>
                 </div>
-              </div>
+              </button>
             ) : null}
           </div>
         </header>
