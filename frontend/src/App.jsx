@@ -21,7 +21,9 @@ import ResetPasswordPage from './auth/ResetPasswordPage'
 import CreateTicketPage from './ticket/CreateTicketPage'
 import MyTicketsPage    from './ticket/MyTicketsPage'
 import TicketDetailPage from './ticket/TicketDetailPage'
-import TechnicianDashboard from './ticket/TechnicianDashboard'
+import TechnicianLayout from './technician/TechnicianLayout'
+import TechnicianDashboardHome from './technician/TechnicianDashboardHome'
+import TechnicianNotificationsPage from './technician/TechnicianNotificationsPage'
 import EnterUniversityIdPage from './auth/EnterUniversityIdPage'
 import SetupAccountPage from './auth/SetupAccountPage'
 import AdminTicketsPage from './admin/AdminTicketsPage'
@@ -41,7 +43,7 @@ function BookingManagerDashboard() {
 function getRoleHome(user) {
   if (!user) return '/'
   if (user.role === 'ADMIN')       return '/admin/dashboard'
-  if (user.role === 'TECHNICIAN')  return '/technician-dashboard'
+  if (user.role === 'TECHNICIAN')  return '/technician/dashboard'
   if (user.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
   if (user.role === 'RECOURSEMNG') return '/resource-dashboard'
   if (user.role === 'BOOKINGMNG') return '/booking-dashboard'
@@ -52,6 +54,7 @@ function App() {
   const location = useLocation()
   const { user } = useAuth()
   const isAdminRoute = location.pathname.startsWith('/admin')
+  const isTechnicianRoute = location.pathname.startsWith('/technician')
   const isLoginRoute = location.pathname === '/login'
     || location.pathname === '/oauth/callback'
     || location.pathname.startsWith('/oauth2')
@@ -61,10 +64,10 @@ function App() {
     || location.pathname === '/enter-university-id'
 
   return (
-    <div className={isAdminRoute ? 'app-shell admin-mode' : 'app-shell'}>
+    <div className={isAdminRoute || isTechnicianRoute ? 'app-shell admin-mode' : 'app-shell'}>
       {!isLoginRoute && <Navbar />}
 
-      <main className={isAdminRoute ? 'page-content admin-page-content' : 'page-content'}>
+      <main className={isAdminRoute || isTechnicianRoute ? 'page-content admin-page-content' : 'page-content'}>
         <Routes>
 
           <Route path="/setup-account" element={<SetupAccountPage />} />
@@ -81,11 +84,7 @@ function App() {
           {/* Protected routes — require login */}
           <Route path="/bookings" element={<RequireAuth><BookingPage /></RequireAuth>} />
 
-          {/* Role-specific dashboards */}
-          <Route
-            path="/technician-dashboard"
-            element={<RequireAuth><RequireRole allowedRoles={['TECHNICIAN']}><TechnicianDashboard /></RequireRole></RequireAuth>}
-          />
+          
           <Route
             path="/maintenance-dashboard"
             element={<RequireAuth><RequireRole allowedRoles={['MAINTENANCEMNG']}><MaintenanceDashboard /></RequireRole></RequireAuth>}
@@ -98,6 +97,24 @@ function App() {
             path="/booking-dashboard"
             element={<RequireAuth><RequireRole allowedRoles={['BOOKINGMNG']}><BookingManagerDashboard /></RequireRole></RequireAuth>}
           />
+
+         <Route
+            path="/technician"
+            element={
+              <RequireAuth>
+                <RequireRole allowedRoles={['TECHNICIAN']}>
+                  <TechnicianLayout />
+                </RequireRole>
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard"     element={<TechnicianDashboardHome />} />
+            <Route path="notifications" element={<TechnicianNotificationsPage />} />
+          </Route>
+
+          {/* keeps old URL working just in case */}
+          <Route path="/technician-dashboard" element={<Navigate to="/technician/dashboard" replace />} />
 
           <Route path="/tickets"     element={<RequireAuth><MyTicketsPage /></RequireAuth>} />
           <Route path="/tickets/my"  element={<RequireAuth><MyTicketsPage /></RequireAuth>} />
@@ -133,7 +150,8 @@ function App() {
         </Routes>
       </main>
 
-      {!isLoginRoute && <Footer />}
+      {!isLoginRoute && !isAdminRoute && !isTechnicianRoute && <Footer />}
+    
     </div>
   )
 }

@@ -11,7 +11,7 @@ import {
   getPriorityBadgeClass,
 } from '../api/ticketApi'
 
-function TechnicianDashboard() {
+function TechnicianDashboardHome() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [tickets, setTickets]    = useState([])
@@ -41,18 +41,14 @@ function TechnicianDashboard() {
   const total      = tickets.length
 
   return (
-    <section className="admin-resources-page">
+    <section className="admin-home-page">
 
-      <div className="home-section-card" style={{ padding: '1.5rem' }}>
-        <div className="panel-header">
-          <div>
-            <h1>Technician Dashboard</h1>
-            <p>
-              Welcome, <strong>{user?.name || user?.email}</strong>.
-              These are all tickets currently assigned to you.
-            </p>
-          </div>
-        </div>
+      <div className="admin-home-header">
+        <h1>Dashboard</h1>
+        <p>
+          Welcome, <strong>{user?.name || user?.email}</strong>.
+          Monitor your assigned tickets and notifications from one workspace.
+        </p>
       </div>
 
       <div className="admin-stat-grid">
@@ -75,6 +71,14 @@ function TechnicianDashboard() {
           <p>SLA Breached</p>
           <h2 style={breached > 0 ? { color: '#b91c1c' } : {}}>{breached}</h2>
         </article>
+      </div>
+
+      <div className="admin-section-card">
+        <h2>Quick Overview</h2>
+        <p>
+          Use the sidebar to open your Dashboard and Notifications pages.
+          Ticket updates and status changes are available by clicking any ticket below.
+        </p>
       </div>
 
       <StatusBanner type="error" message={errorMessage} />
@@ -136,7 +140,7 @@ function TechnicianDashboard() {
                     <td>
                       {ticket.slaBreached
                         ? <span className="badge rejected">⚠ Breached</span>
-                        : <span className="badge approved">✓ OK</span>
+                        : <span className="badge approved">✔ OK</span>
                       }
                     </td>
                     <td>
@@ -155,4 +159,4 @@ function TechnicianDashboard() {
   )
 }
 
-export default TechnicianDashboard
+export default TechnicianDashboardHome
