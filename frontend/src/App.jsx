@@ -62,7 +62,7 @@ function App() {
 
   return (
     <div className={isAdminRoute ? 'app-shell admin-mode' : 'app-shell'}>
-      {!isLoginRoute && <Navbar />}
+      {!isLoginRoute && !isAdminRoute && <Navbar />}
 
       <main className={isAdminRoute ? 'page-content admin-page-content' : 'page-content'}>
         <Routes>
@@ -133,7 +133,7 @@ function App() {
         </Routes>
       </main>
 
-      {!isLoginRoute && <Footer />}
+      {!isLoginRoute && !isAdminRoute && <Footer />}
     </div>
   )
 }

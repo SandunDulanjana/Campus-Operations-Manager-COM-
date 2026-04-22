@@ -1,15 +1,42 @@
-import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/useAuth'
 
-// ── CHANGE 1: Added 'notifications' entry to this array ──────────────────────
 const adminLinks = [
-  { to: '/admin/dashboard',     label: 'Dashboard',     icon: 'dashboard'     },
-  { to: '/admin/bookings',      label: 'Bookings',      icon: 'bookings'      },
-  { to: '/admin/tickets',       label: 'Tickets',       icon: 'tickets'       },
-  { to: '/admin/users',         label: 'Users',         icon: 'users'         },
-  { to: '/admin/resources',     label: 'Resources',     icon: 'resources'     },
-  { to: '/admin/notifications', label: 'Notifications', icon: 'notifications' }, // ← ADD THIS LINE
+  { to: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/admin/bookings', label: 'Bookings', icon: 'bookings' },
+  { to: '/admin/tickets', label: 'Tickets', icon: 'tickets' },
+  { to: '/admin/users', label: 'Users', icon: 'users' },
+  { to: '/admin/resources', label: 'Resources', icon: 'resources' },
+  { to: '/admin/notifications', label: 'Notifications', icon: 'notifications' },
 ]
+
+const pageMeta = {
+  '/admin/dashboard': {
+    title: 'Operations Dashboard',
+    subtitle: 'Campus activity, requests, and approvals in one place.',
+  },
+  '/admin/bookings': {
+    title: 'Booking Review',
+    subtitle: 'Inspect requests, approve schedules, and resolve conflicts.',
+  },
+  '/admin/tickets': {
+    title: 'Incident Tickets',
+    subtitle: 'Track service issues, priority, and technician progress.',
+  },
+  '/admin/users': {
+    title: 'User Management',
+    subtitle: 'Approve registrations, roles, and access decisions.',
+  },
+  '/admin/resources': {
+    title: 'Resource Management',
+    subtitle: 'Maintain campus spaces, equipment, and availability windows.',
+  },
+  '/admin/notifications': {
+    title: 'Notifications',
+    subtitle: 'Broadcast updates and control delivery to campus roles.',
+  },
+}
 
 function NavIcon({ kind }) {
   if (kind === 'dashboard') {
@@ -35,7 +62,7 @@ function NavIcon({ kind }) {
   if (kind === 'tickets') {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
         <rect x="9" y="3" width="6" height="4" rx="1" />
         <path d="M9 12h6M9 16h4" />
       </svg>
@@ -63,39 +90,82 @@ function NavIcon({ kind }) {
     )
   }
 
-  // ── CHANGE 2: Added this entire 'notifications' icon block ──────────────────
-  if (kind === 'notifications') {   // ← ADD THIS ENTIRE BLOCK (lines below until closing brace)
+  if (kind === 'notifications') {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 4a4 4 0 0 0-4 4v1.3c0 1.1-.36 2.18-1.02 3.05L5.6 14.1A1 1 0 0 0 6.4 15.7h11.2a1 1 0 0 0 .8-1.6l-1.38-1.75A5.07 5.07 0 0 1 16 9.3V8a4 4 0 0 0-4-4Z" />
         <path d="M10 18a2 2 0 0 0 4 0" />
       </svg>
     )
-  }                                  // ← END OF ADDED BLOCK
+  }
 
-  // This default return was already here — NO CHANGE
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" />
-    </svg>
-  )
+  return null
 }
 
-// Everything below this line is UNCHANGED from your original file
+function HeaderIcon({ kind }) {
+  if (kind === 'brand') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 16.5V8.2c0-.7.36-1.34.96-1.7L12 3.5l5.04 3c.6.36.96 1 .96 1.7v8.3c0 .7-.36 1.34-.96 1.7L12 21l-5.04-2.8A1.97 1.97 0 0 1 6 16.5Z" />
+        <path d="M9.2 10.8 12 9l2.8 1.8V14L12 15.8 9.2 14v-3.2Z" />
+        <path d="M12 3.5v5.4" />
+      </svg>
+    )
+  }
+
+  if (kind === 'search') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="m16 16 4 4" />
+      </svg>
+    )
+  }
+
+  return null
+}
+
 function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+
+  const meta = useMemo(() => pageMeta[pathname] ?? pageMeta['/admin/dashboard'], [pathname])
+  const initials = user?.name
+    ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+    : 'A'
+
+  function handleLogout() {
+    logout()
+    navigate('/login')
+  }
 
   return (
-    <section className={collapsed ? 'admin-dashboard collapsed' : 'admin-dashboard'}>
-      <aside className="admin-sidebar" aria-label="Admin navigation">
-        <div className="admin-sidebar-top">
-          <div className="admin-sidebar-heading">
-            <p className="admin-sidebar-title">Admin Panel</p>
-            <p className="admin-sidebar-subtitle">Operations controls</p>
+    <section className={collapsed ? 'admin-shell collapsed' : 'admin-shell'}>
+      <aside className="admin-sidebar-shell" aria-label="Admin navigation">
+        <div className="admin-sidebar-brand">
+          <div className="admin-sidebar-brandmark" aria-hidden="true">
+            <HeaderIcon kind="brand" />
           </div>
+          {!collapsed && (
+            <div className="admin-sidebar-brandcopy">
+              <p>Smart Campus</p>
+              <span>Operations Hub</span>
+            </div>
+          )}
+        </div>
+
+        <div className="admin-sidebar-head">
+          {!collapsed && (
+            <div>
+              <p className="admin-sidebar-kicker">Admin Panel</p>
+              <h2>Control Center</h2>
+            </div>
+          )}
           <button
             type="button"
-            className="admin-collapse-btn"
+            className="admin-shell-toggle"
             onClick={() => setCollapsed((current) => !current)}
             aria-label="Toggle sidebar"
           >
@@ -105,37 +175,76 @@ function AdminLayout() {
           </button>
         </div>
 
-        <nav className="admin-nav">
+        <nav className="admin-sidebar-nav">
           {adminLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
-              className={({ isActive }) => (isActive ? 'admin-nav-link active' : 'admin-nav-link')}
+              className={({ isActive }) => (isActive ? 'admin-sidebar-link active' : 'admin-sidebar-link')}
             >
-              <span className="admin-nav-icon" aria-hidden="true">
+              <span className="admin-sidebar-linkicon" aria-hidden="true">
                 <NavIcon kind={link.icon} />
               </span>
-              <span className="admin-nav-text">{link.label}</span>
+              {!collapsed && <span className="admin-sidebar-linktext">{link.label}</span>}
             </NavLink>
           ))}
         </nav>
 
-        <div className="admin-sidebar-footer">
-          <button type="button" className="admin-logout-btn">
-            <span className="admin-nav-icon" aria-hidden="true">
+        <div className="admin-sidebar-foot">
+          {!collapsed && user && (
+            <div className="admin-sidebar-usercard">
+              <div className="admin-sidebar-avatar">{initials}</div>
+              <div>
+                <strong>{user.name || user.email}</strong>
+                <span>{user.role}</span>
+              </div>
+            </div>
+          )}
+
+          <button type="button" className="admin-shell-logout" onClick={handleLogout}>
+            <span className="admin-sidebar-linkicon" aria-hidden="true">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M10 4H5v16h5" />
                 <path d="M14 8l5 4-5 4" />
                 <path d="M9 12h10" />
               </svg>
             </span>
-            <span className="admin-nav-text">Logout</span>
+            {!collapsed && <span>Logout</span>}
           </button>
         </div>
       </aside>
 
-      <div className="admin-main-content">
-        <Outlet />
+      <div className="admin-shell-main">
+        <header className="admin-shell-topbar">
+          <div>
+            <p className="admin-shell-kicker">Experimental Migration</p>
+            <h1>{meta.title}</h1>
+            <p>{meta.subtitle}</p>
+          </div>
+
+          <div className="admin-shell-toolbar">
+            <label className="admin-shell-search">
+              <span aria-hidden="true">
+                <HeaderIcon kind="search" />
+              </span>
+              <input type="text" placeholder="Search admin pages..." />
+            </label>
+
+            {user && (
+              <div className="admin-shell-profile">
+                <div className="admin-sidebar-avatar">{initials}</div>
+                <div>
+                  <strong>{user.name || user.email}</strong>
+                  <span>{user.role}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <div className="admin-shell-content">
+          <Outlet />
+        </div>
       </div>
     </section>
   )
