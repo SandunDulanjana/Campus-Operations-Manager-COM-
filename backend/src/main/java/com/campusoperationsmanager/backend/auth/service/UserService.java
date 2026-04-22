@@ -18,6 +18,7 @@ import com.campusoperationsmanager.backend.auth.dto.UserDTO;
 import com.campusoperationsmanager.backend.auth.model.User;
 import com.campusoperationsmanager.backend.auth.repository.UserRepository;
 import com.campusoperationsmanager.backend.notification.model.NotificationType;
+import com.campusoperationsmanager.backend.notification.service.EmailNotificationService;
 import com.campusoperationsmanager.backend.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     // ── CHANGE 2: inject NotificationService ─────────────────────────────────
     private final NotificationService notificationService;
+    // ── CHANGE: inject EmailNotificationService for invite emails ──────────────
+    private final EmailNotificationService emailNotificationService;
 
     @Value("${app.frontend-url:http://localhost:5173}")
     private String frontendUrl;
@@ -257,7 +260,11 @@ public class UserService {
         String inviteUrl = frontendUrl + "/setup-account?token=" + token;
         log.info("Pending user created: {} role: {} invite expires: {}",
                 email, req.getRole(), saved.getInviteExpiry());
-        return Map.entry(saved, inviteUrl);
+        // ── CHANGE: send invite email automatically ────────────────────────────────
+                emailNotificationService.sendInviteEmail(email, saved.getName() != null ? saved.getName() : email, inviteUrl);
+
+                return Map.entry(saved, inviteUrl);
+        
     }
 
     // ── Invite: Validate token ────────────────────────────────────────────────
@@ -355,48 +362,56 @@ public class UserService {
         user.setRejectionReason(null);
         userRepository.save(user);
 
-        log.info("Registration APPROVED: {} [DEV – dummyPwd: {}]", user.getEmail(), dummyPassword);
-        return Map.of(
-            "message", "User approved.",
-            "devEmail", Map.of(
-                "to",      user.getEmail(),
-                "subject", "Your Smart Campus account is approved!",
-                "body",    "Hello " + user.getName() + ",\n\n"
-                        + "Your registration has been approved.\n"
-                        + "University ID : " + user.getUsername() + "\n"
-                        + "Temp Password : " + dummyPassword + "\n\n"
-                        + "Please log in and change your password.",
-                "devNote", "⚠️ Dev mode – wire a real email service for production"
-            )
-        );
+        log.info("Registration APPROVED: {}", user.getEmail());
+
+        // ── CHANGE: notify the approved user (in-app + email) ─────────────────
+        try {
+            notificationService.createTargetedNotification(
+                user.getEmail(),
+                "Registration Approved ✅",
+                "Hello " + user.getName() + ", your Smart Campus account has been approved! "
+                    + "Your University ID is: " + user.getUsername() + " and your temporary "
+                    + "password is: " + dummyPassword + ". Please log in and change your password.",
+                NotificationType.REGISTRATION_APPROVED,
+                userId
+            );
+        } catch (Exception e) {
+            log.warn("Failed to send approval notification: {}", e.getMessage());
+        }
+
+        return Map.of("message", "User approved.");
     }
 
     public Map<String, Object> rejectRegistration(Long userId, String reason) {
-        User user = getUserById(userId);
-        if (user.getRegistrationStatus() != User.RegistrationStatus.PENDING_APPROVAL)
-            throw new RuntimeException("This account is not pending approval.");
-        if (reason == null || reason.isBlank())
-            throw new RuntimeException("A rejection reason is required.");
+    User user = getUserById(userId);
+    if (user.getRegistrationStatus() != User.RegistrationStatus.PENDING_APPROVAL)
+        throw new RuntimeException("This account is not pending approval.");
+    if (reason == null || reason.isBlank())
+        throw new RuntimeException("A rejection reason is required.");
 
-        user.setRegistrationStatus(User.RegistrationStatus.REJECTED);
-        user.setRejectionReason(reason.trim());
-        user.setEnabled(false);
-        userRepository.save(user);
+    user.setRegistrationStatus(User.RegistrationStatus.REJECTED);
+    user.setRejectionReason(reason.trim());
+    user.setEnabled(false);
+    userRepository.save(user);
 
-        log.info("Registration REJECTED: {} reason: {}", user.getEmail(), reason);
-        return Map.of(
-            "message", "User registration rejected.",
-            "devEmail", Map.of(
-                "to",      user.getEmail(),
-                "subject", "Your Smart Campus registration",
-                "body",    "Hello " + user.getName() + ",\n\n"
-                        + "Your registration request has been declined.\n"
-                        + "Reason: " + reason + "\n\n"
-                        + "Contact your administrator if you think this is a mistake.",
-                "devNote", "⚠️ Dev mode – wire a real email service for production"
-            )
+    log.info("Registration REJECTED: {} reason: {}", user.getEmail(), reason);
+
+    // ── CHANGE: notify the rejected user (in-app + email) ─────────────────
+    try {
+        notificationService.createTargetedNotification(
+            user.getEmail(),
+            "Registration Request Declined",
+            "Hello " + user.getName() + ", your Smart Campus registration request has been declined. "
+                + "Reason: " + reason + ". Please contact your administrator if you believe this is a mistake.",
+            NotificationType.REGISTRATION_REJECTED,
+            userId
         );
+    } catch (Exception e) {
+        log.warn("Failed to send rejection notification: {}", e.getMessage());
     }
+
+    return Map.of("message", "User registration rejected.");
+}
 
     // ── Permanent delete (only for already-deactivated accounts) ─────────────
     public void permanentDeleteUser(Long userId) {
