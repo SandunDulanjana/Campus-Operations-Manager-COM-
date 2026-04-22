@@ -148,16 +148,47 @@ function AdminResourcesPage() {
 
   return (
     <section className="admin-resources-page">
-      <div className="admin-section-card">
+      <div className="module-a-shell">
+        <div className="module-a-hero">
+          <div>
+            <p className="module-a-eyebrow">Module A</p>
+            <h1>Resources Management</h1>
+            <p>Manage campus resource inventory, status, capacity, and availability windows.</p>
+          </div>
+          <div className="module-a-hero-actions">
+            <ActionButton kind="ghost" onClick={resetFilters} disabled={loading}>
+              Reset filters
+            </ActionButton>
+            <ActionButton kind="approve" onClick={openCreateForm} disabled={loading}>
+              Add Resource
+            </ActionButton>
+          </div>
+        </div>
+
+        <div className="module-a-grid">
+          <article className="module-a-metric-card">
+            <span className="module-a-metric-label">Total Resources</span>
+            <strong className="module-a-metric-value">{resources.length}</strong>
+          </article>
+          <article className="module-a-metric-card">
+            <span className="module-a-metric-label">Active Filters</span>
+            <strong className="module-a-metric-value">
+              {[filters.type, filters.minCapacity, filters.location, filters.status].filter(Boolean).length}
+            </strong>
+          </article>
+        </div>
+      </div>
+
+      <div className="admin-section-card module-a-panel">
         <div className="panel-header">
-          <h1>Resources Management</h1>
-          <p>Manage campus resource inventory, status, capacity, and availability windows.</p>
+          <h2>Filter Resources</h2>
+          <p>Refine by type, status, capacity, and location before editing inventory.</p>
         </div>
 
         <StatusBanner type="error" message={errorMessage} />
         <StatusBanner type="success" message={successMessage} />
 
-        <form className="admin-filter-row admin-resource-filter-row" onSubmit={applyFilters}>
+        <form className="admin-filter-row admin-resource-filter-row module-a-filter-row" onSubmit={applyFilters}>
           <label>
             Type
             <select value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
@@ -200,17 +231,16 @@ function AdminResourcesPage() {
           <ActionButton kind="primary" type="submit" disabled={loading}>
             Filter
           </ActionButton>
-          <ActionButton kind="ghost" onClick={resetFilters} disabled={loading}>
-            Reset
-          </ActionButton>
-          <ActionButton kind="approve" onClick={openCreateForm} disabled={loading}>
-            Add Resource
-          </ActionButton>
         </form>
       </div>
 
-      <div className="table-panel">
-        <h2>Resource Catalogue</h2>
+      <div className="table-panel module-a-table-panel">
+        <div className="panel-header">
+          <div>
+            <h2>Resource Catalogue</h2>
+            <p>Review current inventory and open any record for maintenance updates.</p>
+          </div>
+        </div>
         <div className="table-wrap">
           <table>
             <thead>
@@ -261,7 +291,7 @@ function AdminResourcesPage() {
 
       {showForm ? (
         <div className="modal-backdrop" role="presentation" onClick={closeForm}>
-          <div className="modal-window" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+          <div className="modal-window module-a-modal-window" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingResourceId === null ? 'Create Resource' : 'Update Resource'}</h2>
               <ActionButton kind="ghost" onClick={closeForm}>
