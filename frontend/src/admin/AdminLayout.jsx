@@ -139,7 +139,7 @@ function AdminLayout() {
               </div>
             </div>
           ) : null}
-          <Button variant="outline" className="w-full justify-start group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:px-0" onClick={handleLogout}>
+          <Button variant="secondary" className="w-full justify-start group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:px-0" onClick={handleLogout}>
             <LogOutIcon data-icon="inline-start" />
             <span className="group-data-[collapsible=icon]:hidden">Logout</span>
           </Button>
@@ -165,7 +165,7 @@ function AdminLayout() {
               <BellIcon />
             </Button>
             {user ? (
-              <div className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2">
+              <div className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2">
                 <Avatar>
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
