@@ -486,11 +486,6 @@ function Navbar() {
   )
 }
 
-// CHANGE: Added REGISTRATION_REQUEST case to getNotifIcon
-// Location: frontend/src/components/Navbar.jsx
-// Find the existing getNotifIcon function (near bottom of file, just before formatNotifDate)
-// and REPLACE the entire function with the version below:
-
 function getNotifIcon(type) {
   switch (type) {
     case 'BOOKING_APPROVED':      return '✅'
@@ -499,7 +494,6 @@ function getNotifIcon(type) {
     case 'TICKET_STATUS_CHANGED': return '🔧'
     case 'COMMENT_ADDED':         return '💬'
     case 'ADMIN_BROADCAST':       return '📢'
-    case 'REGISTRATION_REQUEST':  return '📋'   // ← NEW LINE ADDED
     default:                      return '🔔'
   }
 }
