@@ -920,9 +920,9 @@
   overflow: hidden;
   min-height: 0;
   background:
-    radial-gradient(circle at top left, rgba(29, 78, 216, 0.08), transparent 32%),
-    radial-gradient(circle at top right, rgba(20, 184, 166, 0.08), transparent 28%),
-    linear-gradient(180deg, #0c1017 0%, #121822 100%);
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 24%),
+    linear-gradient(180deg, #09090b 0%, #111113 100%);
 }
 
 .admin-shell {
@@ -942,7 +942,7 @@
   gap: 1rem;
   min-height: 100%;
   padding: 1rem;
-  background: rgba(8, 11, 17, 0.84);
+  background: rgba(9, 9, 11, 0.92);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(18px);
 }
@@ -961,8 +961,8 @@
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: linear-gradient(145deg, #1d4ed8 0%, #0f766e 100%);
-  box-shadow: 0 20px 34px rgba(15, 23, 42, 0.32);
+  background: linear-gradient(145deg, #18181b 0%, #27272a 100%);
+  box-shadow: 0 20px 34px rgba(0, 0, 0, 0.32);
 }
 
 .admin-sidebar-brandmark svg {
@@ -1003,7 +1003,7 @@
 .admin-sidebar-kicker,
 .admin-shell-kicker {
   margin: 0;
-  color: rgba(148, 163, 184, 0.72);
+  color: rgba(161, 161, 170, 0.72);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -1069,8 +1069,8 @@
 
 .admin-sidebar-link.active {
   color: #f8fafc;
-  background: linear-gradient(135deg, rgba(20,184,166,0.18) 0%, rgba(59,130,246,0.16) 100%);
-  border-color: rgba(94, 234, 212, 0.2);
+  background: linear-gradient(135deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.06) 100%);
+  border-color: rgba(255, 255, 255, 0.12);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -1123,7 +1123,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1d4ed8 0%, #14b8a6 100%);
+  background: linear-gradient(135deg, #27272a 0%, #52525b 100%);
   color: #fff;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -1179,7 +1179,7 @@
   gap: 1rem;
   padding: 1.2rem 1.35rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(7, 10, 16, 0.72);
+  background: rgba(9, 9, 11, 0.72);
   backdrop-filter: blur(20px);
 }
 
@@ -1211,7 +1211,7 @@
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
-  color: rgba(226, 232, 240, 0.65);
+  color: rgba(212, 212, 216, 0.65);
 }
 
 .admin-shell-search svg {
@@ -1567,9 +1567,9 @@
   gap: 1rem;
   padding: 1.25rem;
   border-radius: 1.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   background:
-    linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.72) 100%);
+    linear-gradient(135deg, rgba(24,24,27,0.88) 0%, rgba(9,9,11,0.78) 100%);
   box-shadow:
     0 20px 40px rgba(15, 23, 42, 0.08),
     inset 0 1px 0 rgba(255,255,255,0.5);
@@ -1578,7 +1578,7 @@
 
 .module-a-eyebrow {
   margin: 0 0 0.45rem;
-  color: var(--brand-600);
+  color: rgba(212, 212, 216, 0.72);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -1587,14 +1587,14 @@
 
 .module-a-hero h1 {
   margin: 0;
-  color: #0f172a;
+  color: #fafafa;
   font-size: clamp(2rem, 3vw, 2.7rem);
   letter-spacing: -0.04em;
 }
 
 .module-a-hero p {
   margin: 0.45rem 0 0;
-  color: #475569;
+  color: rgba(228, 228, 231, 0.72);
   max-width: 60ch;
 }
 
@@ -1613,10 +1613,10 @@
 
 .module-a-metric-card {
   border-radius: 1.15rem;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: linear-gradient(180deg, rgba(15,23,42,0.96) 0%, rgba(15,23,42,0.9) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(24,24,27,0.96) 0%, rgba(9,9,11,0.9) 100%);
   padding: 1rem 1.1rem;
-  box-shadow: 0 18px 36px rgba(2, 6, 23, 0.18);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.18);
 }
 
 .module-a-metric-label {
@@ -1638,15 +1638,15 @@
 
 .module-a-panel {
   border-radius: 1.35rem;
-  border: 1px solid rgba(215, 224, 221, 0.9);
-  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(250,250,250,0.98);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
   backdrop-filter: blur(14px);
 }
 
 .module-a-panel .panel-header h2 {
   margin: 0;
-  color: #0f172a;
+  color: #09090b;
   font-size: clamp(1.4rem, 2vw, 1.75rem);
   letter-spacing: -0.03em;
 }
@@ -1658,22 +1658,22 @@
 .module-a-filter-row {
   grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
   border-radius: 1.15rem;
-  border: 1px solid rgba(215, 224, 221, 0.9);
-  background: rgba(255,255,255,0.74);
+  border: 1px solid rgba(228, 228, 231, 1);
+  background: rgba(255,255,255,1);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
 }
 
 .module-a-table-panel {
   border-radius: 1.35rem;
-  border: 1px solid rgba(215, 224, 221, 0.9);
-  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(250,250,250,0.98);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
   backdrop-filter: blur(14px);
 }
 
 .module-a-modal-window {
   border-radius: 1.4rem;
-  border: 1px solid rgba(215, 224, 221, 0.9);
+  border: 1px solid rgba(228, 228, 231, 1);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.92) 100%);
   box-shadow: 0 28px 70px rgba(15, 23, 42, 0.18);
