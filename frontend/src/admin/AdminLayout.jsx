@@ -32,6 +32,7 @@ import {
 import {
   BellIcon,
   BoxesIcon,
+  ChevronDownIcon,
   CircleUserIcon,
   LayoutDashboardIcon,
   LogOutIcon,
@@ -138,10 +139,7 @@ function AdminLayout() {
 
         <SidebarFooter className="p-4">
           {user ? (
-            <Link
-              to="/profile"
-              className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-3 no-underline transition-colors hover:bg-sidebar-accent/60 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
-            >
+            <div className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
               <Avatar size="lg">
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
@@ -151,12 +149,8 @@ function AdminLayout() {
                   {user.role}
                 </span>
               </div>
-            </Link>
+            </div>
           ) : null}
-          <Button variant="secondary" className="w-full justify-start group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:px-0" onClick={handleLogout}>
-            <LogOutIcon data-icon="inline-start" />
-            <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-          </Button>
         </SidebarFooter>
       </Sidebar>
 
@@ -183,15 +177,16 @@ function AdminLayout() {
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center gap-2 rounded-xl border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50"
+                    className="flex items-center gap-2 rounded-xl border bg-card px-2.5 py-2 text-left transition-colors hover:bg-muted/50"
                   >
                     <Avatar>
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
-                    <div className="hidden md:block">
+                    <div className="hidden md:block min-w-0">
                       <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
                       <span className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{user.role}</span>
                     </div>
+                    <ChevronDownIcon className="hidden text-muted-foreground md:block" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
