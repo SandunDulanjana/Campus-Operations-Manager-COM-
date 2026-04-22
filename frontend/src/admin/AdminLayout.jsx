@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useAuth } from '../context/useAuth'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,17 +100,21 @@ function AdminLayout() {
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader className="p-4">
-          <div className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/40 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-              <ShieldIcon />
-            </div>
-            <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-              <p className="truncate text-sm font-semibold text-sidebar-foreground">Smart Campus</p>
-              <span className="truncate text-xs uppercase tracking-[0.24em] text-sidebar-foreground/60">
-                Operations Hub
-              </span>
-            </div>
-          </div>
+          <Card size="sm" className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent">
+            <CardContent className="px-0 group-data-[collapsible=icon]:px-0">
+              <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-background text-foreground shadow-sm">
+                  <ShieldIcon />
+                </div>
+                <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                  <p className="truncate text-sm font-semibold text-sidebar-foreground">Smart Campus</p>
+                  <span className="truncate text-xs uppercase tracking-[0.24em] text-sidebar-foreground/60">
+                    Operations Hub
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </SidebarHeader>
 
         <SidebarContent>
@@ -139,17 +144,21 @@ function AdminLayout() {
 
         <SidebarFooter className="p-4">
           {user ? (
-            <div className="flex items-center gap-3 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
-              <Avatar size="lg">
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                <p className="truncate text-sm font-medium text-sidebar-foreground">{user.name || user.email}</p>
-                <span className="truncate text-xs uppercase tracking-[0.22em] text-sidebar-foreground/60">
-                  {user.role}
-                </span>
-              </div>
-            </div>
+            <Card size="sm" className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent">
+              <CardContent className="px-0 group-data-[collapsible=icon]:px-0">
+                <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
+                  <Avatar size="lg">
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                    <p className="truncate text-sm font-medium text-sidebar-foreground">{user.name || user.email}</p>
+                    <span className="truncate text-xs uppercase tracking-[0.22em] text-sidebar-foreground/60">
+                      {user.role}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ) : null}
         </SidebarFooter>
       </Sidebar>
@@ -175,10 +184,7 @@ function AdminLayout() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 rounded-xl border bg-card px-2.5 py-2 text-left transition-colors hover:bg-muted/50"
-                  >
+                  <Button variant="outline" className="h-auto justify-start rounded-xl px-2.5 py-2">
                     <Avatar>
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
@@ -187,7 +193,7 @@ function AdminLayout() {
                       <span className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{user.role}</span>
                     </div>
                     <ChevronDownIcon className="hidden text-muted-foreground md:block" />
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
