@@ -99,8 +99,11 @@ function AdminLayout() {
   return (
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
-        <SidebarHeader className="p-4">
-          <Card size="sm" className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent">
+        <SidebarHeader className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-2">
+          <Card
+            size="sm"
+            className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:size-12 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:border-sidebar-border/70 group-data-[collapsible=icon]:bg-sidebar-accent/30"
+          >
             <CardHeader className="px-0 group-data-[collapsible=icon]:px-0">
               <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
                 <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border bg-background text-foreground shadow-sm">
@@ -142,9 +145,12 @@ function AdminLayout() {
 
         <SidebarSeparator />
 
-        <SidebarFooter className="p-4">
+        <SidebarFooter className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-2">
           {user ? (
-            <Card size="sm" className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent">
+            <Card
+              size="sm"
+              className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:size-12 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:border-sidebar-border/70 group-data-[collapsible=icon]:bg-sidebar-accent/30"
+            >
               <CardContent className="px-0 group-data-[collapsible=icon]:px-0">
                 <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
                   <Avatar size="lg">
