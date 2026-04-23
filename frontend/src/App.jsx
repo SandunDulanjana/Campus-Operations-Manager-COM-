@@ -26,6 +26,7 @@ import EnterUniversityIdPage from './auth/EnterUniversityIdPage'
 import SetupAccountPage from './auth/SetupAccountPage'
 import AdminTicketsPage from './admin/AdminTicketsPage'
 import AdminNotificationsPage from './admin/AdminNotificationsPage'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 function MaintenanceDashboard() {
   return <div className="page-content"><h1>Maintenance Manager Dashboard</h1></div>
@@ -61,11 +62,12 @@ function App() {
     || location.pathname === '/enter-university-id'
 
   return (
-    <div className={isAdminRoute ? 'app-shell admin-mode' : 'app-shell'}>
-      {!isLoginRoute && <Navbar />}
+    <TooltipProvider>
+      <div className={isAdminRoute ? 'app-shell admin-mode' : 'app-shell'}>
+        {!isLoginRoute && !isAdminRoute && <Navbar />}
 
-      <main className={isAdminRoute ? 'page-content admin-page-content' : 'page-content'}>
-        <Routes>
+        <main className={isAdminRoute ? 'page-content admin-page-content' : 'page-content'}>
+          <Routes>
 
           <Route path="/setup-account" element={<SetupAccountPage />} />
 
@@ -130,11 +132,12 @@ function App() {
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
+          </Routes>
+        </main>
 
-      {!isLoginRoute && <Footer />}
-    </div>
+        {!isLoginRoute && !isAdminRoute && <Footer />}
+      </div>
+    </TooltipProvider>
   )
 }
 

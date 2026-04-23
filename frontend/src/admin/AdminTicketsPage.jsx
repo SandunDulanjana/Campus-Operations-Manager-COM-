@@ -1,16 +1,45 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ActionButton from '../components/ui/ActionButton'
-import StatusBanner from '../components/ui/StatusBanner'
+import { AlertCircleIcon, Clock3Icon, ShieldAlertIcon, TicketIcon, Trash2Icon } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   fetchAllTickets,
   deleteTicket,
   formatTicketLabel,
   formatTicketDate,
-  getStatusBadgeClass,
-  getPriorityBadgeClass,
   TICKET_STATUSES,
 } from '../api/ticketApi'
+
+function getStatusVariant(status) {
+  if (status === 'REJECTED') return 'destructive'
+  if (status === 'IN_PROGRESS') return 'secondary'
+  return 'outline'
+}
+
+function getPriorityVariant(priority) {
+  if (priority === 'CRITICAL') return 'destructive'
+  if (priority === 'HIGH') return 'default'
+  return 'outline'
+}
 
 function AdminTicketsPage() {
   const navigate = useNavigate()
@@ -56,139 +85,140 @@ function AdminTicketsPage() {
   const breached   = tickets.filter((t) => t.slaBreached).length
 
   return (
-    <section className="admin-resources-page">
-
-      <div className="admin-stat-grid">
-        <article className="admin-stat-card">
-          <p>Total Tickets</p>
-          <h2>{total}</h2>
-        </article>
-        <article className="admin-stat-card">
-          <p>Open</p>
-          <h2>{open}</h2>
-        </article>
-        <article className="admin-stat-card">
-          <p>In Progress</p>
-          <h2>{inProgress}</h2>
-        </article>
-        <article
-          className="admin-stat-card"
-          style={breached > 0 ? { borderTop: '3px solid #dc2626' } : {}}
-        >
-          <p>SLA Breached</p>
-          <h2 style={breached > 0 ? { color: '#b91c1c' } : {}}>{breached}</h2>
-        </article>
+    <section className="flex flex-col gap-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: 'Total Tickets', value: total, icon: TicketIcon },
+          { label: 'Open', value: open, icon: Clock3Icon },
+          { label: 'In Progress', value: inProgress, icon: Clock3Icon },
+          { label: 'SLA Breached', value: breached, icon: ShieldAlertIcon },
+        ].map((item) => {
+          const Icon = item.icon
+          return (
+            <Card key={item.label} className="bg-card/80">
+              <CardHeader className="flex flex-row items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                  <CardDescription>{item.label}</CardDescription>
+                  <CardTitle className="text-3xl font-semibold tracking-tight">{item.value}</CardTitle>
+                </div>
+                <div className="rounded-lg border bg-muted p-2 text-muted-foreground">
+                  <Icon />
+                </div>
+              </CardHeader>
+            </Card>
+          )
+        })}
       </div>
 
-      <div className="admin-section-card">
-        <div className="panel-header">
-          <div>
-            <h1>Incident Tickets</h1>
-            <p>Manage all campus maintenance and fault reports submitted by users.</p>
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Incident Tickets</CardTitle>
+          <CardDescription>Manage all campus maintenance and fault reports submitted by users.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 pt-4">
+          {errorMessage ? (
+            <Alert variant="destructive">
+              <AlertCircleIcon />
+              <AlertTitle>Request failed</AlertTitle>
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          {successMessage ? (
+            <Alert>
+              <TicketIcon />
+              <AlertTitle>Updated</AlertTitle>
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          <div className="flex flex-col gap-3 rounded-xl border bg-muted/30 p-4 md:flex-row md:items-end md:justify-between">
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium">Filter by status</p>
+              <Select value={statusFilter || '__all__'} onValueChange={(value) => setFilter(value === '__all__' ? '' : value)}>
+                <SelectTrigger className="min-w-52">
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="__all__">All statuses</SelectItem>
+                    {TICKET_STATUSES.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {formatTicketLabel(status)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" onClick={() => setFilter('')}>
+              Reset
+            </Button>
           </div>
-        </div>
 
-        <StatusBanner type="error"   message={errorMessage}   />
-        <StatusBanner type="success" message={successMessage} />
-
-        <form
-          className="admin-filter-row admin-resource-filter-row"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          <label>
-            Filter by Status
-            <select
-              value={statusFilter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="">All statuses</option>
-              {TICKET_STATUSES.map((s) => (
-                <option key={s} value={s}>{formatTicketLabel(s)}</option>
-              ))}
-            </select>
-          </label>
-
-          <ActionButton kind="ghost" type="button" onClick={() => setFilter('')}>
-            Reset
-          </ActionButton>
-        </form>
-      </div>
-
-      <div className="table-panel">
-        {loading && (
-          <p style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
-            Loading tickets...
-          </p>
-        )}
-
-        {!loading && tickets.length === 0 && (
-          <p style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
-            No tickets found.
-          </p>
-        )}
-
-        {!loading && tickets.length > 0 && (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Title</th>
-                  <th>Status</th>
-                  <th>Priority</th>
-                  <th>Location</th>
-                  <th>Reported by</th>
-                  <th>Created</th>
-                  <th>SLA</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tickets.map((ticket) => (
-                  <tr key={ticket.id}>
-                    <td>{ticket.id}</td>
-                    <td>
-                      <strong>{ticket.title}</strong>
-                      <span className="muted">{formatTicketLabel(ticket.category)}</span>
-                    </td>
-                    <td>
-                      <span className={getStatusBadgeClass(ticket.status)}>
-                        {formatTicketLabel(ticket.status)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={getPriorityBadgeClass(ticket.priority)}>
-                        {ticket.priority}
-                      </span>
-                    </td>
-                    <td>{ticket.location}</td>
-                    <td>
-                      <span className="muted">{ticket.createdByEmail}</span>
-                    </td>
-                    <td>
-                      <span className="muted">{formatTicketDate(ticket.createdAt)}</span>
-                    </td>
-                    <td>
-                      {ticket.slaBreached
-                        ? <span className="badge rejected">⚠ Breached</span>
-                        : <span className="badge approved">✓ OK</span>
-                      }
-                    </td>
-                    <td className="resource-actions-cell">
-                      <ActionButton kind="ghost" onClick={() => navigate(`/tickets/${ticket.id}`)}>
-                        View
-                      </ActionButton>
-                      <ActionButton kind="danger" onClick={() => handleDelete(ticket.id)}>
-                        Delete
-                      </ActionButton>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="rounded-xl border">
+            {loading ? (
+              <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
+                Loading tickets...
+              </div>
+            ) : tickets.length === 0 ? (
+              <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
+                No tickets found.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>#</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Reporter</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>SLA</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tickets.map((ticket) => (
+                    <TableRow key={ticket.id}>
+                      <TableCell className="font-medium">#{ticket.id}</TableCell>
+                      <TableCell className="max-w-64 whitespace-normal">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium">{ticket.title}</span>
+                          <span className="text-sm text-muted-foreground">{formatTicketLabel(ticket.category)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell><Badge variant={getStatusVariant(ticket.status)}>{formatTicketLabel(ticket.status)}</Badge></TableCell>
+                      <TableCell><Badge variant={getPriorityVariant(ticket.priority)}>{formatTicketLabel(ticket.priority)}</Badge></TableCell>
+                      <TableCell className="whitespace-normal text-muted-foreground">{ticket.location}</TableCell>
+                      <TableCell className="whitespace-normal text-muted-foreground">{ticket.createdByEmail}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatTicketDate(ticket.createdAt)}</TableCell>
+                      <TableCell>
+                        <Badge variant={ticket.slaBreached ? 'destructive' : 'secondary'}>
+                          {ticket.slaBreached ? 'Breached' : 'Healthy'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/tickets/${ticket.id}`)}>
+                            View
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleDelete(ticket.id)}>
+                            <Trash2Icon data-icon="inline-start" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </section>
   )
 }

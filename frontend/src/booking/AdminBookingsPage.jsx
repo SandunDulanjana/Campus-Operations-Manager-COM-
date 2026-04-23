@@ -1,16 +1,41 @@
 import { useEffect, useMemo, useState } from 'react'
+import { AlertCircleIcon, CalendarIcon, CheckIcon, Clock3Icon, XIcon } from 'lucide-react'
 import { fetchAllBookings, updateBookingStatus } from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
 import { useAuth } from '../context/useAuth'
-import StatusBanner from '../components/ui/StatusBanner'
-import StatusBadge from '../components/ui/StatusBadge'
-import ActionButton from '../components/ui/ActionButton'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 const DEFAULT_FILTERS = {
   selectedDate: '',
   selectedMonth: '',
   resourceType: '',
   status: '',
+}
+
+function getBookingBadge(status) {
+  if (status === 'APPROVED') return 'secondary'
+  if (status === 'REJECTED' || status === 'CANCELLED') return 'destructive'
+  return 'outline'
 }
 
 function AdminBookingsPage() {
@@ -130,133 +155,173 @@ function AdminBookingsPage() {
   }
 
   return (
-    <section className="admin-bookings-page">
-      <div className="panel-header">
-        <div>
-          <h1>Admin Booking Review</h1>
-          <p>Review booking requests and approve or reject with reasons.</p>
-        </div>
+    <section className="flex flex-col gap-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: 'Total bookings', value: bookings.length, icon: CalendarIcon },
+          { label: 'Pending', value: bookings.filter((b) => b.status === 'PENDING').length, icon: Clock3Icon },
+          { label: 'Approved', value: bookings.filter((b) => b.status === 'APPROVED').length, icon: CheckIcon },
+          { label: 'Rejected', value: bookings.filter((b) => b.status === 'REJECTED').length, icon: XIcon },
+        ].map((stat) => {
+          const Icon = stat.icon
+          return (
+            <Card key={stat.label}>
+              <CardHeader className="flex flex-row items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                  <CardDescription>{stat.label}</CardDescription>
+                  <CardTitle className="text-3xl font-semibold tracking-tight">{stat.value}</CardTitle>
+                </div>
+                <div className="rounded-lg border bg-muted p-2 text-muted-foreground">
+                  <Icon />
+                </div>
+              </CardHeader>
+            </Card>
+          )
+        })}
       </div>
 
-      <StatusBanner type="error" message={errorMessage} />
-      <StatusBanner type="success" message={successMessage} />
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Booking Queue</CardTitle>
+          <CardDescription>Filter requests. Approve or reject with reason.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 pt-4">
+          {errorMessage ? (
+            <Alert variant="destructive">
+              <AlertCircleIcon />
+              <AlertTitle>Request failed</AlertTitle>
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          ) : null}
+          {successMessage ? (
+            <Alert>
+              <CheckIcon />
+              <AlertTitle>Updated</AlertTitle>
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+          ) : null}
 
-      <form className="admin-filter-row" onSubmit={applyFilters}>
-        <label>
-          Date
-          <input
-            type="date"
-            value={filters.selectedDate}
-            onChange={(event) => updateFilter('selectedDate', event.target.value)}
-          />
-        </label>
+          <form className="grid gap-4 rounded-xl border bg-muted/30 p-4 md:grid-cols-2 xl:grid-cols-5" onSubmit={applyFilters}>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium" htmlFor="booking-date">Date</label>
+              <Input id="booking-date" type="date" value={filters.selectedDate} onChange={(e) => updateFilter('selectedDate', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium" htmlFor="booking-month">Month</label>
+              <Input id="booking-month" type="month" value={filters.selectedMonth} onChange={(e) => updateFilter('selectedMonth', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Resource Type</label>
+              <Select value={filters.resourceType || '__all__'} onValueChange={(value) => updateFilter('resourceType', value === '__all__' ? '' : value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="__all__">All</SelectItem>
+                    {resourceTypes.map((type) => (
+                      <SelectItem key={type} value={type}>{type.replace('_', ' ')}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Status</label>
+              <Select value={filters.status || '__all__'} onValueChange={(value) => updateFilter('status', value === '__all__' ? '' : value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="__all__">All</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="APPROVED">Approved</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end">
+              <Button className="w-full" type="submit" disabled={loading}>
+                {loading ? 'Loading…' : 'Apply'}
+              </Button>
+            </div>
+          </form>
 
-        <label>
-          Month
-          <input
-            type="month"
-            value={filters.selectedMonth}
-            onChange={(event) => updateFilter('selectedMonth', event.target.value)}
-          />
-        </label>
-
-        <label>
-          Resource Type
-          <select
-            value={filters.resourceType}
-            onChange={(event) => updateFilter('resourceType', event.target.value)}
-          >
-            <option value="">All</option>
-            {resourceTypes.map((type) => (
-              <option key={type} value={type}>
-                {type.replace('_', ' ')}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Status
-          <select value={filters.status} onChange={(event) => updateFilter('status', event.target.value)}>
-            <option value="">All</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-        </label>
-
-        <ActionButton kind="primary" type="submit" disabled={loading}>
-          {loading ? 'Loading...' : 'Apply'}
-        </ActionButton>
-      </form>
-
-      <div className="table-panel">
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Resource</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Reject Reason</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.map((booking) => (
-                <tr key={booking.id}>
-                  <td>{booking.userId}</td>
-                  <td>
-                    {booking.resourceName}
-                    <small className="muted">{booking.resourceType}</small>
-                  </td>
-                  <td>{booking.bookingDate}</td>
-                  <td>
-                    {booking.startTime} - {booking.endTime}
-                  </td>
-                  <td>
-                    <StatusBadge status={booking.status} />
-                  </td>
-                  <td>
-                    {booking.status === 'PENDING' ? (
-                      <input
-                        type="text"
-                        placeholder="Reason if rejected"
-                        value={rejectReasons[booking.id] || ''}
-                        onChange={(event) =>
-                          setRejectReasons((current) => ({
-                            ...current,
-                            [booking.id]: event.target.value,
-                          }))
-                        }
-                      />
-                    ) : (
-                      booking.reviewReason || '-'
-                    )}
-                  </td>
-                  <td>
-                    {booking.status === 'PENDING' ? (
-                      <div className="action-row">
-                        <ActionButton kind="approve" onClick={() => approveBooking(booking.id)} disabled={loading}>
-                          Approve
-                        </ActionButton>
-                        <ActionButton kind="danger" onClick={() => rejectBooking(booking.id)} disabled={loading}>
-                          Reject
-                        </ActionButton>
+          <div className="rounded-xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Resource</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Reject Reason</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bookings.map((booking) => (
+                  <TableRow key={booking.id}>
+                    <TableCell className="font-medium">{booking.userId}</TableCell>
+                    <TableCell className="whitespace-normal">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">{booking.resourceName}</span>
+                        <span className="text-sm text-muted-foreground">{booking.resourceType}</span>
                       </div>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    </TableCell>
+                    <TableCell>{booking.bookingDate}</TableCell>
+                    <TableCell>{booking.startTime} - {booking.endTime}</TableCell>
+                    <TableCell><Badge variant={getBookingBadge(booking.status)}>{booking.status}</Badge></TableCell>
+                    <TableCell className="whitespace-normal">
+                      {booking.status === 'PENDING' ? (
+                        <Input
+                          placeholder="Reason if rejected"
+                          value={rejectReasons[booking.id] || ''}
+                          onChange={(event) =>
+                            setRejectReasons((current) => ({
+                              ...current,
+                              [booking.id]: event.target.value,
+                            }))
+                          }
+                        />
+                      ) : (
+                        <span className="text-muted-foreground">{booking.reviewReason || '-'}</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {booking.status === 'PENDING' ? (
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" onClick={() => approveBooking(booking.id)} disabled={loading}>
+                            <CheckIcon data-icon="inline-start" />
+                            Approve
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => rejectBooking(booking.id)} disabled={loading}>
+                            <XIcon data-icon="inline-start" />
+                            Reject
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-right text-muted-foreground">-</div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!bookings.length ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                      No bookings found.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </section>
   )
 }
