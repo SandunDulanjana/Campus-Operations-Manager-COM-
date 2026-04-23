@@ -79,7 +79,9 @@ function Navbar() {
   const [notifLoading, setNotifLoading]   = useState(false)
   const notifRef = useRef(null)
 
-  const isAdminRoute = location.pathname.startsWith('/admin')
+  const isAdminRoute      = location.pathname.startsWith('/admin')
+  const isTechnicianRoute = location.pathname.startsWith('/technician')
+  const isTicketRoute     = location.pathname.startsWith('/tickets/')
   const profileAreaRef = useRef(null)
   const resourceAreaRef = useRef(null)
 
@@ -367,11 +369,11 @@ function Navbar() {
                   <Link to="/profile" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                     My Profile
                   </Link>
-                  {user.role === 'TECHNICIAN' && (
-                    <Link to="/technician-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Technician Dashboard
+                  {user.role === 'TECHNICIAN' && !isTechnicianRoute && (
+                     <Link to="/technician/dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                         Technician Dashboard
                     </Link>
-                  )}
+)}
                   {user.role === 'MAINTENANCEMNG' && (
                     <Link to="/maintenance-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
                       Maintenance Dashboard
@@ -392,12 +394,12 @@ function Navbar() {
                       Admin Dashboard
                     </Link>
                   )}
-                  {isAdminRoute && (
+                  {(isAdminRoute || isTechnicianRoute) && (
                     <Link to="/" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Home
+                       Home
                     </Link>
-                  )}
-                  <button type="button" role="menuitem" className="menu-item" onClick={handleLogout}>
+      )}
+                        <button type="button" role="menuitem" className="menu-item" onClick={handleLogout}>
                     Logout
                   </button>
                 </div>
@@ -406,7 +408,7 @@ function Navbar() {
           </div>
         </div>
 
-        {!isAdminRoute && (
+        {!isAdminRoute && !isTechnicianRoute && !isTicketRoute && (
           <div className="sub-header">
             <nav className="sub-nav" aria-label="Primary navigation">
               <Link to="/" className="home-icon-link" title="Home">
