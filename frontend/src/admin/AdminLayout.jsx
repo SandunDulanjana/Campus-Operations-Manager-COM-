@@ -100,39 +100,38 @@ function AdminLayout() {
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-2">
-          <Card
-            size="sm"
-            className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:size-12 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:border-sidebar-border/70 group-data-[collapsible=icon]:bg-sidebar-accent/30"
-          >
-            <CardHeader className="px-0 group-data-[collapsible=icon]:px-0">
-              <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border bg-background text-foreground shadow-sm">
-                  <CampusMark className="size-7" />
-                </div>
-                <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                  <CardTitle className="truncate text-[1.05rem] font-semibold text-sidebar-foreground">Smart Campus</CardTitle>
-                  <CardDescription className="truncate text-[0.67rem] font-medium uppercase tracking-[0.18em] text-sidebar-foreground/60">
-                    Operations Hub
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
+          <div className="flex flex-col gap-2 p-1 group-data-[collapsible=icon]:items-center">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+              <CampusMark className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+              <p className="text-[13px] font-semibold leading-tight text-sidebar-foreground">Smart Campus</p>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-sidebar-foreground/60">
+                Operations Hub
+              </p>
+            </div>
+          </div>
         </SidebarHeader>
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-[10px] font-semibold tracking-widest text-sidebar-foreground/40">ADMIN PANEL</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminLinks.map((link) => {
                   const Icon = link.icon
                   return (
                     <SidebarMenuItem key={link.to}>
-                      <SidebarMenuButton asChild isActive={pathname === link.to} size="lg" tooltip={link.label}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname === link.to}
+                        size="md"
+                        tooltip={link.label}
+                        className="transition-colors hover:bg-sidebar-accent/50 data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
+                      >
                         <NavLink to={link.to}>
-                          <Icon />
-                          <span className="group-data-[collapsible=icon]:hidden">{link.label}</span>
+                          <Icon className="size-4" />
+                          <span className="text-[12px] font-medium group-data-[collapsible=icon]:hidden">{link.label}</span>
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -143,85 +142,81 @@ function AdminLayout() {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarSeparator />
+        <SidebarSeparator className="bg-sidebar-border/50" />
 
         <SidebarFooter className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-2">
           {user ? (
-            <Card
-              size="sm"
-              className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:size-12 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:border-sidebar-border/70 group-data-[collapsible=icon]:bg-sidebar-accent/30"
-            >
-              <CardContent className="px-0 group-data-[collapsible=icon]:px-0">
-                <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
-                  <Avatar size="lg">
-                    <AvatarFallback>{initials}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                    <p className="truncate text-sm font-medium text-sidebar-foreground">{user.name || user.email}</p>
-                    <span className="truncate text-xs uppercase tracking-[0.22em] text-sidebar-foreground/60">
-                      {user.role}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex items-center gap-3 p-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
+              <Avatar className="size-7 rounded-full bg-primary text-primary-foreground">
+                <AvatarFallback className="text-[10px] font-bold">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                <p className="truncate text-[11px] font-semibold text-sidebar-foreground leading-tight">{user.name || user.email}</p>
+                <span className="truncate text-[10px] uppercase font-medium tracking-tight text-sidebar-foreground/60">
+                  {user.role}
+                </span>
+              </div>
+            </div>
           ) : null}
         </SidebarFooter>
       </Sidebar>
 
       <SidebarInset className="min-h-svh bg-background">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-6">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-6">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
             <div className="hidden md:block">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Experimental Migration</p>
-              <h1 className="text-sm font-medium tracking-tight">{meta.title}</h1>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Experimental Migration</p>
+              <h1 className="text-[13px] font-semibold tracking-tight">{meta.title}</h1>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="relative hidden md:block">
-              <SearchIcon className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
-              <Input className="w-72 pl-8" placeholder="Search admin pages..." />
+            <div className="relative hidden md:flex items-center gap-2 bg-background border border-border rounded-md px-3 py-1.5 w-52 transition-colors focus-within:border-primary/50">
+              <SearchIcon className="size-3.5 text-muted-foreground/60" />
+              <input
+                className="bg-transparent border-none text-[12px] placeholder:text-muted-foreground/40 outline-none w-full"
+                placeholder="Search admin pages..."
+              />
             </div>
-            <Button variant="outline" size="icon-sm">
-              <BellIcon />
+            <Button variant="outline" size="icon" className="size-8 rounded-md border-border bg-background hover:bg-muted/50">
+              <BellIcon className="size-4 text-muted-foreground" />
             </Button>
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-auto justify-start rounded-xl px-2.5 py-2">
-                    <Avatar>
-                      <AvatarFallback>{initials}</AvatarFallback>
+                  <button className="flex items-center gap-2 transition-opacity hover:opacity-80 focus:outline-none">
+                    <Avatar className="size-8 rounded-full bg-primary text-primary-foreground">
+                      <AvatarFallback className="text-[10px] font-bold">{initials}</AvatarFallback>
                     </Avatar>
-                    <div className="hidden md:block min-w-0">
-                      <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
-                      <span className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{user.role}</span>
+                    <div className="hidden text-left md:block min-w-0">
+                      <p className="text-[12px] font-semibold leading-none text-foreground">{user.name || user.email}</p>
+                      <span className="text-[10px] uppercase tracking-tight text-muted-foreground">{user.role}</span>
                     </div>
-                    <ChevronDownIcon className="hidden text-muted-foreground md:block" />
-                  </Button>
+                    <ChevronDownIcon className="hidden size-3 text-muted-foreground md:block" />
+                  </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm font-medium">{user.name || user.email}</span>
-                      <span className="text-xs text-muted-foreground">{user.email}</span>
+                <DropdownMenuContent align="end" className="w-56 rounded-xl border-border bg-white shadow-lg">
+                  <DropdownMenuLabel className="px-3 py-2.5">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-semibold">{user.name || user.email}</span>
+                      <span className="text-xs text-muted-foreground font-normal">{user.email}</span>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      <CircleUserIcon data-icon="inline-start" />
+                  <DropdownMenuSeparator className="bg-muted" />
+                  <DropdownMenuGroup className="p-1">
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="rounded-lg">
+                      <CircleUserIcon className="mr-2 size-4" />
                       Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      <Settings2Icon data-icon="inline-start" />
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="rounded-lg">
+                      <Settings2Icon className="mr-2 size-4" />
                       Account Settings
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOutIcon data-icon="inline-start" />
+                  <DropdownMenuSeparator className="bg-muted" />
+                  <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-destructive focus:bg-destructive/10 focus:text-destructive">
+                    <LogOutIcon className="mr-2 size-4" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
