@@ -3,8 +3,9 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 
 const technicianLinks = [
-  { to: '/technician/dashboard',     label: 'Dashboard',     icon: 'dashboard'     },
-  { to: '/technician/notifications', label: 'Notifications', icon: 'notifications' },
+  { to: '/technician/dashboard',       label: 'Dashboard',       icon: 'dashboard'  },
+  { to: '/technician/notifications',   label: 'Notifications',   icon: 'notifications' },
+  { to: '/technician/ticket-analysis', label: 'Ticket Analysis', icon: 'analysis'   },
 ]
 
 function NavIcon({ kind }) {
@@ -26,6 +27,16 @@ function NavIcon({ kind }) {
       </svg>
     )
   }
+  if (kind === 'analysis') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 20V10" />
+        <path d="M12 20V4" />
+        <path d="M6 20v-6" />
+      </svg>
+    )
+  }
+
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /></svg>
 }
 
