@@ -81,6 +81,7 @@ function Navbar() {
 
   const isAdminRoute      = location.pathname.startsWith('/admin')
   const isTechnicianRoute = location.pathname.startsWith('/technician')
+  const isTicketRoute     = location.pathname.startsWith('/tickets/')
   const profileAreaRef = useRef(null)
   const resourceAreaRef = useRef(null)
 
@@ -407,7 +408,7 @@ function Navbar() {
           </div>
         </div>
 
-        {!isAdminRoute && !isTechnicianRoute && (
+        {!isAdminRoute && !isTechnicianRoute && !isTicketRoute && (
           <div className="sub-header">
             <nav className="sub-nav" aria-label="Primary navigation">
               <Link to="/" className="home-icon-link" title="Home">
