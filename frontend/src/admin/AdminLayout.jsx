@@ -44,6 +44,7 @@ import {
   UserCogIcon,
   UsersIcon,
 } from 'lucide-react'
+import NotificationDropdown from '@/components/notifications/NotificationDropdown'
 
 const adminLinks = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
@@ -179,9 +180,7 @@ function AdminLayout() {
                 placeholder="Search admin pages..."
               />
             </div>
-            <Button variant="outline" size="icon" className="size-8 rounded-md border-border bg-background hover:bg-muted/50">
-              <BellIcon className="size-4 text-muted-foreground" />
-            </Button>
+            <NotificationDropdown />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

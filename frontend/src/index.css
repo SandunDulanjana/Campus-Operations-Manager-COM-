@@ -50,14 +50,13 @@
 
   --color-app-bg: #f8f8f8;
   --color-app-fg: #111111;
-  --color-brand-700: #09090b;
-  --color-brand-600: #18181b;
-  --color-brand-500: #3f3f46;
-  --color-brand-100: #f4f4f5;
-  --color-accent-700: #27272a;
-  --color-accent-500: #52525b;
-  --color-accent-100: #f4f4f5;
-  --radius: 0.75rem;
+  --brand-700: #4A64A8;
+  --brand-600: #5F79C5;
+  --brand-500: #6F86C7;
+  --brand-100: #EEF2FC;
+  --accent-700: #1C2B4A;
+  --accent-500: #2E3A5C;
+  --accent-100: #DCE4F5;
 }
 
 * {

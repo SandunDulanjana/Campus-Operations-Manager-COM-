@@ -1,14 +1,16 @@
 // FILE: frontend/src/components/Navbar.jsx
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import {
-  fetchMyNotifications,
-  fetchUnreadCount,
-  markNotificationRead,
-  markAllNotificationsRead,
-} from '../api/notificationApi'
+  CircleUserIcon,
+  HomeIcon,
+  LayoutDashboardIcon,
+  LogOutIcon,
+  Settings2Icon,
+} from 'lucide-react'
+import NotificationDropdown from './notifications/NotificationDropdown'
 
 function HeaderIcon({ kind }) {
   if (kind === 'bell') {
@@ -73,42 +75,11 @@ function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const [notifOpen, setNotifOpen]         = useState(false)
-  const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount]     = useState(0)
-  const [notifLoading, setNotifLoading]   = useState(false)
-  const notifRef = useRef(null)
-
   const isAdminRoute      = location.pathname.startsWith('/admin')
   const isTechnicianRoute = location.pathname.startsWith('/technician')
   const isTicketRoute     = location.pathname.startsWith('/tickets/')
   const profileAreaRef = useRef(null)
   const resourceAreaRef = useRef(null)
-
-  const loadUnreadCount = useCallback(async () => {
-    if (!user) return
-    try {
-      const count = await fetchUnreadCount()
-      setUnreadCount(count)
-    } catch { /* silent */ }
-  }, [user])
-
-  useEffect(() => {
-    void loadUnreadCount()
-    const interval = setInterval(loadUnreadCount, 30000)
-    return () => clearInterval(interval)
-  }, [loadUnreadCount])
-
-  useEffect(() => {
-    if (!notifOpen) return
-    function handler(e) {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setNotifOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [notifOpen])
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -124,7 +95,6 @@ function Navbar() {
         setIsMenuOpen(false)
         setIsResourceOpen(false)
         setIsSearchOpen(false)
-        setNotifOpen(false)
       }
     }
     document.addEventListener('mousedown', handlePointerDown)
@@ -134,28 +104,6 @@ function Navbar() {
       document.removeEventListener('keydown', handleEscape)
     }
   }, [])
-
-  async function openNotifPanel() {
-    setNotifOpen(true)
-    setNotifLoading(true)
-    try {
-      const data = await fetchMyNotifications()
-      setNotifications(data)
-    } catch { /* silent */ }
-    finally { setNotifLoading(false) }
-  }
-
-  async function handleMarkRead(id) {
-    await markNotificationRead(id)
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-    setUnreadCount(prev => Math.max(0, prev - 1))
-  }
-
-  async function handleMarkAllRead() {
-    await markAllNotificationsRead()
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-    setUnreadCount(0)
-  }
 
   function handleLogout() {
     logout()
@@ -251,94 +199,7 @@ function Navbar() {
           </Link>
 
           <div className="top-actions">
-            <div style={{ position: 'relative' }} ref={notifRef}>
-              <button
-                type="button"
-                className="notify-btn"
-                aria-label="Notifications"
-                onClick={() => notifOpen ? setNotifOpen(false) : openNotifPanel()}
-              >
-                <span className="nav-icon-shell" aria-hidden="true">
-                  <HeaderIcon kind="bell" />
-                </span>
-                {unreadCount > 0 && (
-                  <span className="notify-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
-                )}
-              </button>
-
-              {notifOpen && (
-                <div style={{
-                  position: 'absolute', top: 'calc(100% + 0.6rem)', right: 0,
-                  width: 360, maxHeight: 480, background: '#fff',
-                  border: '1px solid #e5e7eb', borderRadius: '1rem',
-                  boxShadow: '0 20px 44px rgba(16,33,43,0.14)',
-                  zIndex: 100, display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                }}>
-                  <div style={{ padding: '1rem 1.1rem 0.75rem', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                      Notifications{' '}
-                      {unreadCount > 0 && (
-                        <span style={{ fontSize: '0.78rem', background: '#dc2626', color: '#fff', borderRadius: 999, padding: '0.1rem 0.45rem', marginLeft: '0.35rem' }}>
-                          {unreadCount}
-                        </span>
-                      )}
-                    </h3>
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={handleMarkAllRead}
-                        style={{ fontSize: '0.78rem', color: '#16a34a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
-                      >
-                        Mark all read
-                      </button>
-                    )}
-                  </div>
-
-                  <div style={{ overflowY: 'auto', flex: 1 }}>
-                    {notifLoading ? (
-                      <p style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>Loading…</p>
-                    ) : notifications.length === 0 ? (
-                      <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>
-                        <p style={{ color: '#94a3b8', margin: 0 }}>No notifications yet</p>
-                      </div>
-                    ) : (
-                      notifications.map(n => (
-                        <div
-                          key={n.id}
-                          onClick={() => !n.read && handleMarkRead(n.id)}
-                          style={{
-                            padding: '0.85rem 1.1rem',
-                            borderBottom: '1px solid #f9fafb',
-                            background: n.read ? '#fff' : '#f0fdf4',
-                            cursor: n.read ? 'default' : 'pointer',
-                            transition: 'background 140ms',
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
-                            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>
-                              {getNotifIcon(n.type)}
-                            </span>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: n.read ? 500 : 700, color: '#1f2937', lineHeight: 1.4 }}>
-                                {n.title}
-                              </p>
-                              <p style={{ margin: '0.2rem 0 0', fontSize: '0.81rem', color: '#6b7280', lineHeight: 1.45 }}>
-                                {n.message}
-                              </p>
-                              <p style={{ margin: '0.25rem 0 0', fontSize: '0.74rem', color: '#9ca3af' }}>
-                                {formatNotifDate(n.createdAt)}
-                              </p>
-                            </div>
-                            {!n.read && (
-                              <span style={{ width: 8, height: 8, borderRadius: 999, background: '#16a34a', flexShrink: 0, marginTop: '0.3rem' }} />
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            <NotificationDropdown className="navbar-notify" />
 
             <div className="profile-area" ref={profileAreaRef}>
               <button
@@ -364,43 +225,70 @@ function Navbar() {
                 </span>
               </button>
 
-              {isMenuOpen && (
+                  {isMenuOpen && (
                 <div className="profile-menu" role="menu">
+                  {/* User Identity Header */}
+                  <div className="menu-header">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="menu-header-name">{user.name || user.email}</span>
+                      <span className="menu-header-email">{user.email}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="menu-separator" />
+
                   <Link to="/profile" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                    My Profile
+                    <CircleUserIcon className="menu-icon" />
+                    <span>Profile</span>
                   </Link>
+
+                  <Link to="/profile" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                    <Settings2Icon className="menu-icon" />
+                    <span>Account Settings</span>
+                  </Link>
+
                   {user.role === 'TECHNICIAN' && !isTechnicianRoute && (
-                     <Link to="/technician/dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                         Technician Dashboard
+                    <Link to="/technician/dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
+                      <LayoutDashboardIcon className="menu-icon" />
+                      <span>Technician Dashboard</span>
                     </Link>
-)}
+                  )}
                   {user.role === 'MAINTENANCEMNG' && (
                     <Link to="/maintenance-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Maintenance Dashboard
+                      <LayoutDashboardIcon className="menu-icon" />
+                      <span>Maintenance Dashboard</span>
                     </Link>
                   )}
                   {user.role === 'RECOURSEMNG' && (
                     <Link to="/resource-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Resource Dashboard
+                      <LayoutDashboardIcon className="menu-icon" />
+                      <span>Resource Dashboard</span>
                     </Link>
                   )}
                   {user.role === 'BOOKINGMNG' && (
                     <Link to="/booking-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Booking Dashboard
+                      <LayoutDashboardIcon className="menu-icon" />
+                      <span>Booking Dashboard</span>
                     </Link>
                   )}
                   {user.role === 'ADMIN' && !isAdminRoute && (
                     <Link to="/admin" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Admin Dashboard
+                      <LayoutDashboardIcon className="menu-icon" />
+                      <span>Admin Dashboard</span>
                     </Link>
                   )}
                   {(isAdminRoute || isTechnicianRoute) && (
                     <Link to="/" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                       Home
+                      <HomeIcon className="menu-icon" />
+                      <span>Home</span>
                     </Link>
-      )}
-                        <button type="button" role="menuitem" className="menu-item" onClick={handleLogout}>
-                    Logout
+                  )}
+
+                  <div className="menu-separator" />
+
+                  <button type="button" role="menuitem" className="menu-item logout-item" onClick={handleLogout}>
+                    <LogOutIcon className="menu-icon" />
+                    <span>Logout</span>
                   </button>
                 </div>
               )}

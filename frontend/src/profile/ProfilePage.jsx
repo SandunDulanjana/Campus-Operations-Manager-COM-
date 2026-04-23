@@ -42,12 +42,12 @@ function compressImage(file, maxWidth = 400, quality = 0.82) {
 }
 
 const ROLE_COLOURS = {
-  ADMIN:          { bg: '#fef3c7', color: '#92400e', border: '#fcd34d' },
-  TECHNICIAN:     { bg: '#ede9fe', color: '#5b21b6', border: '#c4b5fd' },
-  MAINTENANCEMNG: { bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' },
-  RECOURSEMNG:    { bg: '#d1fae5', color: '#065f46', border: '#6ee7b7' },
-  BOOKINGMNG:     { bg: '#fce7f3', color: '#9d174d', border: '#f9a8d4' },
-  USER:           { bg: '#f0fdf4', color: '#166534', border: '#86efac' },
+  ADMIN:          { bg: '#EEF2FC', color: '#6F86C7', border: '#DCE4F5' },
+  TECHNICIAN:     { bg: '#F5F3FF', color: '#7C3AED', border: '#DDD6FE' },
+  MAINTENANCEMNG: { bg: '#EFF6FF', color: '#1D4ED8', border: '#DBEAFE' },
+  RECOURSEMNG:    { bg: '#ECFDF5', color: '#059669', border: '#D1FAE5' },
+  BOOKINGMNG:     { bg: '#FFF1F2', color: '#E11D48', border: '#FFE4E6' },
+  USER:           { bg: '#F8FAFC', color: '#475569', border: '#E2E8F0' },
 }
 
 function RoleBadge({ role }) {

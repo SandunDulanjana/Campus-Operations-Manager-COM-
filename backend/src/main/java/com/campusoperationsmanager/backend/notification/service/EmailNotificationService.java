@@ -16,7 +16,7 @@ public class EmailNotificationService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${MAIL_USERNAME:}")
     private String fromAddress;
 
     @Value("${app.frontend-url:http://localhost:5173}")
@@ -29,33 +29,50 @@ public class EmailNotificationService {
                                       NotificationType type,
                                       Long referenceId) {
         try {
+            if (fromAddress == null || fromAddress.isBlank()) {
+                log.error("CRITICAL: EMAIL_USERNAME is not configured in .env. Email cannot be sent.");
+                return;
+            }
+
             MimeMessage mime = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mime, true, "UTF-8");
+
+            log.info("Preparing to send notification email. AuthUser/From: {}, To: {}", fromAddress, toEmail);
+
             helper.setFrom(fromAddress, "Smart Campus Operations Hub");
             helper.setTo(toEmail);
             helper.setSubject(buildSubject(type, title));
             helper.setText(buildNotificationHtml(title, message, type, referenceId), true);
+            
             mailSender.send(mime);
-            log.info("Email notification sent: type={} to={}", type, toEmail);
+            log.info("Email notification SENT SUCCESS: type={} to={}", type, toEmail);
         } catch (Exception e) {
-            // Email failure must never break the main flow
-            log.warn("Email notification failed for {}: {}", toEmail, e.getMessage());
+            log.error("CRITICAL: Email notification failed for recipient {}. AuthUser: {}. Error: {}", toEmail, fromAddress, e.getMessage(), e);
         }
     }
 
     // ── Invite email ──────────────────────────────────────────────────────────
     public void sendInviteEmail(String toEmail, String toName, String inviteUrl) {
         try {
+            if (fromAddress == null || fromAddress.isBlank()) {
+                log.error("CRITICAL: EMAIL_USERNAME is not configured in .env. Email cannot be sent.");
+                return;
+            }
+
             MimeMessage mime = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mime, true, "UTF-8");
-            helper.setFrom(fromAddress, "Smart Campus Operations Hub");
+
+            log.info("Preparing to send invite email. AuthUser/From: {}, To: {}", fromAddress, toEmail);
+
+            helper.setFrom(fromAddress, "Smart Campus Hub");
             helper.setTo(toEmail);
-            helper.setSubject("You're Invited – Set Up Your Smart Campus Account");
+            helper.setSubject("Welcome to Smart Campus - Account Setup");
             helper.setText(buildInviteHtml(toName, inviteUrl), true);
+            
             mailSender.send(mime);
-            log.info("Invite email sent to: {}", toEmail);
+            log.info("Invite email SENT SUCCESS to: {}", toEmail);
         } catch (Exception e) {
-            log.warn("Invite email failed for {}: {}", toEmail, e.getMessage());
+            log.error("CRITICAL: Invite email failed for {}. AuthUser: {}. Error: {}", toEmail, fromAddress, e.getMessage(), e);
         }
     }
 

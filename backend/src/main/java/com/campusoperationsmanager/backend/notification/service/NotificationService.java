@@ -69,10 +69,11 @@ public class NotificationService {
                 .createdByEmail("system")
                 .build();
 
-        notificationRepository.save(notification);
-        log.info("Targeted notification saved: type={} to={} ref={}", type, targetEmail, referenceId);
+        AppNotification saved = notificationRepository.save(notification);
+        log.info("Targeted notification saved to DB: id={} to={} type={}", saved.getId(), targetEmail, type);
 
-        // 2. Send email notification (non-blocking – EmailNotificationService catches its own exceptions)
+        // 2. Send email notification
+        log.info("Handing off to EmailNotificationService for: {}", targetEmail);
         emailNotificationService.sendNotificationEmail(targetEmail, title, message, type, referenceId);
     }
 

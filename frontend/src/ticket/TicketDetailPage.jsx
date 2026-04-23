@@ -171,94 +171,87 @@ function TicketDetailPage() {
   const allowedNext = ALLOWED_TRANSITIONS[ticket.status] || []
 
   return (
-    <section className="admin-resources-page">
+    <div className="ticket-detail-page">
+      <div className="ticket-detail-hero">
+        <ActionButton kind="ghost" onClick={() => navigate(-1)} style={{ marginBottom: '1.5rem' }}>
+          ← Back to Tickets
+        </ActionButton>
 
-      <ActionButton kind="ghost" onClick={() => navigate(-1)}>
-        ← Back
-      </ActionButton>
+        <div className="ticket-hero-meta">
+          <span className="ticket-id-tag">TICKET #{ticket.id}</span>
+          <span className={getStatusBadgeClass(ticket.status)}>
+            {formatTicketLabel(ticket.status)}
+          </span>
+          <span className={getPriorityBadgeClass(ticket.priority)}>
+            {ticket.priority}
+          </span>
+          <span className="badge cancelled">
+            {formatTicketLabel(ticket.category)}
+          </span>
+          {ticket.slaBreached && (
+            <span className="badge rejected">⚠ SLA Breached</span>
+          )}
+        </div>
 
-      <StatusBanner type="error"   message={errorMessage}   />
-      <StatusBanner type="success" message={successMessage} />
-
-      {/* ── Ticket Info ── */}
-      <div className="home-section-card" style={{ padding: '1.5rem' }}>
-        <div className="panel-header">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-              <span style={{ color: '#64748b', fontSize: '0.85rem' }}>Ticket #{ticket.id}</span>
-              <span className={getStatusBadgeClass(ticket.status)}>
-                {formatTicketLabel(ticket.status)}
-              </span>
-              <span className={getPriorityBadgeClass(ticket.priority)}>
-                {ticket.priority}
-              </span>
-              <span className="badge cancelled">
-                {formatTicketLabel(ticket.category)}
-              </span>
-              {ticket.slaBreached && (
-                <span className="badge rejected">⚠ SLA Breached</span>
-              )}
-            </div>
-            <h1 style={{ margin: 0 }}>{ticket.title}</h1>
-          </div>
-
+        <div className="panel-header" style={{ alignItems: 'flex-start' }}>
+          <h1 className="ticket-detail-title">{ticket.title}</h1>
           {canUpdateStatus && allowedNext.length > 0 && (
             <ActionButton
               kind={showStatusForm ? 'ghost' : 'primary'}
               onClick={() => setShowStatus((v) => !v)}
             >
-              {showStatusForm ? 'Cancel' : 'Update Status'}
+              {showStatusForm ? 'Cancel Update' : 'Update Status'}
             </ActionButton>
           )}
         </div>
 
+        <StatusBanner type="error"   message={errorMessage}   />
+        <StatusBanner type="success" message={successMessage} />
+
         {/* Status update form */}
         {showStatusForm && allowedNext.length > 0 && (
-          <div style={{
-            padding: '1.25rem',
-            background: '#f8fafc',
-            borderRadius: '0.85rem',
-            border: '1px solid #e5e7eb',
-            marginBottom: '1.25rem',
-          }}>
+          <div className="ticket-card" style={{ marginTop: '2rem', background: 'var(--bg-subtle)' }}>
+            <div className="ticket-card-header">
+              <h2>Modify Ticket Status</h2>
+            </div>
             <form className="booking-form" onSubmit={handleStatusUpdate} style={{ padding: 0 }}>
-              <label>
-                New Status
-                <select
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                  style={{ maxWidth: 280 }}
-                >
-                  {allowedNext.map((s) => (
-                    <option key={s} value={s}>{formatTicketLabel(s)}</option>
-                  ))}
-                </select>
-              </label>
+              <div className="resource-form-grid">
+                <label>
+                  New Status
+                  <select
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                  >
+                    {allowedNext.map((s) => (
+                      <option key={s} value={s}>{formatTicketLabel(s)}</option>
+                    ))}
+                  </select>
+                </label>
 
-            {newStatus === 'IN_PROGRESS' && (
-            <label>
-                Assign Technician
-                <select
-                value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-                style={{ maxWidth: 360 }}
-                >
-                <option value="">
-                    {technicians.length === 0
-                    ? 'No technicians available'
-                    : '— Select a technician —'}
-                </option>
-                {technicians.map((tech) => (
-                    <option key={tech.id} value={tech.email}>
-                    {tech.name ? `${tech.name} (${tech.email})` : tech.email}
-                    </option>
-                ))}
-                </select>
-            </label>
-            )}
+                {newStatus === 'IN_PROGRESS' && (
+                  <label>
+                    Assign Technician
+                    <select
+                      value={assignedTo}
+                      onChange={(e) => setAssignedTo(e.target.value)}
+                    >
+                      <option value="">
+                        {technicians.length === 0
+                          ? 'No technicians available'
+                          : '— Select a technician —'}
+                      </option>
+                      {technicians.map((tech) => (
+                        <option key={tech.id} value={tech.email}>
+                          {tech.name ? `${tech.name} (${tech.email})` : tech.email}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
 
               {newStatus === 'RESOLVED' && (
-                <label>
+                <label style={{ marginTop: '1rem', display: 'block' }}>
                   Resolution Notes *
                   <textarea
                     placeholder="Describe what was done to fix the issue..."
@@ -270,7 +263,7 @@ function TicketDetailPage() {
               )}
 
               {newStatus === 'REJECTED' && isAdmin && (
-                <label>
+                <label style={{ marginTop: '1rem', display: 'block' }}>
                   Rejection Reason *
                   <textarea
                     placeholder="Why is this ticket being rejected?"
@@ -281,7 +274,7 @@ function TicketDetailPage() {
                 </label>
               )}
 
-              <div className="booking-actions-row">
+              <div className="booking-actions-row" style={{ marginTop: '1.5rem' }}>
                 <ActionButton kind="approve" type="submit" disabled={statusLoading}>
                   {statusLoading ? 'Updating...' : 'Confirm Update'}
                 </ActionButton>
@@ -292,212 +285,215 @@ function TicketDetailPage() {
             </form>
           </div>
         )}
-
-        {/* Details grid */}
-        <div className="resource-form-grid">
-          <InfoRow label="Description"  value={ticket.description} fullWidth />
-          <InfoRow label="Location"     value={ticket.location} />
-          <InfoRow label="Resource ID"  value={ticket.resourceId || '—'} />
-          <InfoRow label="Reported by"  value={ticket.createdByEmail} />
-          <InfoRow label="Assigned to"  value={ticket.assignedToEmail || 'Not assigned yet'} />
-          <InfoRow label="Created"      value={formatTicketDate(ticket.createdAt)} />
-          <InfoRow label="Last updated" value={formatTicketDate(ticket.updatedAt)} />
-          <InfoRow label="Contact"      value={`${ticket.contactName}${ticket.contactEmail ? ' · ' + ticket.contactEmail : ''}`} />
-          {ticket.resolutionNotes && (
-            <InfoRow label="Resolution Notes" value={ticket.resolutionNotes} fullWidth />
-          )}
-          {ticket.rejectionReason && (
-            <InfoRow label="Rejection Reason" value={ticket.rejectionReason} fullWidth />
-          )}
-        </div>
       </div>
 
-      {/* ── SLA Card ── */}
-      <div className="home-section-card" style={{ padding: '1.25rem' }}>
-        <h2 style={{ margin: '0 0 1rem' }}>SLA Performance</h2>
-        <div className="admin-stat-grid">
-          <SlaCard
-            label="Time to First Response"
-            value={formatDuration(ticket.minutesToFirstResponse)}
-            note="Target: 60 min"
-            breached={ticket.minutesToFirstResponse != null && ticket.minutesToFirstResponse > 60}
-          />
-          <SlaCard
-            label="Time to Resolution"
-            value={formatDuration(ticket.minutesToResolution)}
-            note="Target: 48 hours"
-            breached={ticket.minutesToResolution != null && ticket.minutesToResolution > 2880}
-          />
-          <SlaCard
-            label="SLA Status"
-            value={ticket.slaBreached ? 'Breached' : 'Within SLA'}
-            note={formatTicketLabel(ticket.status)}
-            breached={ticket.slaBreached}
-          />
-          <SlaCard
-            label="Priority Level"
-            value={ticket.priority}
-            note={formatTicketLabel(ticket.category)}
-            breached={ticket.priority === 'CRITICAL'}
-          />
-        </div>
-      </div>
-
-      {/* ── Attachments ── */}
-      {ticket.attachments?.length > 0 && (
-        <div className="home-section-card" style={{ padding: '1.25rem' }}>
-          <h2 style={{ margin: '0 0 1rem' }}>
-            Photo Evidence ({ticket.attachments.length}/3)
-          </h2>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            {ticket.attachments.map((att) => (
-              <div key={att.id}>
-                <img
-                  src={getAttachmentUrl(ticket.id, att.id)}
-                  alt={att.fileName}
-                  style={{
-                    width: 140, height: 140, objectFit: 'cover',
-                    borderRadius: '0.85rem',
-                    border: '1px solid var(--border-soft)',
-                    display: 'block',
-                  }}
-                />
-                <p style={{
-                  fontSize: '0.72rem', color: '#6b7280',
-                  margin: '0.25rem 0', maxWidth: 140,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {att.fileName}
-                </p>
-                {isAdmin && (
-                  <ActionButton
-                    kind="danger"
-                    onClick={() => handleDeleteAttachment(att.id)}
-                    style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
-                  >
-                    Delete
-                  </ActionButton>
-                )}
+      <div className="ticket-detail-body">
+        <div className="ticket-main-col">
+          {/* ── Core Details ── */}
+          <div className="ticket-card">
+            <div className="ticket-card-header">
+              <h2>Ticket Details</h2>
+            </div>
+            <div className="ticket-info-grid">
+              <div className="ticket-info-item" style={{ gridColumn: '1 / -1' }}>
+                <span className="ticket-info-label">Problem Description</span>
+                <p className="ticket-info-value" style={{ fontWeight: 400, lineHeight: 1.6 }}>{ticket.description}</p>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+              <InfoRow label="Location"     value={ticket.location} />
+              <InfoRow label="Resource"     value={ticket.resourceId || 'Not linked to a resource'} />
+              <InfoRow label="Reported by"  value={ticket.createdByEmail} />
+              <InfoRow label="Assigned to"  value={ticket.assignedToEmail || 'Unassigned'} />
+              <InfoRow label="Created On"   value={formatTicketDate(ticket.createdAt)} />
+              <InfoRow label="Last Updated" value={formatTicketDate(ticket.updatedAt)} />
+              <InfoRow label="Requester"    value={ticket.contactName} />
+              <InfoRow label="Contact Info" value={ticket.contactEmail || 'No email provided'} />
 
-      {/* ── Comments ── */}
-      <div className="home-section-card" style={{ padding: '1.25rem' }}>
-        <h2 style={{ margin: '0 0 1rem' }}>
-          Comments ({ticket.comments?.length ?? 0})
-        </h2>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
-
-          {ticket.comments?.length === 0 && (
-            <p style={{ color: '#64748b' }}>No comments yet. Be the first to add one.</p>
-          )}
-
-          {ticket.comments?.map((comment) => (
-            <div
-              key={comment.id}
-              style={{
-                padding: '0.9rem 1rem',
-                background: '#f8fafc',
-                borderRadius: '0.85rem',
-                border: '1px solid #e5e7eb',
-              }}
-            >
-              {editingId === comment.id ? (
-                <div className="booking-form" style={{ padding: 0, gap: '0.5rem' }}>
-                  <textarea
-                    value={editingText}
-                    onChange={(e) => setEditingText(e.target.value)}
-                    rows={3}
-                  />
-                  <div className="booking-actions-row">
-                    <ActionButton kind="approve" onClick={() => handleEditComment(comment.id)} disabled={commentLoading}>
-                      Save
-                    </ActionButton>
-                    <ActionButton kind="ghost" onClick={() => { setEditingId(null); setEditingText('') }}>
-                      Cancel
-                    </ActionButton>
-                  </div>
+              {ticket.resolutionNotes && (
+                <div className="ticket-info-item" style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1rem', background: '#f0fdf4', borderRadius: '0.75rem', border: '1px solid #dcfce7' }}>
+                  <span className="ticket-info-label" style={{ color: '#166534' }}>Resolution Progress</span>
+                  <p className="ticket-info-value" style={{ color: '#14532d' }}>{ticket.resolutionNotes}</p>
                 </div>
-              ) : (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <div>
-                      <strong style={{ fontSize: '0.875rem' }}>{comment.authorEmail}</strong>
-                      <span className="muted">{formatTicketDate(comment.createdAt)}</span>
-                    </div>
-                    {(user?.email === comment.authorEmail || isAdmin) && (
-                      <div className="booking-actions-row" style={{ margin: 0 }}>
-                        {user?.email === comment.authorEmail && (
-                          <ActionButton
-                            kind="ghost"
-                            onClick={() => { setEditingId(comment.id); setEditingText(comment.content) }}
-                            style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
-                          >
-                            Edit
-                          </ActionButton>
-                        )}
-                        <ActionButton
-                          kind="danger"
-                          onClick={() => handleDeleteComment(comment.id)}
-                          style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
-                        >
-                          Delete
-                        </ActionButton>
-                      </div>
-                    )}
-                  </div>
-                  <p style={{ margin: '0.5rem 0 0', color: '#374151' }}>{comment.content}</p>
+              )}
+              {ticket.rejectionReason && (
+                <div className="ticket-info-item" style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1rem', background: '#fef2f2', borderRadius: '0.75rem', border: '1px solid #fee2e2' }}>
+                  <span className="ticket-info-label" style={{ color: '#991b1b' }}>Rejection Reason</span>
+                  <p className="ticket-info-value" style={{ color: '#7f1d1d' }}>{ticket.rejectionReason}</p>
                 </div>
               )}
             </div>
-          ))}
+          </div>
+
+          {/* ── Comments ── */}
+          <div className="ticket-card" style={{ marginTop: '1.5rem' }}>
+            <div className="ticket-card-header">
+              <h2>Discussion ({ticket.comments?.length ?? 0})</h2>
+            </div>
+
+            <div className="comment-list">
+              {ticket.comments?.length === 0 && (
+                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>
+                  No comments yet. Start the conversation below.
+                </p>
+              )}
+
+              {ticket.comments?.map((comment) => (
+                <div key={comment.id} className="comment-bubble">
+                  {editingId === comment.id ? (
+                    <div className="booking-form" style={{ padding: 0, gap: '0.5rem' }}>
+                      <textarea
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        rows={3}
+                      />
+                      <div className="booking-actions-row">
+                        <ActionButton kind="approve" onClick={() => handleEditComment(comment.id)} disabled={commentLoading}>
+                          Save Change
+                        </ActionButton>
+                        <ActionButton kind="ghost" onClick={() => { setEditingId(null); setEditingText('') }}>
+                          Cancel
+                        </ActionButton>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="comment-bubble-header">
+                        <div className="comment-author-info">
+                          <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', background: 'var(--profile-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'var(--profile-accent)' }}>
+                            {comment.authorEmail[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <span className="comment-author-name">{comment.authorEmail}</span>
+                            <div className="comment-date">{formatTicketDate(comment.createdAt)}</div>
+                          </div>
+                        </div>
+                        {(user?.email === comment.authorEmail || isAdmin) && (
+                          <div className="booking-actions-row" style={{ margin: 0 }}>
+                            {user?.email === comment.authorEmail && (
+                              <ActionButton
+                                kind="ghost"
+                                onClick={() => { setEditingId(comment.id); setEditingText(comment.content) }}
+                                style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
+                              >
+                                Edit
+                              </ActionButton>
+                            )}
+                            <ActionButton
+                              kind="danger"
+                              onClick={() => handleDeleteComment(comment.id)}
+                              style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
+                            >
+                              Delete
+                            </ActionButton>
+                          </div>
+                        )}
+                      </div>
+                      <p className="comment-text">{comment.content}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <form className="booking-form" onSubmit={handleAddComment} style={{ padding: 0, marginTop: '2rem', borderTop: '1px solid var(--bg-subtle)', paddingTop: '1.5rem' }}>
+              <label>
+                Share an Update
+                <textarea
+                  placeholder="Ask a question or provide context..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  style={{ borderRadius: '1rem' }}
+                  required
+                />
+              </label>
+              <div className="booking-actions-row">
+                <ActionButton kind="primary" type="submit" disabled={commentLoading || !commentText.trim()}>
+                  {commentLoading ? 'Sending...' : 'Post Message'}
+                </ActionButton>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <form className="booking-form" onSubmit={handleAddComment} style={{ padding: 0 }}>
-          <label>
-            Add a Comment
-            <textarea
-              placeholder="Write your comment here..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              required
-            />
-          </label>
-          <div className="booking-actions-row">
-            <ActionButton kind="primary" type="submit" disabled={commentLoading || !commentText.trim()}>
-              {commentLoading ? 'Posting...' : 'Post Comment'}
-            </ActionButton>
+        <div className="ticket-sidebar">
+          {/* ── SLA ── */}
+          <div className="ticket-card">
+            <div className="ticket-card-header">
+              <h2>SLA Performance</h2>
+            </div>
+            <div className="sla-grid">
+              <SlaCard
+                label="Response Time"
+                value={formatDuration(ticket.minutesToFirstResponse)}
+                breached={ticket.minutesToFirstResponse != null && ticket.minutesToFirstResponse > 60}
+              />
+              <SlaCard
+                label="Total Time"
+                value={formatDuration(ticket.minutesToResolution)}
+                breached={ticket.minutesToResolution != null && ticket.minutesToResolution > 2880}
+              />
+              <SlaCard
+                label="Service Status"
+                value={ticket.slaBreached ? 'Breached' : 'Maintain SLA'}
+                breached={ticket.slaBreached}
+              />
+            </div>
           </div>
-        </form>
+
+          {/* ── Attachments ── */}
+          {ticket.attachments?.length > 0 && (
+            <div className="ticket-card" style={{ marginTop: '1.5rem' }}>
+              <div className="ticket-card-header">
+                <h2>Photo Evidence</h2>
+              </div>
+              <div className="tech-photo-gallery">
+                {ticket.attachments.map((att) => (
+                  <div key={att.id} className="tech-photo-card">
+                    <img
+                      src={getAttachmentUrl(ticket.id, att.id)}
+                      alt={att.fileName}
+                      className="tech-photo-img"
+                    />
+                    <div style={{ padding: '0.5rem 0' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+                        {att.fileName}
+                      </p>
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleDeleteAttachment(att.id)}
+                          style={{ background: 'none', border: 'none', padding: 0, color: '#dc2626', fontSize: '0.65rem', fontWeight: 700, cursor: 'pointer', marginTop: '0.2rem' }}
+                        >
+                          Delete Photo
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-
-    </section>
-  )
-}
-
-function InfoRow({ label, value, fullWidth }) {
-  return (
-    <div style={fullWidth ? { gridColumn: '1 / -1' } : {}}>
-      <p style={{ margin: '0 0 0.2rem', fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        {label}
-      </p>
-      <p style={{ margin: 0, color: '#1f2937' }}>{value}</p>
     </div>
   )
 }
 
-function SlaCard({ label, value, note, breached }) {
+function InfoRow({ label, value }) {
   return (
-    <article className="admin-stat-card" style={{ borderTop: `3px solid ${breached ? '#dc2626' : '#16a34a'}` }}>
-      <p>{label}</p>
-      <h2 style={{ color: breached ? '#b91c1c' : '#166534' }}>{value || '—'}</h2>
-      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{note}</span>
-    </article>
+    <div className="ticket-info-item">
+      <span className="ticket-info-label">{label}</span>
+      <span className="ticket-info-value">{value}</span>
+    </div>
   )
 }
+
+function SlaCard({ label, value, breached }) {
+  return (
+    <div className={`sla-stat-card ${breached ? 'breached' : 'within'}`}>
+      <span className="sla-stat-label">{label}</span>
+      <span className="sla-stat-value">{value || 'N/A'}</span>
+    </div>
+  )
+}
+
 
 export default TicketDetailPage

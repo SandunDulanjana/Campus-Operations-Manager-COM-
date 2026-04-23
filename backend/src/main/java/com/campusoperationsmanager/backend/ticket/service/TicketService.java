@@ -81,12 +81,12 @@ public class TicketService {
                                     NotificationType.TICKET_STATUS_CHANGED,
                                     savedTicket.getId()
                             );
-                        } catch (Exception ignored) {
-                            // individual send failure must not block ticket creation
+                        } catch (Exception ex) {
+                            log.warn("Failed to notify admin {}: {}", admin.getEmail(), ex.getMessage());
                         }
                     });
         } catch (Exception e) {
-            // Never let notification failure prevent ticket creation
+            log.error("Global notification failure during ticket creation: {}", e.getMessage());
         }
         // ── END CHANGE ───────────────────────────────────────────────────────────
 

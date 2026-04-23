@@ -50,14 +50,16 @@ public class AppNotification {
     @Column(name = "target_audience")
     private String targetAudience;
 
-    @Column(nullable = false)
-    private boolean published;
+    @Column(name = "published", nullable = false)
+    @Builder.Default
+    private Boolean published = true;
 
     @Column(name = "reference_id")
     private Long referenceId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "created_by_email")
     private String createdByEmail;
@@ -65,7 +67,7 @@ public class AppNotification {
     // ── FIX 1: was missing — DB has read BOOLEAN NOT NULL ────────────────────
     @Column(name = "read", nullable = false)
     @Builder.Default
-    private boolean read = false;
+    private Boolean read = false;
 
     // ── FIX 2: was missing — DB has recipient_user_id BIGINT (nullable after migration)
     @Column(name = "recipient_user_id")
@@ -73,7 +75,8 @@ public class AppNotification {
 
     // ── FIX 3: was missing — DB has updated_at TIMESTAMP NOT NULL ────────────
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {
