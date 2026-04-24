@@ -12,8 +12,8 @@ export const startGoogleLogin = () => {
 }
 
 /** Feature 5: Request a password reset keyword (sent to email / shown in dev mode) */
-export const forgotPassword = async (identifier) => {
-  const response = await axios.post(`${API_URL}/auth/forgot-password`, { identifier })
+export const forgotPassword = async (email, universityId) => {
+  const response = await axios.post(`${API_URL}/auth/forgot-password`, { email, universityId })
   return response.data // { message, devKeyword }
 }
 
