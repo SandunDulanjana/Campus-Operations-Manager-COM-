@@ -24,4 +24,5 @@ public class UserDTO {
     private boolean invitePending;
     private String registrationStatus;   // "ACTIVE" | "PENDING_APPROVAL" | "REJECTED"
     private String rejectionReason;
+    private boolean emailNotificationsEnabled;
 }

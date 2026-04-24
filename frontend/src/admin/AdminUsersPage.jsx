@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
-import { AlertCircleIcon, CheckIcon, CopyIcon, LinkIcon, Trash2Icon, UserPlusIcon, XIcon } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { AlertCircleIcon, CheckIcon, CopyIcon, LinkIcon, SearchIcon, Trash2Icon, UserPlusIcon, XIcon } from 'lucide-react'
 import {
   createPendingUser, fetchAllUsers, updateUserRole, deactivateUser,
-  fetchRegistrationRequests, approveRegistration, rejectRegistration,permanentDeleteUser
+  fetchRegistrationRequests, approveRegistration, rejectRegistration, permanentDeleteUser
 } from '../api/adminApi'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -36,132 +36,193 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
-const ROLES = ['USER','TECHNICIAN','BOOKINGMNG','RECOURSEMNG','MAINTENANCEMNG','ADMIN']
+const ROLES = ['USER', 'TECHNICIAN', 'BOOKINGMNG', 'RECOURSEMNG', 'MAINTENANCEMNG', 'ADMIN']
 const ROLE_LABELS = {
-  USER:'User', TECHNICIAN:'Technician', BOOKINGMNG:'Booking Mgr',
-  RECOURSEMNG:'Resource Mgr', MAINTENANCEMNG:'Maintenance Mgr', ADMIN:'Admin'
+  USER: 'User',
+  TECHNICIAN: 'Technician',
+  BOOKINGMNG: 'Booking Mgr',
+  RECOURSEMNG: 'Resource Mgr',
+  MAINTENANCEMNG: 'Maintenance Mgr',
+  ADMIN: 'Admin',
 }
-const emptyForm = { name:'', email:'', username:'', role:'USER', phone:'', department:'' }
+
+const emptyForm = { name: '', email: '', username: '', role: 'USER', phone: '', department: '' }
 
 export default function AdminUsersPage() {
-  const [tab, setTab] = useState('users')   // 'users' | 'requests'
-
-  // ── Users tab ────────────────────────────────────────────────────────────
-  const [users, setUsers]         = useState([])
+  const [tab, setTab] = useState('users')
+  const [users, setUsers] = useState([])
   const [usersLoading, setUsersLoading] = useState(true)
-  const [usersError, setUsersError]     = useState('')
+  const [usersError, setUsersError] = useState('')
   const [showModal, setShowModal] = useState(false)
-  const [form, setForm]           = useState(emptyForm)
+  const [form, setForm] = useState(emptyForm)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
   const [inviteUrl, setInviteUrl] = useState('')
-  const [copied, setCopied]       = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [roleFilter, setRoleFilter] = useState('__all__')
+  const [searchQuery, setSearchQuery] = useState('')
 
-  // ── Registration Requests tab ─────────────────────────────────────────────
-  const [requests, setRequests]         = useState([])
-  const [reqLoading, setReqLoading]     = useState(true)
-  const [reqError, setReqError]         = useState('')
+  const [requests, setRequests] = useState([])
+  const [reqLoading, setReqLoading] = useState(true)
+  const [reqError, setReqError] = useState('')
   const [actionUserId, setActionUserId] = useState(null)
   const [dummyPassword, setDummyPassword] = useState('')
   const [rejectReason, setRejectReason] = useState('')
-  const [actionType, setActionType]     = useState(null) // 'approve' | 'reject'
+  const [actionType, setActionType] = useState(null)
   const [actionSubmitting, setActionSubmitting] = useState(false)
-  const [actionError, setActionError]   = useState('')
-  const [devEmailInfo, setDevEmailInfo] = useState(null)  // shows email preview
+  const [actionError, setActionError] = useState('')
+  const [devEmailInfo, setDevEmailInfo] = useState(null)
+  const [approvalSuccess, setApprovalSuccess] = useState(false)
 
-  useEffect(() => { loadUsers(); loadRequests() }, [])
+  const filteredUsers = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    return users.filter((user) => {
+      const matchesRole = roleFilter === '__all__' || user.role === roleFilter
+      const matchesSearch = !query
+        || (user.name || '').toLowerCase().includes(query)
+        || (user.email || '').toLowerCase().includes(query)
+        || (user.username || '').toLowerCase().includes(query)
+      return matchesRole && matchesSearch
+    })
+  }, [users, roleFilter, searchQuery])
+
+  useEffect(() => {
+    void loadUsers()
+    void loadRequests()
+  }, [])
 
   async function loadUsers() {
-    setUsersLoading(true); setUsersError('')
-    try { setUsers(await fetchAllUsers()) }
-    catch { setUsersError('Failed to load users.') }
-    finally { setUsersLoading(false) }
+    setUsersLoading(true)
+    setUsersError('')
+    try {
+      setUsers(await fetchAllUsers())
+    } catch {
+      setUsersError('Failed to load users.')
+    } finally {
+      setUsersLoading(false)
+    }
   }
 
   async function loadRequests() {
-    setReqLoading(true); setReqError('')
-    try { setRequests(await fetchRegistrationRequests()) }
-    catch { setReqError('Failed to load registration requests.') }
-    finally { setReqLoading(false) }
+    setReqLoading(true)
+    setReqError('')
+    try {
+      setRequests(await fetchRegistrationRequests())
+    } catch {
+      setReqError('Failed to load registration requests.')
+    } finally {
+      setReqLoading(false)
+    }
   }
 
-  // ── Create invited user ───────────────────────────────────────────────────
-  async function handleCreate(e) {
-    e.preventDefault(); setFormError(''); setSubmitting(true)
+  async function handleCreate(event) {
+    event.preventDefault()
+    setFormError('')
+    setSubmitting(true)
     try {
       const { user: created, inviteUrl: url } = await createPendingUser(form)
-      setUsers(prev => [created, ...prev])
-      setInviteUrl(url); setForm(emptyForm)
-    } catch (err) { setFormError(err?.response?.data || 'Failed to create user.') }
-    finally { setSubmitting(false) }
+      setUsers((current) => [created, ...current])
+      setInviteUrl(url)
+      setForm(emptyForm)
+    } catch (error) {
+      setFormError(error?.response?.data || 'Failed to create user.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function handleRoleChange(userId, newRole) {
     try {
       const updated = await updateUserRole(userId, newRole)
-      setUsers(prev => prev.map(u => u.id === userId ? updated : u))
-    } catch { setUsersError('Role update failed.') }
+      setUsers((current) => current.map((user) => user.id === userId ? updated : user))
+    } catch {
+      setUsersError('Role update failed.')
+    }
   }
 
   async function handleDeactivate(userId) {
     if (!window.confirm('Deactivate this account?')) return
     try {
       await deactivateUser(userId)
-      setUsers(prev => prev.map(u => u.id === userId ? {...u, enabled: false} : u))
-    } catch { setUsersError('Deactivation failed.') }
+      setUsers((current) => current.map((user) => user.id === userId ? { ...user, enabled: false } : user))
+    } catch {
+      setUsersError('Deactivation failed.')
+    }
   }
 
-    async function handlePermanentDelete(userId, userName) {
-    if (!window.confirm(
-      `Permanently delete "${userName}"?\n\nThis CANNOT be undone. All data for this user will be removed.`
-    )) return
+  async function handlePermanentDelete(userId, userName) {
+    if (!window.confirm(`Permanently delete "${userName}"?\n\nThis CANNOT be undone. All data for this user will be removed.`)) return
     try {
       await permanentDeleteUser(userId)
-      setUsers(prev => prev.filter(u => u.id !== userId))
-    } catch (err) {
-      setUsersError(err?.response?.data || 'Delete failed.')
+      setUsers((current) => current.filter((user) => user.id !== userId))
+    } catch (error) {
+      setUsersError(error?.response?.data || 'Delete failed.')
     }
   }
 
   function copyInviteUrl() {
     navigator.clipboard.writeText(inviteUrl)
-    setCopied(true); setTimeout(() => setCopied(false), 2500)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
   }
 
-  // ── Approve / Reject ──────────────────────────────────────────────────────
   function openAction(userId, type) {
-    setActionUserId(userId); setActionType(type)
-    setDummyPassword(''); setRejectReason(''); setActionError(''); setDevEmailInfo(null)
+    setActionUserId(userId)
+    setActionType(type)
+    setDummyPassword('')
+    setRejectReason('')
+    setActionError('')
+    setDevEmailInfo(null)
   }
 
-  async function handleApprove(e) {
-    e.preventDefault(); setActionError(''); setActionSubmitting(true)
+  async function handleApprove(event) {
+    event.preventDefault()
+    setActionError('')
+    setActionSubmitting(true)
     try {
       const result = await approveRegistration(actionUserId, dummyPassword)
-      setDevEmailInfo(result.devEmail)
-      setRequests(prev => prev.filter(r => r.id !== actionUserId))
-      // Reload users list so newly approved user appears
-      loadUsers()
-    } catch (err) { setActionError(err?.response?.data || 'Failed to approve.') }
-    finally { setActionSubmitting(false) }
+      setDevEmailInfo(result.devEmail || null)
+      setRequests((current) => current.filter((request) => request.id !== actionUserId))
+      await loadUsers()
+      setActionUserId(null)
+      setActionType(null)
+      setApprovalSuccess(true)
+    } catch (error) {
+      setActionError(error?.response?.data || 'Failed to approve.')
+    } finally {
+      setActionSubmitting(false)
+    }
   }
 
-  async function handleReject(e) {
-    e.preventDefault(); setActionError(''); setActionSubmitting(true)
+  async function handleReject(event) {
+    event.preventDefault()
+    setActionError('')
+    setActionSubmitting(true)
     try {
       const result = await rejectRegistration(actionUserId, rejectReason)
       setDevEmailInfo(result.devEmail)
-      setRequests(prev => prev.filter(r => r.id !== actionUserId))
-    } catch (err) { setActionError(err?.response?.data || 'Failed to reject.') }
-    finally { setActionSubmitting(false) }
+      setRequests((current) => current.filter((request) => request.id !== actionUserId))
+    } catch (error) {
+      setActionError(error?.response?.data || 'Failed to reject.')
+    } finally {
+      setActionSubmitting(false)
+    }
   }
 
   function closeActionModal() {
-    setActionUserId(null); setActionType(null); setDevEmailInfo(null)
-    setDummyPassword(''); setRejectReason(''); setActionError('')
+    setActionUserId(null)
+    setActionType(null)
+    setDevEmailInfo(null)
+    setDummyPassword('')
+    setRejectReason('')
+    setActionError('')
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  function closeApprovalSuccess() {
+    setApprovalSuccess(false)
+    setTab('users')
+  }
+
   return (
     <section className="flex flex-col gap-6">
       <Tabs value={tab} onValueChange={setTab}>
@@ -182,17 +243,55 @@ export default function AdminUsersPage() {
                 Add New User
               </Button>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="flex flex-col gap-4 pt-4">
               {usersError ? (
-                <Alert variant="destructive" className="mb-4">
+                <Alert variant="destructive">
                   <AlertCircleIcon />
                   <AlertTitle>Request failed</AlertTitle>
                   <AlertDescription>{usersError}</AlertDescription>
                 </Alert>
               ) : null}
 
+              <div className="flex flex-col gap-3 rounded-xl border bg-muted/30 p-4 xl:flex-row xl:items-end xl:justify-between">
+                <div className="flex flex-1 flex-col gap-2">
+                  <label className="text-sm font-medium" htmlFor="user-search">Search users</label>
+                  <div className="relative">
+                    <SearchIcon className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="user-search"
+                      className="pl-9"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="Search by name, email, or University ID"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium">Role</label>
+                  <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger className="min-w-44">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="__all__">All roles</SelectItem>
+                        {ROLES.map((role) => (
+                          <SelectItem key={role} value={role}>{ROLE_LABELS[role]}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{filteredUsers.length} of {users.length}</Badge>
+                  <Button variant="outline" onClick={() => { setRoleFilter('__all__'); setSearchQuery('') }}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
+
               {usersLoading ? (
-                <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Loading…</div>
+                <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Loading...</div>
               ) : (
                 <div className="rounded-xl border">
                   <Table>
@@ -207,7 +306,13 @@ export default function AdminUsersPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {users.map((user) => (
+                      {filteredUsers.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                            No users found.
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredUsers.map((user) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
@@ -216,7 +321,7 @@ export default function AdminUsersPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                          <TableCell className="font-mono text-muted-foreground">{user.username || '—'}</TableCell>
+                          <TableCell className="font-mono text-muted-foreground">{user.username || '-'}</TableCell>
                           <TableCell>
                             <Select value={user.role} onValueChange={(value) => handleRoleChange(user.id, value)}>
                               <SelectTrigger className="w-40">
@@ -276,7 +381,7 @@ export default function AdminUsersPage() {
               ) : null}
 
               {reqLoading ? (
-                <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Loading…</div>
+                <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Loading...</div>
               ) : requests.length === 0 ? (
                 <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
                   No pending registration requests.
@@ -288,7 +393,7 @@ export default function AdminUsersPage() {
                       <div className="flex flex-col gap-1">
                         <p className="font-medium">{request.name}</p>
                         <span className="text-sm text-muted-foreground">{request.email}</span>
-                        <span className="text-sm text-muted-foreground">University ID: {request.username || '—'}</span>
+                        <span className="text-sm text-muted-foreground">University ID: {request.username || '-'}</span>
                       </div>
                       <div className="flex gap-2">
                         <Button size="sm" onClick={() => openAction(request.id, 'approve')}>
@@ -329,29 +434,27 @@ export default function AdminUsersPage() {
               ) : null}
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium" htmlFor="invite-name">Full Name</label>
-                  <Input id="invite-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium" htmlFor="invite-email">Email</label>
-                  <Input id="invite-email" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} required />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium" htmlFor="invite-username">University ID</label>
-                  <Input id="invite-username" value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium" htmlFor="invite-phone">Phone</label>
-                  <Input id="invite-phone" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium" htmlFor="invite-dept">Department</label>
-                  <Input id="invite-dept" value={form.department} onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))} />
-                </div>
+                {[
+                  ['invite-name', 'Full Name', 'name', 'text'],
+                  ['invite-email', 'Email', 'email', 'email'],
+                  ['invite-username', 'University ID', 'username', 'text'],
+                  ['invite-phone', 'Phone', 'phone', 'text'],
+                  ['invite-dept', 'Department', 'department', 'text'],
+                ].map(([id, label, key, type]) => (
+                  <div key={id} className="flex flex-col gap-2">
+                    <label className="text-sm font-medium" htmlFor={id}>{label}</label>
+                    <Input
+                      id={id}
+                      type={type}
+                      value={form[key]}
+                      onChange={(event) => setForm((value) => ({ ...value, [key]: event.target.value }))}
+                      required={key === 'name' || key === 'email'}
+                    />
+                  </div>
+                ))}
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium">Role</label>
-                  <Select value={form.role} onValueChange={(value) => setForm((f) => ({ ...f, role: value }))}>
+                  <Select value={form.role} onValueChange={(value) => setForm((current) => ({ ...current, role: value }))}>
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
@@ -370,7 +473,7 @@ export default function AdminUsersPage() {
                 <Button variant="outline" type="button" onClick={() => { setShowModal(false); setForm(emptyForm) }}>Cancel</Button>
                 <Button type="submit" disabled={submitting}>
                   <UserPlusIcon data-icon="inline-start" />
-                  {submitting ? 'Creating…' : 'Create invite'}
+                  {submitting ? 'Creating...' : 'Create invite'}
                 </Button>
               </DialogFooter>
             </form>
@@ -414,13 +517,13 @@ export default function AdminUsersPage() {
             <form onSubmit={handleApprove} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium" htmlFor="dummy-password">Temporary Password</label>
-                <Input id="dummy-password" value={dummyPassword} onChange={(e) => setDummyPassword(e.target.value)} minLength={6} required />
+                <Input id="dummy-password" value={dummyPassword} onChange={(event) => setDummyPassword(event.target.value)} minLength={6} required />
               </div>
               <DialogFooter>
                 <Button variant="outline" type="button" onClick={closeActionModal}>Cancel</Button>
                 <Button type="submit" disabled={actionSubmitting}>
                   <CheckIcon data-icon="inline-start" />
-                  {actionSubmitting ? 'Approving…' : 'Confirm Approval'}
+                  {actionSubmitting ? 'Approving...' : 'Confirm Approval'}
                 </Button>
               </DialogFooter>
             </form>
@@ -428,13 +531,13 @@ export default function AdminUsersPage() {
             <form onSubmit={handleReject} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium" htmlFor="reject-reason">Rejection Reason</label>
-                <Textarea id="reject-reason" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={4} required />
+                <Textarea id="reject-reason" value={rejectReason} onChange={(event) => setRejectReason(event.target.value)} rows={4} required />
               </div>
               <DialogFooter>
                 <Button variant="outline" type="button" onClick={closeActionModal}>Cancel</Button>
                 <Button variant="destructive" type="submit" disabled={actionSubmitting}>
                   <XIcon data-icon="inline-start" />
-                  {actionSubmitting ? 'Rejecting…' : 'Confirm Rejection'}
+                  {actionSubmitting ? 'Rejecting...' : 'Confirm Rejection'}
                 </Button>
               </DialogFooter>
             </form>
@@ -464,6 +567,23 @@ export default function AdminUsersPage() {
           ) : null}
           <DialogFooter>
             <Button onClick={closeActionModal}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={approvalSuccess} onOpenChange={(open) => { if (!open) closeApprovalSuccess() }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Registration Approved</DialogTitle>
+            <DialogDescription>User can now sign in with approved account access.</DialogDescription>
+          </DialogHeader>
+          <Alert>
+            <CheckIcon />
+            <AlertTitle>Approved</AlertTitle>
+            <AlertDescription>The registration request has been accepted successfully.</AlertDescription>
+          </Alert>
+          <DialogFooter>
+            <Button onClick={closeApprovalSuccess}>Go to Users Section</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

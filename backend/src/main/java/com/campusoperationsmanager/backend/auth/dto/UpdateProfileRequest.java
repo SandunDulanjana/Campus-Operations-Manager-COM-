@@ -11,4 +11,5 @@ public class UpdateProfileRequest {
 
     private String phone;
     private String department;
+    private boolean emailNotificationsEnabled;
 }

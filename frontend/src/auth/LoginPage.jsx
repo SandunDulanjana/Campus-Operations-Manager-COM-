@@ -37,7 +37,7 @@ function LoginPage() {
   function getRoleHome(userData) {
     if (!userData) return '/'
     if (userData.role === 'ADMIN') return '/admin/dashboard'
-    if (userData.role === 'TECHNICIAN') return '/technician-dashboard'
+    if (userData.role === 'TECHNICIAN') return '/technician/dashboard'
     if (userData.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
     if (userData.role === 'RECOURSEMNG') return '/resource-dashboard'
     if (userData.role === 'BOOKINGMNG') return '/booking-dashboard'
@@ -136,7 +136,7 @@ function LoginPage() {
             <form className="login-form" onSubmit={handleSubmit}>
               <div className="login-inputs-row">
                 <label>
-                  Username
+                  University ID
                   <input
                     type="text"
                     value={username}
