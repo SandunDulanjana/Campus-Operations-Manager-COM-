@@ -313,35 +313,75 @@ function TicketDetailPage() {
       </div>
 
       {/* ── SLA Card ── */}
-      <div className="home-section-card" style={{ padding: '1.25rem' }}>
-        <h2 style={{ margin: '0 0 1rem' }}>SLA Performance</h2>
-        <div className="admin-stat-grid">
-          <SlaCard
-            label="Time to First Response"
-            value={formatDuration(ticket.minutesToFirstResponse)}
-            note="Target: 60 min"
-            breached={ticket.minutesToFirstResponse != null && ticket.minutesToFirstResponse > 60}
-          />
-          <SlaCard
-            label="Time to Resolution"
-            value={formatDuration(ticket.minutesToResolution)}
-            note="Target: 48 hours"
-            breached={ticket.minutesToResolution != null && ticket.minutesToResolution > 2880}
-          />
-          <SlaCard
-            label="SLA Status"
-            value={ticket.slaBreached ? 'Breached' : 'Within SLA'}
-            note={formatTicketLabel(ticket.status)}
-            breached={ticket.slaBreached}
-          />
-          <SlaCard
-            label="Priority Level"
-            value={ticket.priority}
-            note={formatTicketLabel(ticket.category)}
-            breached={ticket.priority === 'CRITICAL'}
-          />
-        </div>
-      </div>
+      {/* ── SLA Card ── */}
+      {(() => {
+        // Priority-based SLA targets
+        const slaTargets = {
+          LOW:      { responseMin: 240,  resolutionMin: 10080, responseLabel: '4 hours',  resolutionLabel: '7 days'    },
+          MEDIUM:   { responseMin: 120,  resolutionMin: 4320,  responseLabel: '2 hours',  resolutionLabel: '3 days'    },
+          HIGH:     { responseMin: 60,   resolutionMin: 2880,  responseLabel: '1 hour',   resolutionLabel: '48 hours'  },
+          CRITICAL: { responseMin: 15,   resolutionMin: 1440,  responseLabel: '15 min',   resolutionLabel: '24 hours'  },
+        }
+        const target = slaTargets[ticket.priority] || slaTargets.MEDIUM
+        const responseBreached = ticket.minutesToFirstResponse != null
+          && ticket.minutesToFirstResponse > target.responseMin
+        const resolutionBreached = ticket.minutesToResolution != null
+          && ticket.minutesToResolution > target.resolutionMin
+
+        return (
+          <div className="home-section-card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h2 style={{ margin: 0 }}>SLA Performance</h2>
+              <span style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '0.2rem 0.7rem',
+                borderRadius: 999,
+                background: ticket.priority === 'CRITICAL' ? '#fef2f2'
+                  : ticket.priority === 'HIGH' ? '#eff6ff'
+                  : ticket.priority === 'MEDIUM' ? '#fffbeb'
+                  : '#f0fdf4',
+                color: ticket.priority === 'CRITICAL' ? '#b91c1c'
+                  : ticket.priority === 'HIGH' ? '#1d4ed8'
+                  : ticket.priority === 'MEDIUM' ? '#92400e'
+                  : '#166534',
+                border: `1px solid ${ticket.priority === 'CRITICAL' ? '#fecaca'
+                  : ticket.priority === 'HIGH' ? '#bfdbfe'
+                  : ticket.priority === 'MEDIUM' ? '#fde68a'
+                  : '#bbf7d0'}`,
+              }}>
+                {ticket.priority} Priority SLA Targets applied
+              </span>
+            </div>
+            <div className="admin-stat-grid">
+              <SlaCard
+                label="Time to First Response"
+                value={formatDuration(ticket.minutesToFirstResponse)}
+                note={`Target: ${target.responseLabel}`}
+                breached={responseBreached}
+              />
+              <SlaCard
+                label="Time to Resolution"
+                value={formatDuration(ticket.minutesToResolution)}
+                note={`Target: ${target.resolutionLabel}`}
+                breached={resolutionBreached}
+              />
+              <SlaCard
+                label="SLA Status"
+                value={ticket.slaBreached ? 'Breached' : 'Within SLA'}
+                note={formatTicketLabel(ticket.status)}
+                breached={ticket.slaBreached}
+              />
+              <SlaCard
+                label="Priority Level"
+                value={ticket.priority}
+                note={formatTicketLabel(ticket.category)}
+                breached={ticket.priority === 'CRITICAL'}
+              />
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Attachments ── */}
       {ticket.attachments?.length > 0 && (
