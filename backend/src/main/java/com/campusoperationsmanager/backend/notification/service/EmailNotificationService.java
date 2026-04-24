@@ -1,5 +1,6 @@
 package com.campusoperationsmanager.backend.notification.service;
 
+import com.campusoperationsmanager.backend.auth.repository.UserRepository;
 import com.campusoperationsmanager.backend.notification.model.NotificationType;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 public class EmailNotificationService {
 
     private final JavaMailSender mailSender;
+    private final UserRepository userRepository;
 
     @Value("${spring.mail.username}")
     private String fromAddress;
@@ -30,6 +32,22 @@ public class EmailNotificationService {
                                       String message,
                                       NotificationType type,
                                       Long referenceId) {
+        
+        // Skip check for registration emails, otherwise check user preference
+        if (type != NotificationType.REGISTRATION_APPROVED && 
+            type != NotificationType.REGISTRATION_REJECTED &&
+            type != NotificationType.REGISTRATION_REQUEST) {
+            
+            boolean enabled = userRepository.findByEmail(toEmail)
+                    .map(u -> u.isEmailNotificationsEnabled())
+                    .orElse(true); // Default to true if user not found (e.g. system emails)
+            
+            if (!enabled) {
+                log.info("Skipping email notification for {} (preferences disabled)", toEmail);
+                return;
+            }
+        }
+
         try {
             MimeMessage mime = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mime, true, "UTF-8");

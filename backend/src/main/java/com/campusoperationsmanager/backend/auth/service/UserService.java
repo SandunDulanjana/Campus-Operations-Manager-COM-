@@ -126,6 +126,7 @@ public class UserService {
                 .registrationStatus(user.getRegistrationStatus() != null
                         ? user.getRegistrationStatus().name() : "ACTIVE")
                 .rejectionReason(user.getRejectionReason())
+                .emailNotificationsEnabled(user.isEmailNotificationsEnabled())
                 .build();
     }
 
@@ -136,6 +137,7 @@ public class UserService {
         user.setPhone((phone != null && !phone.isBlank()) ? phone.trim() : null);
         String dept = request.getDepartment();
         user.setDepartment((dept != null && !dept.isBlank()) ? dept.trim() : null);
+        user.setEmailNotificationsEnabled(request.isEmailNotificationsEnabled());
         log.info("Profile updated → user: {}", user.getEmail());
         return userRepository.save(user);
     }
