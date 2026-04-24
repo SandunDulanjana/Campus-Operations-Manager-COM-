@@ -425,10 +425,32 @@ function TicketDetailPage() {
               ) : (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <div>
-                      <strong style={{ fontSize: '0.875rem' }}>{comment.authorEmail}</strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        padding: '0.15rem 0.55rem',
+                        borderRadius: 999,
+                        background: comment.authorRole === 'Admin'
+                          ? '#fef2f2' : comment.authorRole === 'Technician'
+                          ? '#eff6ff' : '#f0fdf4',
+                        color: comment.authorRole === 'Admin'
+                          ? '#b91c1c' : comment.authorRole === 'Technician'
+                          ? '#1d4ed8' : '#166534',
+                        border: `1px solid ${comment.authorRole === 'Admin'
+                          ? '#fecaca' : comment.authorRole === 'Technician'
+                          ? '#bfdbfe' : '#bbf7d0'}`,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}>
+                        {comment.authorRole || 'User'}
+                      </span>
+                      <strong style={{ fontSize: '0.875rem' }}>
+                        {comment.authorName || comment.authorEmail}
+                      </strong>
                       <span className="muted">{formatTicketDate(comment.createdAt)}</span>
                     </div>
+                    
                     {(user?.email === comment.authorEmail || isAdmin) && (
                       <div className="booking-actions-row" style={{ margin: 0 }}>
                         {user?.email === comment.authorEmail && (
