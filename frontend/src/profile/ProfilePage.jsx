@@ -601,7 +601,7 @@ export default function ProfilePage() {
           <Banner type="error"   msg={profileError} />
           <form className="profile-form" onSubmit={handleProfileSave}>
             <FieldRow iconKind="mail" label="Email address" locked value={user?.email} />
-            {user?.username && <FieldRow iconKind="user" label="Username" locked value={user.username} />}
+            {user?.username && <FieldRow iconKind="user" label="University ID" locked value={user.username} />}
             <FieldRow iconKind="user" label="Full name">
               <input className="profile-input" value={profileForm.name}
                 onChange={e => setProfileForm(f => ({ ...f, name: e.target.value }))}

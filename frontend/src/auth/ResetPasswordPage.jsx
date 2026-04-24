@@ -1,15 +1,22 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { resetPassword } from '../api/authApi'
 
 export default function ResetPasswordPage() {
   const navigate  = useNavigate()
+  const [searchParams] = useSearchParams()
   const [keyword, setKeyword]         = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirm, setConfirm]         = useState('')
   const [loading, setLoading]         = useState(false)
   const [error, setError]             = useState('')
   const [success, setSuccess]         = useState(false)
+
+  // Auto-fill keyword from URL if present
+  useEffect(() => {
+    const kw = searchParams.get('keyword')
+    if (kw) setKeyword(kw.toUpperCase())
+  }, [searchParams])
 
   const strength = newPassword.length < 8 ? 'Too short' : newPassword.length < 12 ? 'Weak' : newPassword.length < 16 ? 'Good' : 'Strong'
 
@@ -53,23 +60,28 @@ export default function ResetPasswordPage() {
         {!success ? (
           <>
             <p style={{ margin: '0 0 1.2rem', color: '#374151', fontSize: '0.92rem', lineHeight: 1.55 }}>
-              Enter the reset keyword from your email and choose a new password.
+              {searchParams.get('keyword') 
+                ? "Your identity has been verified via the secure link. Please choose your new password below."
+                : "Enter the reset keyword from your email and choose a new password."
+              }
             </p>
             {error && <p className="login-error">{error}</p>}
             <form className="login-form" onSubmit={handleSubmit}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600, color: '#374151' }}>
-                Reset Keyword
-                <input
-                  type="text"
-                  value={keyword}
-                  onChange={e => setKeyword(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                  placeholder="e.g. ABC12345"
-                  style={{ letterSpacing: '0.18em', fontWeight: 700, fontSize: '1.1rem' }}
-                  maxLength={8}
-                  autoFocus
-                  required
-                />
-              </label>
+              {!searchParams.get('keyword') && (
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600, color: '#374151' }}>
+                  Reset Keyword
+                  <input
+                    type="text"
+                    value={keyword}
+                    onChange={e => setKeyword(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                    placeholder="e.g. ABC12345"
+                    style={{ letterSpacing: '0.18em', fontWeight: 700, fontSize: '1.1rem' }}
+                    maxLength={8}
+                    autoFocus
+                    required
+                  />
+                </label>
+              )}
               <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600, color: '#374151' }}>
                 New Password
                 <input

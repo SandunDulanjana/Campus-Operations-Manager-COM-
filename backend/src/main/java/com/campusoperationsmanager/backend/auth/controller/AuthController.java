@@ -112,17 +112,29 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         try {
-            if (request.getIdentifier() == null || request.getIdentifier().isBlank()) {
-                return ResponseEntity.badRequest().body("Username or email is required.");
+            if (request.getEmail() == null || request.getEmail().isBlank()) {
+                return ResponseEntity.badRequest().body("Email is required.");
             }
-            String keyword = userService.generatePasswordResetKeyword(
-                    request.getIdentifier().trim());
+            if (request.getUniversityId() == null || request.getUniversityId().isBlank()) {
+                return ResponseEntity.badRequest().body("University ID is required.");
+            }
+            userService.generatePasswordResetKeyword(
+                    request.getEmail().trim(), request.getUniversityId().trim());
             return ResponseEntity.ok(Map.of(
-                "message", "Reset keyword generated. Check your email (dev: keyword shown below).",
-                "devKeyword", keyword  // ⚠️ Remove in production
+                "message", "Reset link has been sent to your registered email address."
             ));
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/test-email")
+    public ResponseEntity<?> testEmail(@RequestParam String to) {
+        try {
+            userService.sendTestEmail(to);
+            return ResponseEntity.ok("Test email sent successfully to " + to);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Email failed: " + e.getMessage());
         }
     }
 
@@ -188,7 +200,7 @@ public class AuthController {
 
     // ─── DTOs ─────────────────────────────────────────────────────────────────
     @Data public static class TwoFactorLoginRequest  { private String tempToken; private String code; }
-    @Data public static class ForgotPasswordRequest  { private String identifier; }
+    @Data public static class ForgotPasswordRequest  { private String email; private String universityId; }
     @Data public static class ResetPasswordRequest   { private String keyword; private String newPassword; }
 
     // ─── Self-registration: submit University ID after Google login ───────────────
