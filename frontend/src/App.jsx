@@ -24,10 +24,12 @@ import TicketDetailPage from './ticket/TicketDetailPage'
 import TechnicianLayout from './technician/TechnicianLayout'
 import TechnicianDashboardHome from './technician/TechnicianDashboardHome'
 import TechnicianNotificationsPage from './technician/TechnicianNotificationsPage'
+import TechnicianTicketAnalysis from './technician/TechnicianTicketAnalysis'
 import EnterUniversityIdPage from './auth/EnterUniversityIdPage'
 import SetupAccountPage from './auth/SetupAccountPage'
 import AdminTicketsPage from './admin/AdminTicketsPage'
 import AdminNotificationsPage from './admin/AdminNotificationsPage'
+
 
 function MaintenanceDashboard() {
   return <div className="page-content"><h1>Maintenance Manager Dashboard</h1></div>
@@ -109,8 +111,9 @@ function App() {
             }
           >
             <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard"     element={<TechnicianDashboardHome />} />
-            <Route path="notifications" element={<TechnicianNotificationsPage />} />
+            <Route path="dashboard"       element={<TechnicianDashboardHome />} />
+            <Route path="notifications"   element={<TechnicianNotificationsPage />} />
+            <Route path="ticket-analysis" element={<TechnicianTicketAnalysis />} />
           </Route>
 
           {/* keeps old URL working just in case */}
