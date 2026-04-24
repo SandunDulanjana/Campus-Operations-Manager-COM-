@@ -62,7 +62,7 @@ public class User {
     @Builder.Default
     private boolean enabled = true;
 
-    @Column(name = "email_notifications_enabled", nullable = false)
+    @Column(name = "email_notifications_enabled", columnDefinition = "boolean default true", nullable = false)
     @Builder.Default
     private boolean emailNotificationsEnabled = true;
 
