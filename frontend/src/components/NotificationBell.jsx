@@ -44,6 +44,7 @@ function typeIcon(type) {
 export default function NotificationBell() {
   const [unread, setUnread]           = useState(0)
   const [open, setOpen]               = useState(false)
+  const [selectedNotification, setSelectedNotification] = useState(null)
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading]         = useState(false)
   const [markingAll, setMarkingAll]   = useState(false)
@@ -221,13 +222,16 @@ export default function NotificationBell() {
                   {notifications.map(n => (
                     <li
                       key={n.id}
-                      onClick={() => !n.read && handleMarkRead(n.id)}
+                      onClick={() => {
+                        if (!n.read) handleMarkRead(n.id);
+                        setSelectedNotification(n);
+                      }}
                       style={{
                         display: 'flex', gap: '0.85rem', alignItems: 'flex-start',
                         padding: '0.9rem 1.4rem',
                         borderBottom: '1px solid #f3f4f6',
                         background: n.read ? '#fff' : '#f0fdf4',
-                        cursor: n.read ? 'default' : 'pointer',
+                        cursor: 'pointer',
                         transition: 'background 120ms ease',
                       }}
                     >
@@ -275,6 +279,51 @@ export default function NotificationBell() {
             </div>
           </div>
         </>
+      )}
+
+      {/* ── Notification Detail Modal (Popup) ── */}
+      {selectedNotification && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999,
+          padding: '1rem'
+        }} onClick={() => setSelectedNotification(null)}>
+          <div style={{
+            background: 'white',
+            borderRadius: '1rem',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '100%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            position: 'relative'
+          }} onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setSelectedNotification(null)}
+              style={{
+                position: 'absolute', top: '1rem', right: '1.25rem',
+                background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer',
+                color: '#6b7280', fontWeight: 600
+              }}
+            >
+              &times;
+            </button>
+            <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: '#111827', paddingRight: '1rem' }}>
+              {selectedNotification.title}
+            </h3>
+            <div style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <div>{new Date(selectedNotification.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+              <div>
+                <strong>Type:</strong> <span style={{ background: '#f1f5f9', padding: '0.1rem 0.4rem', borderRadius: 4 }}>{selectedNotification.type}</span>
+              </div>
+            </div>
+            <div style={{ color: '#374151', lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: 0, background: '#f9fafb', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}>
+              {selectedNotification.message}
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
