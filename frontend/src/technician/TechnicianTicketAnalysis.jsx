@@ -6,8 +6,7 @@ const STATUS_COLORS = {
   IN_PROGRESS: '#2d6f95',
   RESOLVED:    '#15803d',
   CLOSED:      '#6b7280',
-  REJECTED:    '#dc2626',
-  OPEN:        '#b7791f',
+  
 }
 
 const PRIORITY_COLORS = {
@@ -139,8 +138,7 @@ function TechnicianTicketAnalysis() {
     { key: 'IN_PROGRESS', label: 'In Progress', count: filtered.filter((t) => t.status === 'IN_PROGRESS').length },
     { key: 'RESOLVED',    label: 'Resolved',    count: filtered.filter((t) => t.status === 'RESOLVED').length },
     { key: 'CLOSED',      label: 'Closed',      count: filtered.filter((t) => t.status === 'CLOSED').length },
-    { key: 'REJECTED',    label: 'Rejected',    count: filtered.filter((t) => t.status === 'REJECTED').length },
-    { key: 'OPEN',        label: 'Open',        count: filtered.filter((t) => t.status === 'OPEN').length },
+    
   ]
 
   // ── Priority data ────────────────────────────────────────────
@@ -273,7 +271,7 @@ function TechnicianTicketAnalysis() {
                   <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>Ticket Status Analysis</h2>
                 </div>
                 <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
-                  IN PROGRESS, RESOLVED, CLOSED, REJECTED, OPEN
+                  IN PROGRESS, RESOLVED, CLOSED
                 </p>
               </div>
               {total === 0 ? (

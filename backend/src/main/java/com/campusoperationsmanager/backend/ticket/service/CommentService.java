@@ -13,6 +13,8 @@ import com.campusoperationsmanager.backend.ticket.dto.TicketResponse;
 import com.campusoperationsmanager.backend.ticket.exception.TicketException;
 import com.campusoperationsmanager.backend.ticket.model.Ticket;
 import com.campusoperationsmanager.backend.ticket.model.TicketComment;
+import com.campusoperationsmanager.backend.auth.model.User;
+import com.campusoperationsmanager.backend.auth.repository.UserRepository;
 import com.campusoperationsmanager.backend.ticket.repository.TicketCommentRepository;
 import com.campusoperationsmanager.backend.ticket.repository.TicketRepository;
 
@@ -26,6 +28,7 @@ public class CommentService {
     private final TicketCommentRepository commentRepository;
     private final TicketRepository ticketRepository;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
 public TicketResponse.CommentResponse addComment(Long ticketId,
                                                 CreateCommentRequest request,
@@ -101,10 +104,32 @@ public TicketResponse.CommentResponse addComment(Long ticketId,
     }
 
     private TicketResponse.CommentResponse toResponse(TicketComment c) {
+        // Look up the author's role and name from the users table
+        String authorRole = "User";
+        String authorName = null;
+        try {
+            User author = userRepository.findByEmail(c.getAuthorEmail()).orElse(null);
+            if (author != null) {
+                authorName = author.getName();
+                authorRole = switch (author.getRole()) {
+                    case ADMIN          -> "Admin";
+                    case TECHNICIAN     -> "Technician";
+                    case MAINTENANCEMNG -> "Maintenance Manager";
+                    case RECOURSEMNG    -> "Resource Manager";
+                    case BOOKINGMNG     -> "Booking Manager";
+                    default             -> "User";
+                };
+            }
+        } catch (Exception ignored) {
+            // If lookup fails, fall back to "User"
+        }
+
         return TicketResponse.CommentResponse.builder()
                 .id(c.getId())
                 .content(c.getContent())
                 .authorEmail(c.getAuthorEmail())
+                .authorRole(authorRole)
+                .authorName(authorName)
                 .createdAt(c.getCreatedAt())
                 .updatedAt(c.getUpdatedAt())
                 .build();

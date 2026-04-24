@@ -112,7 +112,7 @@ function App() {
           >
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard"       element={<TechnicianDashboardHome />} />
-            <Route path="notifications"   element={<TechnicianNotificationsPage />} />
+            <Route path="notifications"   element={<TechnicianNotificationsPage />} />clea
             <Route path="ticket-analysis" element={<TechnicianTicketAnalysis />} />
           </Route>
 
