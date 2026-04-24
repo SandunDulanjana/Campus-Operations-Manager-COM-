@@ -12,7 +12,7 @@ import {
   TICKET_STATUSES,
 } from '../api/ticketApi'
 
-// ── Inline DonutChart (same as TechnicianTicketAnalysis) ──────────────────────
+// ── Inline DonutChart ─────────────────────────────────────────────────────────
 const STATUS_COLORS = {
   OPEN:        '#b7791f',
   IN_PROGRESS: '#2d6f95',
@@ -77,6 +77,16 @@ function DonutChart({ data, colors, total, label }) {
   )
 }
 
+// All statuses for filter pills
+const ALL_FILTER_OPTIONS = [
+  { value: '',            label: 'All' },
+  { value: 'OPEN',        label: 'Open' },
+  { value: 'IN_PROGRESS', label: 'In Progress' },
+  { value: 'RESOLVED',    label: 'Resolved' },
+  { value: 'CLOSED',      label: 'Closed' },
+  { value: 'REJECTED',    label: 'Rejected' },
+]
+
 function AdminTicketsPage() {
   const navigate = useNavigate()
   const [tickets, setTickets]     = useState([])
@@ -85,10 +95,24 @@ function AdminTicketsPage() {
   const [errorMessage, setError]  = useState('')
   const [successMessage, setOk]   = useState('')
 
+  // We always load ALL tickets for charts; filter is applied on display
+  const [allTickets, setAllTickets] = useState([])
+
+  useEffect(() => {
+    void loadAllTickets()
+  }, [])
+
   useEffect(() => {
     void loadTickets()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter])
+
+  async function loadAllTickets() {
+    try {
+      const data = await fetchAllTickets({})
+      setAllTickets(data)
+    } catch { /* silent */ }
+  }
 
   async function loadTickets() {
     setLoading(true)
@@ -110,19 +134,29 @@ function AdminTicketsPage() {
       await deleteTicket(ticketId)
       setOk(`Ticket #${ticketId} deleted.`)
       void loadTickets()
+      void loadAllTickets()
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to delete ticket')
     }
   }
 
-  const total      = tickets.length
-  const open       = tickets.filter((t) => t.status === 'OPEN').length
-  const inProgress = tickets.filter((t) => t.status === 'IN_PROGRESS').length
-  const breached   = tickets.filter((t) => t.slaBreached).length
+  const total      = allTickets.length
+  const open       = allTickets.filter((t) => t.status === 'OPEN').length
+  const inProgress = allTickets.filter((t) => t.status === 'IN_PROGRESS').length
+  const breached   = allTickets.filter((t) => t.slaBreached).length
 
   return (
     <section className="admin-resources-page">
 
+      {/* ── Page Title — TOP of page ── */}
+      <div style={{ marginBottom: '1.25rem' }}>
+        <h1 style={{ margin: '0 0 0.25rem' }}>Incident Tickets</h1>
+        <p style={{ margin: 0, color: '#64748b' }}>
+          Manage all campus maintenance and fault reports submitted by users.
+        </p>
+      </div>
+
+      {/* ── Stat cards ── */}
       <div className="admin-stat-grid">
         <article className="admin-stat-card">
           <p>Total Tickets</p>
@@ -145,8 +179,8 @@ function AdminTicketsPage() {
         </article>
       </div>
 
-     {/* ── Ticket Analysis Charts ── */}
-      {!loading && tickets.length > 0 && (
+      {/* ── Ticket Analysis Charts ── */}
+      {!loading && allTickets.length > 0 && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', margin: '0.5rem 0 0.75rem' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-600)' }} />
@@ -165,14 +199,14 @@ function AdminTicketsPage() {
               </div>
               <DonutChart
                 data={[
-                  { key: 'OPEN',        label: 'Open',        count: tickets.filter((t) => t.status === 'OPEN').length },
-                  { key: 'IN_PROGRESS', label: 'In Progress', count: tickets.filter((t) => t.status === 'IN_PROGRESS').length },
-                  { key: 'RESOLVED',    label: 'Resolved',    count: tickets.filter((t) => t.status === 'RESOLVED').length },
-                  { key: 'CLOSED',      label: 'Closed',      count: tickets.filter((t) => t.status === 'CLOSED').length },
-                  { key: 'REJECTED',    label: 'Rejected',    count: tickets.filter((t) => t.status === 'REJECTED').length },
+                  { key: 'OPEN',        label: 'Open',        count: allTickets.filter((t) => t.status === 'OPEN').length },
+                  { key: 'IN_PROGRESS', label: 'In Progress', count: allTickets.filter((t) => t.status === 'IN_PROGRESS').length },
+                  { key: 'RESOLVED',    label: 'Resolved',    count: allTickets.filter((t) => t.status === 'RESOLVED').length },
+                  { key: 'CLOSED',      label: 'Closed',      count: allTickets.filter((t) => t.status === 'CLOSED').length },
+                  { key: 'REJECTED',    label: 'Rejected',    count: allTickets.filter((t) => t.status === 'REJECTED').length },
                 ]}
                 colors={STATUS_COLORS}
-                total={tickets.length}
+                total={allTickets.length}
                 label="Statuses"
               />
             </div>
@@ -186,13 +220,13 @@ function AdminTicketsPage() {
               </div>
               <DonutChart
                 data={[
-                  { key: 'LOW',      label: 'Low',      count: tickets.filter((t) => t.priority === 'LOW').length },
-                  { key: 'MEDIUM',   label: 'Medium',   count: tickets.filter((t) => t.priority === 'MEDIUM').length },
-                  { key: 'HIGH',     label: 'High',     count: tickets.filter((t) => t.priority === 'HIGH').length },
-                  { key: 'CRITICAL', label: 'Critical', count: tickets.filter((t) => t.priority === 'CRITICAL').length },
+                  { key: 'LOW',      label: 'Low',      count: allTickets.filter((t) => t.priority === 'LOW').length },
+                  { key: 'MEDIUM',   label: 'Medium',   count: allTickets.filter((t) => t.priority === 'MEDIUM').length },
+                  { key: 'HIGH',     label: 'High',     count: allTickets.filter((t) => t.priority === 'HIGH').length },
+                  { key: 'CRITICAL', label: 'Critical', count: allTickets.filter((t) => t.priority === 'CRITICAL').length },
                 ]}
                 colors={PRIORITY_COLORS}
-                total={tickets.length}
+                total={allTickets.length}
                 label="Priorities"
               />
             </div>
@@ -200,40 +234,65 @@ function AdminTicketsPage() {
         </>
       )}
 
-      <div className="admin-section-card">
-        <div className="panel-header">
-          <div>
-            <h1>Incident Tickets</h1>
-            <p>Manage all campus maintenance and fault reports submitted by users.</p>
+      {/* ── Filter section with pill buttons ── */}
+      <div className="admin-section-card" style={{ padding: '1rem 1.25rem' }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.75rem',
+        }}>
+          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151' }}>
+            Filter by Status
+          </span>
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {ALL_FILTER_OPTIONS.map((opt) => {
+              const isActive = statusFilter === opt.value
+              const count = opt.value === ''
+                ? allTickets.length
+                : allTickets.filter((t) => t.status === opt.value).length
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setFilter(opt.value)}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    borderRadius: 999,
+                    border: isActive
+                      ? '2px solid var(--brand-600)'
+                      : '1.5px solid #e2e8f0',
+                    background: isActive ? 'var(--brand-600)' : '#ffffff',
+                    color: isActive ? '#ffffff' : '#374151',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 140ms ease',
+                  }}
+                >
+                  {opt.label}
+                  <span style={{
+                    marginLeft: '0.35rem',
+                    fontSize: '0.72rem',
+                    background: isActive ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
+                    color: isActive ? '#fff' : '#64748b',
+                    borderRadius: 999,
+                    padding: '0.05rem 0.4rem',
+                  }}>
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
         <StatusBanner type="error"   message={errorMessage}   />
         <StatusBanner type="success" message={successMessage} />
-
-        <form
-          className="admin-filter-row admin-resource-filter-row"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          <label>
-            Filter by Status
-            <select
-              value={statusFilter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="">All statuses</option>
-              {TICKET_STATUSES.map((s) => (
-                <option key={s} value={s}>{formatTicketLabel(s)}</option>
-              ))}
-            </select>
-          </label>
-
-          <ActionButton kind="ghost" type="button" onClick={() => setFilter('')}>
-            Reset
-          </ActionButton>
-        </form>
       </div>
 
+      {/* ── Tickets table ── */}
       <div className="table-panel">
         {loading && (
           <p style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
