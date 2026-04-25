@@ -9,10 +9,12 @@ import {
   PlusIcon,
   RefreshCwIcon,
   SendIcon,
+  Trash2Icon,
   XIcon,
 } from 'lucide-react'
 import {
   createBooking,
+  deleteBooking,
   fetchApprovedWeeklyBookings,
   fetchMyBookings,
   resubmitBooking,
@@ -286,6 +288,24 @@ function BookingPage() {
     }
   }
 
+  async function handleDeleteBooking(bookingId) {
+    if (!window.confirm('Delete this booking request? This cannot be undone.')) {
+      return
+    }
+
+    clearMessages()
+    setLoading(true)
+    try {
+      await deleteBooking(bookingId)
+      setSuccessMessage('Booking deleted successfully')
+      await loadMyBookings()
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to delete booking'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleUpload() {
     if (!uploadFile) {
       setErrorMessage('Please select a file')
@@ -516,19 +536,29 @@ function BookingPage() {
                   </TableCell>
                   <TableCell className="max-w-56 truncate">{booking.reviewReason || '-'}</TableCell>
                   <TableCell>
-                    {booking.status === 'APPROVED' ? (
-                      <Button variant="destructive" size="sm" onClick={() => cancelBooking(booking.id)} disabled={loading}>
-                        <XIcon data-icon="inline-start" />
-                        Cancel
-                      </Button>
-                    ) : booking.status === 'REJECTED' ? (
-                      <Button variant="outline" size="sm" onClick={() => openResubmitForm(booking)} disabled={loading}>
-                        <RefreshCwIcon data-icon="inline-start" />
-                        Revise
-                      </Button>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {booking.status === 'APPROVED' ? (
+                        <Button variant="destructive" size="sm" onClick={() => cancelBooking(booking.id)} disabled={loading}>
+                          <XIcon data-icon="inline-start" />
+                          Cancel
+                        </Button>
+                      ) : null}
+                      {booking.status === 'REJECTED' ? (
+                        <Button variant="outline" size="sm" onClick={() => openResubmitForm(booking)} disabled={loading}>
+                          <RefreshCwIcon data-icon="inline-start" />
+                          Revise
+                        </Button>
+                      ) : null}
+                      {['PENDING', 'REJECTED', 'CANCELLED'].includes(booking.status) ? (
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteBooking(booking.id)} disabled={loading}>
+                          <Trash2Icon data-icon="inline-start" />
+                          Delete
+                        </Button>
+                      ) : null}
+                      {!['APPROVED', 'REJECTED', 'PENDING', 'CANCELLED'].includes(booking.status) ? (
+                        <span className="text-muted-foreground">-</span>
+                      ) : null}
+                    </div>
                   </TableCell>
                 </TableRow>
               )) : (

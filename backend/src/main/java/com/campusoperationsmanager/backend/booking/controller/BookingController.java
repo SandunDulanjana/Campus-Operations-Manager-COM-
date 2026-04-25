@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -97,6 +98,16 @@ public class BookingController {
         @AuthenticationPrincipal Long userId
     ) {
         return ResponseEntity.ok(bookingService.resubmitBooking(bookingId, request, userId));
+    }
+
+    @DeleteMapping("/{bookingId}")
+    public ResponseEntity<Void> deleteBooking(
+        @PathVariable Long bookingId,
+        @AuthenticationPrincipal Long userId,
+        Authentication authentication
+    ) {
+        bookingService.deleteBooking(bookingId, userId, isAdmin(authentication));
+        return ResponseEntity.noContent().build();
     }
 
     private boolean isAdmin(Authentication authentication) {

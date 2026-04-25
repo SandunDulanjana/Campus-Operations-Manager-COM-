@@ -40,3 +40,7 @@ export async function resubmitBooking(bookingId, payload) {
   const response = await axios.post(`${API_BASE_URL}/api/bookings/${bookingId}/resubmit`, payload)
   return response.data
 }
+
+export async function deleteBooking(bookingId) {
+  await axios.delete(`${API_BASE_URL}/api/bookings/${bookingId}`)
+}

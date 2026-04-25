@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface BookingHistoryRepository extends JpaRepository<BookingHistory, Long> {
 
     List<BookingHistory> findByBookingIdOrderByCreatedAtDesc(Long bookingId);
+
+    void deleteByBookingId(Long bookingId);
 }

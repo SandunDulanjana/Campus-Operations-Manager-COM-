@@ -4,10 +4,12 @@ import {
   CalendarIcon,
   CheckIcon,
   Clock3Icon,
+  Trash2Icon,
   UploadIcon,
   XIcon,
 } from 'lucide-react'
 import {
+  deleteBooking,
   fetchAllBookings,
   fetchApprovedWeeklyBookings,
   fetchBookingDetails,
@@ -274,6 +276,27 @@ function AdminBookingsPage() {
     }
   }
 
+  async function handleDeleteBooking(bookingId) {
+    if (!window.confirm('Delete this booking request? Approved bookings must be cancelled instead.')) {
+      return
+    }
+
+    setLoading(true)
+    setErrorMessage('')
+    setSuccessMessage('')
+    try {
+      await deleteBooking(bookingId)
+      setSuccessMessage('Booking deleted')
+      if (selectedBookingDetails?.booking?.id === bookingId) {
+        setSelectedBookingDetails(null)
+      }
+      await loadBookings()
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to delete booking'))
+      setLoading(false)
+    }
+  }
+
   async function viewBookingDetails(bookingId) {
     setDetailsLoading(true)
     setErrorMessage('')
@@ -512,6 +535,12 @@ function AdminBookingsPage() {
                         <Button variant="outline" size="sm" onClick={() => viewBookingDetails(booking.id)} disabled={detailsLoading}>
                           View Details
                         </Button>
+                        {['PENDING', 'REJECTED', 'CANCELLED'].includes(booking.status) ? (
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteBooking(booking.id)} disabled={loading}>
+                            <Trash2Icon data-icon="inline-start" />
+                            Delete
+                          </Button>
+                        ) : null}
                       </div>
                     </TableCell>
                   </TableRow>

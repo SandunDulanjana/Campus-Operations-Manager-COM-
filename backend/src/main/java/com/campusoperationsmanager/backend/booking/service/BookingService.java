@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.campusoperationsmanager.backend.auth.model.User;
 import com.campusoperationsmanager.backend.auth.repository.UserRepository;
@@ -264,6 +265,26 @@ public class BookingService {
         }
 
         throw new BookingValidationException("Unsupported status transition");
+    }
+
+    @Transactional
+    public void deleteBooking(Long bookingId, Long actorUserId, boolean isAdmin) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId));
+
+        if (!isAdmin && !Objects.equals(booking.getUserId(), actorUserId)) {
+            throw new BookingValidationException("You can only delete your own booking");
+        }
+
+        if (booking.getStatus() == BookingStatus.APPROVED) {
+            throw new BookingValidationException("Cancel APPROVED bookings instead of deleting them");
+        }
+
+        if (bookingRepository.existsByPreviousBookingId(bookingId)) {
+            throw new BookingValidationException("Cannot delete a booking that has resubmitted versions");
+        }
+
+        bookingHistoryRepository.deleteByBookingId(bookingId);
+        bookingRepository.delete(booking);
     }
 
     private void validateTimeRange(CreateBookingRequest request) {
