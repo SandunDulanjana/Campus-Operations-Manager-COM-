@@ -265,27 +265,86 @@ function AdminTicketsPage() {
 }
 
 function DistributionCard({ title, description, items, total }) {
+  const segments = getChartSegments(items, total)
+
   return (
     <Card>
       <CardHeader className="border-b">
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3 pt-4">
-        {items.map((item) => {
-          const percent = total > 0 ? Math.round((item.count / total) * 100) : 0
-          return (
-            <div key={item.key} className="flex items-center justify-between rounded-lg border p-3">
-              <div>
-                <p className="font-medium">{item.label}</p>
-                <p className="text-sm text-muted-foreground">{percent}% of all tickets</p>
-              </div>
-              <Badge variant="secondary">{item.count}</Badge>
-            </div>
-          )
-        })}
+      <CardContent className="pt-4">
+        <DonutDistribution segments={segments} total={total} label="Tickets" />
       </CardContent>
     </Card>
+  )
+}
+
+function getChartSegments(items, total) {
+  const circumference = 2 * Math.PI * 58
+  let offset = 0
+
+  return items.map((item, index) => {
+    const dash = total > 0 ? (item.count / total) * circumference : 0
+    const segment = {
+      ...item,
+      dash,
+      offset,
+      percent: total > 0 ? Math.round((item.count / total) * 100) : 0,
+      color: `var(--chart-${(index % 5) + 1})`,
+      circumference,
+    }
+    offset += dash
+    return segment
+  })
+}
+
+function DonutDistribution({ segments, total, label }) {
+  return (
+    <div className="flex flex-wrap items-center gap-8">
+      <div className="relative shrink-0">
+        <svg className="-rotate-90" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label={`${label} distribution`}>
+          <circle cx="80" cy="80" r="58" fill="none" stroke="var(--muted)" strokeWidth="22" />
+          {segments.map((segment) => segment.count > 0 ? (
+            <circle
+              key={segment.key}
+              cx="80"
+              cy="80"
+              r="58"
+              fill="none"
+              stroke={segment.color}
+              strokeWidth="22"
+              strokeDasharray={`${segment.dash} ${segment.circumference - segment.dash}`}
+              strokeDashoffset={-segment.offset}
+            />
+          ) : null)}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-semibold tracking-tight">{total}</span>
+          <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{label}</span>
+        </div>
+      </div>
+
+      <div className="flex min-w-48 flex-1 flex-col gap-3">
+        {segments.map((segment) => (
+          <div key={segment.key} className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-sm font-medium">
+                <span className="size-2 rounded-full" style={{ backgroundColor: segment.color }} />
+                {segment.label}
+              </span>
+              <Badge variant="secondary">{segment.count} · {segment.percent}%</Badge>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full transition-[width] duration-500"
+                style={{ width: `${segment.percent}%`, backgroundColor: segment.color }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
