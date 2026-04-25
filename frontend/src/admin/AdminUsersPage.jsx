@@ -9,72 +9,53 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
-const ROLES = ['USER','TECHNICIAN','BOOKINGMNG','RECOURSEMNG','MAINTENANCEMNG','ADMIN']
+const ROLES = ['USER', 'TECHNICIAN', 'BOOKINGMNG', 'RECOURSEMNG', 'MAINTENANCEMNG', 'ADMIN']
 const ROLE_LABELS = {
-  USER:'User', TECHNICIAN:'Technician', BOOKINGMNG:'Booking Mgr',
-  RECOURSEMNG:'Resource Mgr', MAINTENANCEMNG:'Maintenance Mgr', ADMIN:'Admin'
+  USER: 'User', TECHNICIAN: 'Technician', BOOKINGMNG: 'Booking Mgr',
+  RECOURSEMNG: 'Resource Mgr', MAINTENANCEMNG: 'Maintenance Mgr', ADMIN: 'Admin',
 }
-const emptyForm = { name:'', email:'', username:'', role:'USER', phone:'', department:'' }
+const emptyForm = { name: '', email: '', username: '', role: 'USER', phone: '', department: '' }
 
 export default function AdminUsersPage() {
   const [tab, setTab] = useState('users')
 
-  // ── Users tab ────────────────────────────────────────────────────────────
-  const [users, setUsers]               = useState([])
+  // ── Users tab ─────────────────────────────────────────────────────────────
+  const [users, setUsers]             = useState([])
   const [usersLoading, setUsersLoading] = useState(true)
-  const [usersError, setUsersError]     = useState('')
-  const [showModal, setShowModal]       = useState(false)
-  const [form, setForm]                 = useState(emptyForm)
-  const [submitting, setSubmitting]     = useState(false)
-  const [formError, setFormError]       = useState('')
-  const [inviteUrl, setInviteUrl]       = useState('')
-  const [copied, setCopied]             = useState(false)
-
-  // CHANGE 2 & 3: Filter by role + live search bar state
+  const [usersError, setUsersError]   = useState('')
+  const [showModal, setShowModal]     = useState(false)
+  const [form, setForm]               = useState(emptyForm)
+  const [submitting, setSubmitting]   = useState(false)
+  const [formError, setFormError]     = useState('')
+  const [inviteUrl, setInviteUrl]     = useState('')
+  const [copied, setCopied]           = useState(false)
   const [roleFilter, setRoleFilter]   = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
   // ── Registration Requests tab ─────────────────────────────────────────────
-  const [requests, setRequests]               = useState([])
-  const [reqLoading, setReqLoading]           = useState(true)
-  const [reqError, setReqError]               = useState('')
-  const [actionUserId, setActionUserId]       = useState(null)
-  const [dummyPassword, setDummyPassword]     = useState('')
-  const [rejectReason, setRejectReason]       = useState('')
-  const [actionType, setActionType]           = useState(null)
+  const [requests, setRequests]                 = useState([])
+  const [reqLoading, setReqLoading]             = useState(true)
+  const [reqError, setReqError]                 = useState('')
+  const [actionUserId, setActionUserId]         = useState(null)
+  const [dummyPassword, setDummyPassword]       = useState('')
+  const [rejectReason, setRejectReason]         = useState('')
+  const [actionType, setActionType]             = useState(null)
   const [actionSubmitting, setActionSubmitting] = useState(false)
-  const [actionError, setActionError]         = useState('')
-  const [devEmailInfo, setDevEmailInfo]       = useState(null)
-
-  // CHANGE 1: Success popup state after approval
-  const [approvalSuccess, setApprovalSuccess] = useState(false)
+  const [actionError, setActionError]           = useState('')
+  const [devEmailInfo, setDevEmailInfo]         = useState(null)
+  const [approvalSuccess, setApprovalSuccess]   = useState(false)
 
   useEffect(() => { loadUsers(); loadRequests() }, [])
 
@@ -92,8 +73,7 @@ export default function AdminUsersPage() {
     finally { setReqLoading(false) }
   }
 
-  // CHANGE 2 & 3: Computed filtered+searched user list
-  const filteredUsers = users.filter(u => {
+  const filteredUsers = users.filter((u) => {
     const matchesRole = !roleFilter || u.role === roleFilter
     const q = searchQuery.toLowerCase()
     const matchesSearch = !q ||
@@ -107,25 +87,32 @@ export default function AdminUsersPage() {
     e.preventDefault(); setFormError(''); setSubmitting(true)
     try {
       const { user: created, inviteUrl: url } = await createPendingUser(form)
-      setUsers(prev => [created, ...prev])
+      setUsers((prev) => [created, ...prev])
       setInviteUrl(url); setForm(emptyForm)
-    } catch (err) { setFormError(err?.response?.data || 'Failed to create user.') }
-    finally { setSubmitting(false) }
+    } catch (err) {
+      setFormError(err?.response?.data || 'Failed to create user.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function handleRoleChange(userId, newRole) {
     try {
       const updated = await updateUserRole(userId, newRole)
-      setUsers(prev => prev.map(u => u.id === userId ? updated : u))
-    } catch { setUsersError('Role update failed.') }
+      setUsers((prev) => prev.map((u) => (u.id === userId ? updated : u)))
+    } catch {
+      setUsersError('Role update failed.')
+    }
   }
 
   async function handleDeactivate(userId) {
     if (!window.confirm('Deactivate this account?')) return
     try {
       await deactivateUser(userId)
-      setUsers(prev => prev.map(u => u.id === userId ? {...u, enabled: false} : u))
-    } catch { setUsersError('Deactivation failed.') }
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, enabled: false } : u)))
+    } catch {
+      setUsersError('Deactivation failed.')
+    }
   }
 
   async function handlePermanentDelete(userId, userName) {
@@ -134,7 +121,7 @@ export default function AdminUsersPage() {
     )) return
     try {
       await permanentDeleteUser(userId)
-      setUsers(prev => prev.filter(u => u.id !== userId))
+      setUsers((prev) => prev.filter((u) => u.id !== userId))
     } catch (err) {
       setUsersError(err?.response?.data || 'Delete failed.')
     }
@@ -150,18 +137,19 @@ export default function AdminUsersPage() {
     setDummyPassword(''); setRejectReason(''); setActionError(''); setDevEmailInfo(null)
   }
 
-  // CHANGE 1: Show success popup after approval, then redirect to users tab
   async function handleApprove(e) {
     e.preventDefault(); setActionError(''); setActionSubmitting(true)
     try {
       await approveRegistration(actionUserId, dummyPassword)
-      setRequests(prev => prev.filter(r => r.id !== actionUserId))
+      setRequests((prev) => prev.filter((r) => r.id !== actionUserId))
       loadUsers()
-      // Close the approve modal and show success popup
       setActionUserId(null); setActionType(null)
       setApprovalSuccess(true)
-    } catch (err) { setActionError(err?.response?.data || 'Failed to approve.') }
-    finally { setActionSubmitting(false) }
+    } catch (err) {
+      setActionError(err?.response?.data || 'Failed to approve.')
+    } finally {
+      setActionSubmitting(false)
+    }
   }
 
   async function handleReject(e) {
@@ -169,9 +157,12 @@ export default function AdminUsersPage() {
     try {
       const result = await rejectRegistration(actionUserId, rejectReason)
       setDevEmailInfo(result.devEmail)
-      setRequests(prev => prev.filter(r => r.id !== actionUserId))
-    } catch (err) { setActionError(err?.response?.data || 'Failed to reject.') }
-    finally { setActionSubmitting(false) }
+      setRequests((prev) => prev.filter((r) => r.id !== actionUserId))
+    } catch (err) {
+      setActionError(err?.response?.data || 'Failed to reject.')
+    } finally {
+      setActionSubmitting(false)
+    }
   }
 
   function closeActionModal() {
@@ -179,7 +170,6 @@ export default function AdminUsersPage() {
     setDummyPassword(''); setRejectReason(''); setActionError('')
   }
 
-  // CHANGE 1: Close approval success popup and navigate to Users tab
   function closeApprovalSuccess() {
     setApprovalSuccess(false)
     setTab('users')
@@ -188,145 +178,237 @@ export default function AdminUsersPage() {
   return (
     <section className="flex flex-col gap-6">
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList variant="line">
+        <TabsList>
           <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="requests">Registration Requests{requests.length ? ` (${requests.length})` : ''}</TabsTrigger>
+          <TabsTrigger value="requests">
+            Registration Requests{requests.length ? ` (${requests.length})` : ''}
+          </TabsTrigger>
         </TabsList>
 
+        {/* ── Users Tab ─────────────────────────────────────────────────── */}
         <TabsContent value="users">
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-3 border-b">
               <div className="flex flex-col gap-1">
                 <CardTitle>All Users</CardTitle>
-                <CardDescription>Manage role assignment, invite links, activation state.</CardDescription>
+                <CardDescription>Manage role assignment, invite links, and activation state.</CardDescription>
               </div>
               <Button onClick={() => { setShowModal(true); setInviteUrl(''); setFormError('') }}>
                 <UserPlusIcon data-icon="inline-start" />
                 Add New User
               </Button>
             </CardHeader>
-            <CardContent className="pt-4">
-              {usersError ? (
-                <Alert variant="destructive" className="mb-4">
+            <CardContent className="flex flex-col gap-4 pt-4">
+              {usersError && (
+                <Alert variant="destructive">
                   <AlertCircleIcon />
                   <AlertTitle>Request failed</AlertTitle>
                   <AlertDescription>{usersError}</AlertDescription>
                 </Alert>
-              ) : null}
+              )}
 
-      {/* ════════════════════════ USERS TAB ════════════════════════ */}
-      {tab === 'users' && (
-        <>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem' }}>
-            <h1 style={{ margin:0 }}>All Users</h1>
-            <button className="profile-save-btn"
-              onClick={() => { setShowModal(true); setInviteUrl(''); setFormError('') }}>
-              + Add New User
-            </button>
-          </div>
+              {/* Filters */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative flex-1" style={{ minWidth: '200px', maxWidth: '340px' }}>
+                  <svg
+                    viewBox="0 0 24 24"
+                    style={{
+                      position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                      width: '1rem', height: '1rem', stroke: '#9ca3af', fill: 'none',
+                      strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+                    }}
+                  >
+                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                  </svg>
+                  <Input
+                    type="text"
+                    placeholder="Search by name, email or University ID…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
 
-          {usersError && <StatusBanner type="error" message={usersError} />}
+                <Select
+                  value={roleFilter || '__all__'}
+                  onValueChange={(v) => setRoleFilter(v === '__all__' ? '' : v)}
+                >
+                  <SelectTrigger className="w-44">
+                    <SelectValue placeholder="All roles" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="__all__">All roles</SelectItem>
+                      {ROLES.map((r) => (
+                        <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
 
-          {/* CHANGE 2 & 3: Filter by role + Search bar */}
-          <div style={{ display:'flex', gap:'0.75rem', marginBottom:'1rem', flexWrap:'wrap', alignItems:'center' }}>
-            {/* Search bar */}
-            <div style={{ position:'relative', flex:'1', minWidth:'200px', maxWidth:'340px' }}>
-              <svg style={{ position:'absolute', left:'0.75rem', top:'50%', transform:'translateY(-50%)', width:'1rem', height:'1rem', stroke:'#9ca3af', fill:'none', strokeWidth:2, strokeLinecap:'round', strokeLinejoin:'round' }} viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
-              <input
-                type="text"
-                placeholder="Search by name, email or University ID…"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                style={{
-                  width:'100%', padding:'0.55rem 0.8rem 0.55rem 2.3rem',
-                  borderRadius:'0.65rem', border:'1.5px solid #d1d5db',
-                  fontSize:'0.88rem', boxSizing:'border-box', outline:'none'
-                }}
-              />
-            </div>
+                <span className="text-sm text-muted-foreground">
+                  {filteredUsers.length} of {users.length} users
+                </span>
 
-            {/* Role filter */}
-            <label style={{ display:'flex', alignItems:'center', gap:'0.4rem', fontSize:'0.88rem', fontWeight:600, color:'#374151' }}>
-              Role:
-              <select
-                value={roleFilter}
-                onChange={e => setRoleFilter(e.target.value)}
-                style={{ padding:'0.52rem 0.75rem', borderRadius:'0.65rem', border:'1.5px solid #d1d5db', fontSize:'0.88rem', cursor:'pointer' }}
-              >
-                <option value="">All roles</option>
-                {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
-              </select>
-            </label>
+                {(roleFilter || searchQuery) && (
+                  <Button
+                    variant="ghost" size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => { setRoleFilter(''); setSearchQuery('') }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
 
-            {/* Count indicator */}
-            <span style={{ fontSize:'0.82rem', color:'#9ca3af' }}>
-              {filteredUsers.length} of {users.length} users
-            </span>
+              {usersLoading ? (
+                <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                  Loading users…
+                </div>
+              ) : (
+                <div className="rounded-xl border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>University ID</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="h-40 text-center text-muted-foreground">
+                            No users found matching your filters.
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredUsers.map((u) => (
+                        <TableRow key={u.id}>
+                          <TableCell className="font-medium">
+                            {u.name}
+                            {u.invitePending && (
+                              <Badge variant="outline" className="ml-2 text-xs">INVITED</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                          <TableCell className="font-mono">{u.username || '—'}</TableCell>
+                          <TableCell>
+                            <Select value={u.role} onValueChange={(v) => handleRoleChange(u.id, v)}>
+                              <SelectTrigger className="h-8 w-44 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  {ROLES.map((r) => (
+                                    <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={u.enabled ? 'default' : 'destructive'}>
+                              {u.enabled ? 'Active' : 'Disabled'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {u.enabled ? (
+                              <Button
+                                variant="ghost" size="sm"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => handleDeactivate(u.id)}
+                              >
+                                Deactivate
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="destructive" size="sm"
+                                onClick={() => handlePermanentDelete(u.id, u.name)}
+                              >
+                                <Trash2Icon data-icon="inline-start" />
+                                Delete
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            {/* Reset filters */}
-            {(roleFilter || searchQuery) && (
-              <button onClick={() => { setRoleFilter(''); setSearchQuery('') }}
-                style={{ fontSize:'0.82rem', color:'#dc2626', background:'none', border:'none', cursor:'pointer', fontWeight:600, textDecoration:'underline' }}>
-                Clear filters
-              </button>
-            )}
-          </div>
+        {/* ── Registration Requests Tab ──────────────────────────────────── */}
+        <TabsContent value="requests">
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle>Registration Requests</CardTitle>
+              <CardDescription>Review and approve or reject self-registration submissions.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {reqError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircleIcon />
+                  <AlertTitle>Request failed</AlertTitle>
+                  <AlertDescription>{reqError}</AlertDescription>
+                </Alert>
+              )}
 
-          {usersLoading ? <p style={{ color:'#6b7280' }}>Loading…</p> : (
-            <div style={{ overflowX:'auto' }}>
-              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.88rem' }}>
-                <thead>
-                  <tr style={{ borderBottom:'2px solid #e5e7eb' }}>
-                    {['Name','Email','University ID','Role','Status','Actions'].map(h => (
-                      <th key={h} style={{ padding:'0.65rem 0.8rem', textAlign:'left', fontWeight:600, color:'#374151' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} style={{ padding:'2rem', textAlign:'center', color:'#9ca3af' }}>
-                        No users found matching your filters.
-                      </td>
-                    </tr>
-                  ) : filteredUsers.map(u => (
-                    <tr key={u.id} style={{ borderBottom:'1px solid #f3f4f6' }}>
-                      <td style={{ padding:'0.65rem 0.8rem' }}>
-                        {u.name}
-                        {u.invitePending && <span style={{ marginLeft:'0.4rem', fontSize:'0.72rem', background:'#fef3c7', color:'#92400e', padding:'0.12rem 0.45rem', borderRadius:'9999px', fontWeight:700 }}>INVITED</span>}
-                      </td>
-                      <td style={{ padding:'0.65rem 0.8rem', color:'#6b7280' }}>{u.email}</td>
-                      <td style={{ padding:'0.65rem 0.8rem', fontFamily:'monospace', color:'#374151' }}>{u.username || '—'}</td>
-                      <td style={{ padding:'0.65rem 0.8rem' }}>
-                        <select value={u.role} onChange={e => handleRoleChange(u.id, e.target.value)}
-                          style={{ fontSize:'0.83rem', padding:'0.22rem 0.45rem', borderRadius:'0.4rem', border:'1px solid #d1d5db' }}>
-                          {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
-                        </select>
-                      </td>
-                      <td style={{ padding:'0.65rem 0.8rem' }}>
-                        <span style={{ fontSize:'0.78rem', fontWeight:700, padding:'0.2rem 0.5rem', borderRadius:'9999px',
-                          background: u.enabled ? '#dcfce7' : '#fee2e2',
-                          color: u.enabled ? '#166534' : '#991b1b' }}>
-                          {u.enabled ? 'Active' : 'Disabled'}
-                        </span>
-                      </td>
-                      <td style={{ padding:'0.65rem 0.8rem' }}>
-                        {u.enabled ? (
-                          <button onClick={() => handleDeactivate(u.id)}
-                            style={{ fontSize:'0.8rem', color:'#dc2626', background:'none', border:'none', cursor:'pointer', fontWeight:600, padding:0 }}>
-                            Deactivate
-                          </button>
-                        ) : (
-                          <button onClick={() => handlePermanentDelete(u.id, u.name)}
-                            style={{ fontSize:'0.8rem', color:'#fff', background:'#dc2626', border:'none', cursor:'pointer', fontWeight:600, padding:'0.25rem 0.65rem', borderRadius:'0.4rem' }}>
-                            🗑 Delete
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+              {reqLoading ? (
+                <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                  Loading requests…
+                </div>
+              ) : (
+                <div className="rounded-xl border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>University ID</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {requests.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="h-40 text-center text-muted-foreground">
+                            No pending registration requests.
+                          </TableCell>
+                        </TableRow>
+                      ) : requests.map((req) => (
+                        <TableRow key={req.id}>
+                          <TableCell className="font-medium">{req.name}</TableCell>
+                          <TableCell className="text-muted-foreground">{req.email}</TableCell>
+                          <TableCell className="font-mono">{req.username || '—'}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">Pending</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button size="sm" onClick={() => openAction(req.id, 'approve')}>
+                                <CheckIcon data-icon="inline-start" />
+                                Approve
+                              </Button>
+                              <Button
+                                variant="destructive" size="sm"
+                                onClick={() => openAction(req.id, 'reject')}
+                              >
+                                <XIcon data-icon="inline-start" />
+                                Reject
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               )}
             </CardContent>
@@ -334,52 +416,67 @@ export default function AdminUsersPage() {
         </TabsContent>
       </Tabs>
 
+      {/* ── Invite User Modal ─────────────────────────────────────────────── */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{inviteUrl ? 'Invite link ready' : 'Invite New User'}</DialogTitle>
             <DialogDescription>
-              {inviteUrl ? 'Share generated link with invited user.' : 'Create pending account and issue setup link.'}
+              {inviteUrl
+                ? 'Share this generated link with the invited user.'
+                : 'Create a pending account and issue a setup link.'}
             </DialogDescription>
           </DialogHeader>
 
           {!inviteUrl ? (
             <form onSubmit={handleCreate} className="flex flex-col gap-4">
-              {formError ? (
+              {formError && (
                 <Alert variant="destructive">
                   <AlertCircleIcon />
                   <AlertTitle>Request failed</AlertTitle>
                   <AlertDescription>{formError}</AlertDescription>
                 </Alert>
-              ) : null}
-
+              )}
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium" htmlFor="invite-name">Full Name</label>
-                  <Input id="invite-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
+                  <Input
+                    id="invite-name" value={form.name} required
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium" htmlFor="invite-email">Email</label>
-                  <Input id="invite-email" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} required />
+                  <Input
+                    id="invite-email" type="email" value={form.email} required
+                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium" htmlFor="invite-username">University ID</label>
-                  <Input id="invite-username" value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} />
+                  <Input
+                    id="invite-username" value={form.username}
+                    onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium" htmlFor="invite-phone">Phone</label>
-                  <Input id="invite-phone" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+                  <Input
+                    id="invite-phone" value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium" htmlFor="invite-dept">Department</label>
-                  <Input id="invite-dept" value={form.department} onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))} />
+                  <Input
+                    id="invite-dept" value={form.department}
+                    onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
+                  />
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium">Role</label>
                   <Select value={form.role} onValueChange={(value) => setForm((f) => ({ ...f, role: value }))}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
                         {ROLES.map((role) => (
@@ -390,9 +487,13 @@ export default function AdminUsersPage() {
                   </Select>
                 </div>
               </div>
-
               <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => { setShowModal(false); setForm(emptyForm) }}>Cancel</Button>
+                <Button
+                  variant="outline" type="button"
+                  onClick={() => { setShowModal(false); setForm(emptyForm) }}
+                >
+                  Cancel
+                </Button>
                 <Button type="submit" disabled={submitting}>
                   <UserPlusIcon data-icon="inline-start" />
                   {submitting ? 'Creating…' : 'Create invite'}
@@ -420,26 +521,39 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(actionUserId && !devEmailInfo)} onOpenChange={(open) => { if (!open) closeActionModal() }}>
+      {/* ── Approve / Reject Modal ────────────────────────────────────────── */}
+      <Dialog
+        open={Boolean(actionUserId && !devEmailInfo)}
+        onOpenChange={(open) => { if (!open) closeActionModal() }}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{actionType === 'approve' ? 'Approve Registration' : 'Reject Registration'}</DialogTitle>
+            <DialogTitle>
+              {actionType === 'approve' ? 'Approve Registration' : 'Reject Registration'}
+            </DialogTitle>
             <DialogDescription>
-              {actionType === 'approve' ? 'Set temporary password for approved user.' : 'Provide rejection reason for email message.'}
+              {actionType === 'approve'
+                ? 'Set a temporary password for the approved user.'
+                : 'Provide a rejection reason for the notification email.'}
             </DialogDescription>
           </DialogHeader>
-          {actionError ? (
+
+          {actionError && (
             <Alert variant="destructive">
               <AlertCircleIcon />
               <AlertTitle>Request failed</AlertTitle>
               <AlertDescription>{actionError}</AlertDescription>
             </Alert>
-          ) : null}
+          )}
+
           {actionType === 'approve' ? (
             <form onSubmit={handleApprove} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium" htmlFor="dummy-password">Temporary Password</label>
-                <Input id="dummy-password" value={dummyPassword} onChange={(e) => setDummyPassword(e.target.value)} minLength={6} required />
+                <Input
+                  id="dummy-password" value={dummyPassword} minLength={6} required
+                  onChange={(e) => setDummyPassword(e.target.value)}
+                />
               </div>
               <DialogFooter>
                 <Button variant="outline" type="button" onClick={closeActionModal}>Cancel</Button>
@@ -453,7 +567,10 @@ export default function AdminUsersPage() {
             <form onSubmit={handleReject} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium" htmlFor="reject-reason">Rejection Reason</label>
-                <Textarea id="reject-reason" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={4} required />
+                <Textarea
+                  id="reject-reason" value={rejectReason} rows={4} required
+                  onChange={(e) => setRejectReason(e.target.value)}
+                />
               </div>
               <DialogFooter>
                 <Button variant="outline" type="button" onClick={closeActionModal}>Cancel</Button>
@@ -467,13 +584,17 @@ export default function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(devEmailInfo)} onOpenChange={(open) => { if (!open) closeActionModal() }}>
+      {/* ── Dev Email Preview Modal ───────────────────────────────────────── */}
+      <Dialog
+        open={Boolean(devEmailInfo)}
+        onOpenChange={(open) => { if (!open) closeActionModal() }}
+      >
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Dev Mode Email Preview</DialogTitle>
-            <DialogDescription>Backend mail preview payload for approve/reject flow.</DialogDescription>
+            <DialogDescription>Backend mail preview payload for the reject flow.</DialogDescription>
           </DialogHeader>
-          {devEmailInfo ? (
+          {devEmailInfo && (
             <div className="flex flex-col gap-3">
               <Alert>
                 <AlertCircleIcon />
@@ -483,55 +604,43 @@ export default function AdminUsersPage() {
               <div className="rounded-xl border bg-muted/30 p-4">
                 <p className="text-sm"><strong>To:</strong> {devEmailInfo.to}</p>
                 <p className="text-sm"><strong>Subject:</strong> {devEmailInfo.subject}</p>
-                <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-sm text-muted-foreground">{devEmailInfo.body}</pre>
+                <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-sm text-muted-foreground">
+                  {devEmailInfo.body}
+                </pre>
               </div>
+              <DialogFooter>
+                <Button onClick={closeActionModal}>Done</Button>
+              </DialogFooter>
             </div>
-            <button onClick={closeActionModal} className="profile-save-btn"
-              style={{ width:'100%', justifyContent:'center', marginTop:'1.1rem' }}>
-              Done
-            </button>
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
-      {/* ════════════════ CHANGE 1: APPROVAL SUCCESS POPUP ════════════════
-          Shows after admin clicks Confirm Approval. Blurs background, shows
-          success box with a button that redirects to the Users tab.           */}
+      {/* ── Approval Success Overlay ──────────────────────────────────────── */}
       {approvalSuccess && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 1100,
           backdropFilter: 'blur(6px)', background: 'rgba(0,0,0,0.35)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <div style={{
             background: '#fff', borderRadius: '1.4rem', padding: '2.5rem 2rem',
             width: '100%', maxWidth: '400px', textAlign: 'center',
             boxShadow: '0 24px 60px rgba(0,0,0,0.22)',
-            animation: 'fadeInUp 0.25s ease'
           }}>
             <div style={{ fontSize: '3.5rem', marginBottom: '0.6rem' }}>✅</div>
             <h2 style={{ margin: '0 0 0.5rem', color: '#166534', fontSize: '1.3rem' }}>
               Registration Approved!
             </h2>
             <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: '0 0 1.5rem', lineHeight: 1.6 }}>
-              The user registration request has been accepted successfully.
-              The user has been notified and can now log in.
+              The user has been approved and notified. They can now log in with their temporary password.
             </p>
-            <button
-              onClick={closeApprovalSuccess}
-              style={{
-                width: '100%', padding: '0.75rem', borderRadius: '0.8rem',
-                border: 'none', background: '#166534', color: '#fff',
-                fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer',
-                boxShadow: '0 8px 20px rgba(22,101,52,0.25)'
-              }}
-            >
+            <Button className="w-full" onClick={closeApprovalSuccess}>
               Go to Users Section
-            </button>
+            </Button>
           </div>
         </div>
       )}
-
     </section>
   )
 }

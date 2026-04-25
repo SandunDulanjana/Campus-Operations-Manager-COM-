@@ -15,13 +15,13 @@ public class NotificationDTO {
     private String title;
     private String message;
     private NotificationType type;
-    private String targetEmail;       // ← matches AppNotification.targetEmail
-    private String targetAudience;    // ← matches AppNotification.targetAudience
+    private String targetEmail;
+    private String targetAudience;
     private boolean published;
     private Long referenceId;
     private String createdByEmail;
     private LocalDateTime createdAt;
-    private boolean read;             // ← computed per user, passed as parameter — NOT from AppNotification
+    private boolean read;
 
     public static NotificationDTO from(AppNotification n, boolean read) {
         return NotificationDTO.builder()
@@ -29,13 +29,13 @@ public class NotificationDTO {
                 .title(n.getTitle())
                 .message(n.getMessage())
                 .type(n.getType())
-                .targetEmail(n.getTargetEmail())        // ← FIXED: was n.getRecipientEmail()
-                .targetAudience(n.getTargetAudience())  // ← FIXED: was n.getTargetRoles()
-                .published(n.isPublished())
+                .targetEmail(n.getTargetEmail())
+                .targetAudience(n.getTargetAudience())
+                .published(Boolean.TRUE.equals(n.getPublished()))  // FIX: Boolean wrapper → getPublished()
                 .referenceId(n.getReferenceId())
                 .createdByEmail(n.getCreatedByEmail())
                 .createdAt(n.getCreatedAt())
-                .read(read)                             // ← FIXED: was n.getRead() — read comes from the parameter
+                .read(read)
                 .build();
     }
 }

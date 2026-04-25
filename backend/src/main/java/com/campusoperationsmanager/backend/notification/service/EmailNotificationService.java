@@ -1,15 +1,17 @@
 package com.campusoperationsmanager.backend.notification.service;
 
-import com.campusoperationsmanager.backend.auth.repository.UserRepository;
-import com.campusoperationsmanager.backend.notification.model.NotificationType;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import com.campusoperationsmanager.backend.auth.repository.UserRepository;
+import com.campusoperationsmanager.backend.notification.model.NotificationType;
+
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -67,13 +69,12 @@ public class EmailNotificationService {
             mailSender.send(mime);
             log.info("Email notification SENT SUCCESS: type={} to={}", type, toEmail);
         } catch (Exception e) {
-        } catch (Exception e) {
             log.error("CRITICAL: Email notification failed for recipient {}. AuthUser: {}. Error: {}", toEmail, fromAddress, e.getMessage(), e);
             // Email failure must never break the main flow in async contexts,
             // but we throw here so that diagnostic operations can catch it.
             throw new RuntimeException("Email delivery failed: " + e.getMessage());
         }
-        }
+        
     }
 
     // ── Invite email ──────────────────────────────────────────────────────────

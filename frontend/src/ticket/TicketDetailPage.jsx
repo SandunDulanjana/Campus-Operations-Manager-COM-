@@ -25,24 +25,24 @@ function TicketDetailPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
-  const [ticket, setTicket]             = useState(null)
-  const [loading, setLoading]           = useState(true)
-  const [errorMessage, setError]        = useState('')
-  const [successMessage, setOk]         = useState('')
-  const [showStatusForm, setShowStatus] = useState(false)
-  const [newStatus, setNewStatus]       = useState('')
-  const [assignedTo, setAssignedTo]     = useState('')
-  const [resolutionNotes, setNotes]     = useState('')
-  const [rejectionReason, setReason]    = useState('')
-  const [statusLoading, setStatusLoad]  = useState(false)
-  const [commentText, setCommentText]   = useState('')
-  const [editingId, setEditingId]       = useState(null)
-  const [editingText, setEditingText]   = useState('')
+  const [ticket, setTicket]              = useState(null)
+  const [loading, setLoading]            = useState(true)
+  const [errorMessage, setError]         = useState('')
+  const [successMessage, setOk]          = useState('')
+  const [showStatusForm, setShowStatus]  = useState(false)
+  const [newStatus, setNewStatus]        = useState('')
+  const [assignedTo, setAssignedTo]      = useState('')
+  const [resolutionNotes, setNotes]      = useState('')
+  const [rejectionReason, setReason]     = useState('')
+  const [statusLoading, setStatusLoad]   = useState(false)
+  const [commentText, setCommentText]    = useState('')
+  const [editingId, setEditingId]        = useState(null)
+  const [editingText, setEditingText]    = useState('')
   const [commentLoading, setCommentLoad] = useState(false)
-  const [technicians, setTechnicians] = useState([])
+  const [technicians, setTechnicians]    = useState([])
 
-  const isAdmin = user?.role === 'ADMIN'
-  const isTech  = user?.role === 'TECHNICIAN'
+  const isAdmin         = user?.role === 'ADMIN'
+  const isTech          = user?.role === 'TECHNICIAN'
   const canUpdateStatus = isAdmin || isTech
 
   useEffect(() => {
@@ -50,15 +50,13 @@ function TicketDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  // Load technicians for the assign dropdown
-    useEffect(() => {
+  useEffect(() => {
     if (isAdmin || isTech) {
-        fetchTechnicians()
+      fetchTechnicians()
         .then(setTechnicians)
-        .catch(() => setTechnicians([]))  // Silent fail if no permission
+        .catch(() => setTechnicians([]))
     }
-    }, [isAdmin, isTech])
-
+  }, [isAdmin, isTech])
 
   async function loadTicket() {
     setLoading(true)
@@ -79,23 +77,24 @@ function TicketDetailPage() {
     setError('')
     setStatusLoad(true)
     try {
-    await updateTicketStatus(id, {
+      await updateTicketStatus(id, {
         status:          newStatus,
         assignedToEmail: newStatus === 'IN_PROGRESS' && assignedTo ? assignedTo : undefined,
-        resolutionNotes: newStatus === 'RESOLVED' && resolutionNotes ? resolutionNotes : undefined,
-        rejectionReason: newStatus === 'REJECTED' && rejectionReason ? rejectionReason : undefined,
-        })
+        resolutionNotes: newStatus === 'RESOLVED'    && resolutionNotes ? resolutionNotes : undefined,
+        rejectionReason: newStatus === 'REJECTED'    && rejectionReason ? rejectionReason : undefined,
+      })
       setOk('Status updated successfully!')
       setShowStatus(false)
       setNotes('')
       setReason('')
       await loadTicket()
     } catch (err) {
-     const backendMsg = err?.response?.data?.message
-        || err?.response?.data?.error
-        || err?.message
-        || 'Failed to update status'
-        setError(backendMsg)
+      const backendMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error   ||
+        err?.message                 ||
+        'Failed to update status'
+      setError(backendMsg)
     } finally {
       setStatusLoad(false)
     }
@@ -170,8 +169,29 @@ function TicketDetailPage() {
 
   const allowedNext = ALLOWED_TRANSITIONS[ticket.status] || []
 
+  // Priority-based SLA targets
+  const slaTargets = {
+    LOW:      { responseMin: 240, resolutionMin: 10080, responseLabel: '4 hours',  resolutionLabel: '7 days'   },
+    MEDIUM:   { responseMin: 120, resolutionMin: 4320,  responseLabel: '2 hours',  resolutionLabel: '3 days'   },
+    HIGH:     { responseMin: 60,  resolutionMin: 2880,  responseLabel: '1 hour',   resolutionLabel: '48 hours' },
+    CRITICAL: { responseMin: 15,  resolutionMin: 1440,  responseLabel: '15 min',   resolutionLabel: '24 hours' },
+  }
+  const target            = slaTargets[ticket.priority] || slaTargets.MEDIUM
+  const responseBreached  = ticket.minutesToFirstResponse != null && ticket.minutesToFirstResponse > target.responseMin
+  const resolutionBreached = ticket.minutesToResolution  != null && ticket.minutesToResolution  > target.resolutionMin
+
+  const priorityStyle = {
+    CRITICAL: { bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+    HIGH:     { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+    MEDIUM:   { bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
+    LOW:      { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' },
+  }
+  const ps = priorityStyle[ticket.priority] || priorityStyle.MEDIUM
+
   return (
     <div className="ticket-detail-page">
+
+      {/* ── Hero ── */}
       <div className="ticket-detail-hero">
         <ActionButton kind="ghost" onClick={() => navigate(-1)} style={{ marginBottom: '1.5rem' }}>
           ← Back to Tickets
@@ -218,10 +238,7 @@ function TicketDetailPage() {
               <div className="resource-form-grid">
                 <label>
                   New Status
-                  <select
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                  >
+                  <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
                     {allowedNext.map((s) => (
                       <option key={s} value={s}>{formatTicketLabel(s)}</option>
                     ))}
@@ -231,14 +248,9 @@ function TicketDetailPage() {
                 {newStatus === 'IN_PROGRESS' && (
                   <label>
                     Assign Technician
-                    <select
-                      value={assignedTo}
-                      onChange={(e) => setAssignedTo(e.target.value)}
-                    >
+                    <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}>
                       <option value="">
-                        {technicians.length === 0
-                          ? 'No technicians available'
-                          : '— Select a technician —'}
+                        {technicians.length === 0 ? 'No technicians available' : '— Select a technician —'}
                       </option>
                       {technicians.map((tech) => (
                         <option key={tech.id} value={tech.email}>
@@ -287,44 +299,17 @@ function TicketDetailPage() {
         )}
       </div>
 
-      {/* ── SLA Card ── */}
-      {/* ── SLA Card ── */}
-      {(() => {
-        // Priority-based SLA targets
-        const slaTargets = {
-          LOW:      { responseMin: 240,  resolutionMin: 10080, responseLabel: '4 hours',  resolutionLabel: '7 days'    },
-          MEDIUM:   { responseMin: 120,  resolutionMin: 4320,  responseLabel: '2 hours',  resolutionLabel: '3 days'    },
-          HIGH:     { responseMin: 60,   resolutionMin: 2880,  responseLabel: '1 hour',   resolutionLabel: '48 hours'  },
-          CRITICAL: { responseMin: 15,   resolutionMin: 1440,  responseLabel: '15 min',   resolutionLabel: '24 hours'  },
-        }
-        const target = slaTargets[ticket.priority] || slaTargets.MEDIUM
-        const responseBreached = ticket.minutesToFirstResponse != null
-          && ticket.minutesToFirstResponse > target.responseMin
-        const resolutionBreached = ticket.minutesToResolution != null
-          && ticket.minutesToResolution > target.resolutionMin
+      {/* ── Two-column layout ── */}
+      <div className="ticket-detail-layout">
 
-        return (
+        {/* ── Main column ── */}
+        <div className="ticket-main">
+
+          {/* ── SLA Performance (detailed) ── */}
           <div className="home-section-card" style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <h2 style={{ margin: 0 }}>SLA Performance</h2>
-              <span style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                padding: '0.2rem 0.7rem',
-                borderRadius: 999,
-                background: ticket.priority === 'CRITICAL' ? '#fef2f2'
-                  : ticket.priority === 'HIGH' ? '#eff6ff'
-                  : ticket.priority === 'MEDIUM' ? '#fffbeb'
-                  : '#f0fdf4',
-                color: ticket.priority === 'CRITICAL' ? '#b91c1c'
-                  : ticket.priority === 'HIGH' ? '#1d4ed8'
-                  : ticket.priority === 'MEDIUM' ? '#92400e'
-                  : '#166534',
-                border: `1px solid ${ticket.priority === 'CRITICAL' ? '#fecaca'
-                  : ticket.priority === 'HIGH' ? '#bfdbfe'
-                  : ticket.priority === 'MEDIUM' ? '#fde68a'
-                  : '#bbf7d0'}`,
-              }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.7rem', borderRadius: 999, background: ps.bg, color: ps.color, border: `1px solid ${ps.border}` }}>
                 {ticket.priority} Priority SLA Targets applied
               </span>
             </div>
@@ -355,45 +340,13 @@ function TicketDetailPage() {
               />
             </div>
           </div>
-        )
-      })()}
 
-      {/* ── Attachments ── */}
-      {ticket.attachments?.length > 0 && (
-        <div className="home-section-card" style={{ padding: '1.25rem' }}>
-          <h2 style={{ margin: '0 0 1rem' }}>
-            Photo Evidence ({ticket.attachments.length}/3)
-          </h2>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            {ticket.attachments.map((att) => (
-              <div key={att.id}>
-                <img
-                  src={getAttachmentUrl(ticket.id, att.id)}
-                  alt={att.fileName}
-                  style={{
-                    width: 140, height: 140, objectFit: 'cover',
-                    borderRadius: '0.85rem',
-                    border: '1px solid var(--border-soft)',
-                    display: 'block',
-                  }}
-                />
-                <p style={{
-                  fontSize: '0.72rem', color: '#6b7280',
-                  margin: '0.25rem 0', maxWidth: 140,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {att.fileName}
-                </p>
-                {isAdmin && (
-                  <ActionButton
-                    kind="danger"
-                    onClick={() => handleDeleteAttachment(att.id)}
-                    style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
-                  >
-                    Delete
-                  </ActionButton>
-                )}
-              </div>
+          {/* ── Ticket Details ── */}
+          <div className="ticket-card" style={{ marginTop: '1.5rem' }}>
+            <div className="ticket-card-header">
+              <h2>Ticket Details</h2>
+            </div>
+            <div className="ticket-info-grid">
               <InfoRow label="Location"     value={ticket.location} />
               <InfoRow label="Resource"     value={ticket.resourceId || 'Not linked to a resource'} />
               <InfoRow label="Reported by"  value={ticket.createdByEmail} />
@@ -402,67 +355,50 @@ function TicketDetailPage() {
               <InfoRow label="Last Updated" value={formatTicketDate(ticket.updatedAt)} />
               <InfoRow label="Requester"    value={ticket.contactName} />
               <InfoRow label="Contact Info" value={ticket.contactEmail || 'No email provided'} />
+            </div>
 
-              {ticket.resolutionNotes && (
-                <div className="ticket-info-item" style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1rem', background: '#f0fdf4', borderRadius: '0.75rem', border: '1px solid #dcfce7' }}>
-                  <span className="ticket-info-label" style={{ color: '#166534' }}>Resolution Progress</span>
-                  <p className="ticket-info-value" style={{ color: '#14532d' }}>{ticket.resolutionNotes}</p>
-                </div>
-              ) : (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <span style={{
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        padding: '0.15rem 0.55rem',
-                        borderRadius: 999,
-                        background: comment.authorRole === 'Admin'
-                          ? '#fef2f2' : comment.authorRole === 'Technician'
-                          ? '#eff6ff' : '#f0fdf4',
-                        color: comment.authorRole === 'Admin'
-                          ? '#b91c1c' : comment.authorRole === 'Technician'
-                          ? '#1d4ed8' : '#166534',
-                        border: `1px solid ${comment.authorRole === 'Admin'
-                          ? '#fecaca' : comment.authorRole === 'Technician'
-                          ? '#bfdbfe' : '#bbf7d0'}`,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                      }}>
-                        {comment.authorRole || 'User'}
-                      </span>
-                      <strong style={{ fontSize: '0.875rem' }}>
-                        {comment.authorName || comment.authorEmail}
-                      </strong>
-                      <span className="muted">{formatTicketDate(comment.createdAt)}</span>
-                    </div>
-                    
-                    {(user?.email === comment.authorEmail || isAdmin) && (
-                      <div className="booking-actions-row" style={{ margin: 0 }}>
-                        {user?.email === comment.authorEmail && (
-                          <ActionButton
-                            kind="ghost"
-                            onClick={() => { setEditingId(comment.id); setEditingText(comment.content) }}
-                            style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
-                          >
-                            Edit
-                          </ActionButton>
-                        )}
-                        <ActionButton
-                          kind="danger"
-                          onClick={() => handleDeleteComment(comment.id)}
-                          style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
-                        >
-                          Delete
-                        </ActionButton>
-                      </div>
+            {ticket.resolutionNotes && (
+              <div
+                className="ticket-info-item"
+                style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1rem', background: '#f0fdf4', borderRadius: '0.75rem', border: '1px solid #dcfce7' }}
+              >
+                <span className="ticket-info-label" style={{ color: '#166534' }}>Resolution Progress</span>
+                <p className="ticket-info-value" style={{ color: '#14532d' }}>{ticket.resolutionNotes}</p>
+              </div>
+            )}
+          </div>
+
+          {/* ── Attachments (main) ── */}
+          {ticket.attachments?.length > 0 && (
+            <div className="home-section-card" style={{ padding: '1.25rem', marginTop: '1.5rem' }}>
+              <h2 style={{ margin: '0 0 1rem' }}>
+                Photo Evidence ({ticket.attachments.length}/3)
+              </h2>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                {ticket.attachments.map((att) => (
+                  <div key={att.id}>
+                    <img
+                      src={getAttachmentUrl(ticket.id, att.id)}
+                      alt={att.fileName}
+                      style={{ width: 140, height: 140, objectFit: 'cover', borderRadius: '0.85rem', border: '1px solid var(--border-soft)', display: 'block' }}
+                    />
+                    <p style={{ fontSize: '0.72rem', color: '#6b7280', margin: '0.25rem 0', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {att.fileName}
+                    </p>
+                    {isAdmin && (
+                      <ActionButton
+                        kind="danger"
+                        onClick={() => handleDeleteAttachment(att.id)}
+                        style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
+                      >
+                        Delete
+                      </ActionButton>
                     )}
                   </div>
-                  <p style={{ margin: '0.5rem 0 0', color: '#374151' }}>{comment.content}</p>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ── Comments ── */}
           <div className="ticket-card" style={{ marginTop: '1.5rem' }}>
@@ -535,7 +471,11 @@ function TicketDetailPage() {
               ))}
             </div>
 
-            <form className="booking-form" onSubmit={handleAddComment} style={{ padding: 0, marginTop: '2rem', borderTop: '1px solid var(--bg-subtle)', paddingTop: '1.5rem' }}>
+            <form
+              className="booking-form"
+              onSubmit={handleAddComment}
+              style={{ padding: 0, marginTop: '2rem', borderTop: '1px solid var(--bg-subtle)', paddingTop: '1.5rem' }}
+            >
               <label>
                 Share an Update
                 <textarea
@@ -555,8 +495,10 @@ function TicketDetailPage() {
           </div>
         </div>
 
+        {/* ── Sidebar ── */}
         <div className="ticket-sidebar">
-          {/* ── SLA ── */}
+
+          {/* Compact SLA */}
           <div className="ticket-card">
             <div className="ticket-card-header">
               <h2>SLA Performance</h2>
@@ -565,22 +507,22 @@ function TicketDetailPage() {
               <SlaCard
                 label="Response Time"
                 value={formatDuration(ticket.minutesToFirstResponse)}
-                breached={ticket.minutesToFirstResponse != null && ticket.minutesToFirstResponse > 60}
+                breached={responseBreached}
               />
               <SlaCard
                 label="Total Time"
                 value={formatDuration(ticket.minutesToResolution)}
-                breached={ticket.minutesToResolution != null && ticket.minutesToResolution > 2880}
+                breached={resolutionBreached}
               />
               <SlaCard
                 label="Service Status"
-                value={ticket.slaBreached ? 'Breached' : 'Maintain SLA'}
+                value={ticket.slaBreached ? 'Breached' : 'Within SLA'}
                 breached={ticket.slaBreached}
               />
             </div>
           </div>
 
-          {/* ── Attachments ── */}
+          {/* Sidebar attachments gallery */}
           {ticket.attachments?.length > 0 && (
             <div className="ticket-card" style={{ marginTop: '1.5rem' }}>
               <div className="ticket-card-header">
@@ -613,6 +555,7 @@ function TicketDetailPage() {
             </div>
           )}
         </div>
+
       </div>
     </div>
   )
@@ -627,14 +570,14 @@ function InfoRow({ label, value }) {
   )
 }
 
-function SlaCard({ label, value, breached }) {
+function SlaCard({ label, value, note, breached }) {
   return (
     <div className={`sla-stat-card ${breached ? 'breached' : 'within'}`}>
       <span className="sla-stat-label">{label}</span>
       <span className="sla-stat-value">{value || 'N/A'}</span>
+      {note && <span className="sla-stat-note">{note}</span>}
     </div>
   )
 }
-
 
 export default TicketDetailPage

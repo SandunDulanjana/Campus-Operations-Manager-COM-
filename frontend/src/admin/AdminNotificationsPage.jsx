@@ -38,26 +38,36 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 
 const AUDIENCE_OPTIONS = [
-  { value: 'ALL',          label: 'All Users' },
-  { value: 'USER',         label: 'Users only' },
-  { value: 'ADMIN',        label: 'Admins only' },
-  { value: 'TECHNICIAN',   label: 'Technicians only' },
-  { value: 'USER,ADMIN',   label: 'Users & Admins' },
+  { value: 'ALL',             label: 'All Users'           },
+  { value: 'USER',            label: 'Users only'          },
+  { value: 'ADMIN',           label: 'Admins only'         },
+  { value: 'TECHNICIAN',      label: 'Technicians only'    },
+  { value: 'USER,ADMIN',      label: 'Users & Admins'      },
   { value: 'USER,TECHNICIAN', label: 'Users & Technicians' },
+]
+
+// Filter pill options (for the table)
+const FILTER_OPTIONS = [
+  { value: 'ANY',        label: 'All'          },
+  { value: 'ALL',        label: 'Broadcasts'   },
+  { value: 'USER',       label: 'Users'        },
+  { value: 'ADMIN',      label: 'Admins'       },
+  { value: 'TECHNICIAN', label: 'Technicians'  },
+  { value: 'DIRECT',     label: 'Direct'       },
 ]
 
 const EMPTY_FORM = { title: '', message: '', audience: 'ALL', published: true }
 
 function AdminNotificationsPage() {
-  const [notifications, setNotifications] = useState([])
-  const [loading, setLoading]             = useState(false)
-  const [filterAudience, setFilterAudience] = useState('ANY')
+  const [notifications, setNotifications]       = useState([])
+  const [loading, setLoading]                   = useState(false)
+  const [filterAudience, setFilterAudience]     = useState('ANY')
   const [selectedNotification, setSelectedNotification] = useState(null)
-  const [showForm, setShowForm]           = useState(false)
-  const [form, setForm]                   = useState(EMPTY_FORM)
-  const [submitting, setSubmitting]       = useState(false)
-  const [success, setSuccess]             = useState('')
-  const [error, setError]                 = useState('')
+  const [showForm, setShowForm]                 = useState(false)
+  const [form, setForm]                         = useState(EMPTY_FORM)
+  const [submitting, setSubmitting]             = useState(false)
+  const [success, setSuccess]                   = useState('')
+  const [error, setError]                       = useState('')
 
   useEffect(() => { void loadNotifications() }, [])
 
@@ -123,8 +133,18 @@ function AdminNotificationsPage() {
     })
   }
 
+  // Apply audience filter
+  const filteredNotifications = notifications.filter((n) => {
+    if (filterAudience === 'ANY')    return true
+    if (filterAudience === 'DIRECT') return n.targetEmail != null
+    if (n.targetAudience)            return n.targetAudience.includes(filterAudience)
+    return false
+  })
+
   return (
     <section className="flex flex-col gap-6">
+
+      {/* ── Composer header card ─────────────────────────────────────────── */}
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-3 border-b">
           <div className="flex flex-col gap-1">
@@ -137,28 +157,31 @@ function AdminNotificationsPage() {
           </Button>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 pt-4">
-          {success ? (
+          {success && (
             <Alert>
               <BellIcon />
               <AlertTitle>Saved</AlertTitle>
               <AlertDescription>{success}</AlertDescription>
             </Alert>
-          ) : null}
-          {error ? (
+          )}
+          {error && (
             <Alert variant="destructive">
               <AlertCircleIcon />
               <AlertTitle>Request failed</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
-          ) : null}
+          )}
         </CardContent>
       </Card>
 
+      {/* ── Create notification dialog ───────────────────────────────────── */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Create notification</DialogTitle>
-            <DialogDescription>Single monochrome admin composer. No legacy inline form styles.</DialogDescription>
+            <DialogDescription>
+              Compose a broadcast message and choose who receives it.
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreate} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
@@ -186,14 +209,19 @@ function AdminNotificationsPage() {
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium">Audience</label>
-              <Select value={form.audience} onValueChange={(value) => setForm((f) => ({ ...f, audience: value }))}>
+              <Select
+                value={form.audience}
+                onValueChange={(value) => setForm((f) => ({ ...f, audience: value }))}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
                     {AUDIENCE_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
                     ))}
                   </SelectGroup>
                 </SelectContent>
@@ -215,7 +243,9 @@ function AdminNotificationsPage() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button variant="outline" type="button" onClick={() => setShowForm(false)}>
+                Cancel
+              </Button>
               <Button type="submit" disabled={submitting}>
                 <PencilLineIcon data-icon="inline-start" />
                 {submitting ? 'Publishing…' : 'Publish'}
@@ -225,17 +255,52 @@ function AdminNotificationsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* ── Notifications table with filter pills ────────────────────────── */}
       <Card>
         <CardHeader className="border-b">
-          <CardTitle>All Notifications</CardTitle>
-          <CardDescription>{notifications.length} items in broadcast log.</CardDescription>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle>All Notifications</CardTitle>
+              <CardDescription>{filteredNotifications.length} of {notifications.length} items shown.</CardDescription>
+            </div>
+
+            {/* Filter pills */}
+            <div className="flex flex-wrap gap-2">
+              {FILTER_OPTIONS.map((opt) => {
+                const isActive = filterAudience === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setFilterAudience(opt.value)}
+                    style={{
+                      padding: '0.35rem 1rem',
+                      borderRadius: 999,
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      border: isActive ? '2px solid var(--brand-600)' : '1.5px solid #e2e8f0',
+                      background: isActive ? 'var(--brand-600)' : '#ffffff',
+                      color: isActive ? '#ffffff' : '#374151',
+                      transition: 'all 140ms ease',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </CardHeader>
+
         <CardContent className="pt-4">
           {loading ? (
-            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">Loading…</div>
-          ) : notifications.length === 0 ? (
             <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-              No notifications yet. Create one above.
+              Loading…
+            </div>
+          ) : filteredNotifications.length === 0 ? (
+            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+              No notifications found.
             </div>
           ) : (
             <div className="rounded-xl border">
@@ -252,30 +317,46 @@ function AdminNotificationsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {notifications.map((notification) => (
-                    <TableRow key={notification.id}>
-                      <TableCell className="font-medium">{notification.title}</TableCell>
-                      <TableCell className="max-w-72 truncate text-muted-foreground">{notification.message}</TableCell>
-                      <TableCell><Badge variant="outline">{notification.type}</Badge></TableCell>
-                      <TableCell className="text-muted-foreground">{notification.targetAudience || notification.targetEmail || '—'}</TableCell>
+                  {filteredNotifications.map((n) => (
+                    <TableRow
+                      key={n.id}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedNotification(n)}
+                    >
+                      <TableCell className="font-medium">{n.title}</TableCell>
+                      <TableCell className="max-w-72 truncate text-muted-foreground">
+                        {n.message}
+                      </TableCell>
                       <TableCell>
-                        <Badge variant={notification.published ? 'secondary' : 'outline'}>
-                          {notification.published ? 'Published' : 'Draft'}
+                        <Badge variant="outline">{n.type}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {n.targetAudience || n.targetEmail || '—'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={n.published ? 'secondary' : 'outline'}>
+                          {n.published ? 'Published' : 'Draft'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{formatDate(notification.createdAt)}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatDate(n.createdAt)}
+                      </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-2">
-                          {notification.type === 'ADMIN_BROADCAST' ? (
+                        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                          {n.type === 'ADMIN_BROADCAST' && (
                             <Button
-                              variant={notification.published ? 'outline' : 'default'}
+                              variant={n.published ? 'outline' : 'default'}
                               size="sm"
-                              onClick={() => handleToggle(notification.id)}
+                              onClick={() => handleToggle(n.id)}
                             >
-                              {notification.published ? 'Unpublish' : 'Publish'}
+                              {n.published ? 'Unpublish' : 'Publish'}
                             </Button>
-                          ) : null}
-                          <Button variant="destructive" size="sm" onClick={() => handleDelete(notification.id)}>
+                          )}
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(n.id)}
+                          >
                             <Trash2Icon data-icon="inline-start" />
                             Delete
                           </Button>
@@ -289,140 +370,33 @@ function AdminNotificationsPage() {
           )}
         </CardContent>
       </Card>
-      {/* ── Notification List ── */}
-      <div className="table-panel">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>All Notifications ({notifications.length})</h2>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {[
-              { value: 'ANY', label: 'All' },
-              { value: 'ALL', label: 'Broadcasts' },
-              { value: 'USER', label: 'Users' },
-              { value: 'ADMIN', label: 'Admins' },
-              { value: 'TECHNICIAN', label: 'Technicians' },
-              { value: 'DIRECT', label: 'Direct' },
-            ].map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setFilterAudience(opt.value)}
-                style={{
-                  padding: '0.35rem 1rem',
-                  borderRadius: '999px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  border: filterAudience === opt.value ? '1px solid var(--brand-700)' : '1px solid #e2e8f0',
-                  background: filterAudience === opt.value ? 'var(--brand-700)' : '#fff',
-                  color: filterAudience === opt.value ? '#fff' : '#4b5563',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        {loading ? (
-          <p style={{ padding: '1rem', color: '#6b7280' }}>Loading…</p>
-        ) : notifications.length === 0 ? (
-          <p style={{ padding: '1rem', color: '#6b7280' }}>No notifications yet. Create one above.</p>
-        ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Message</th>
-                  <th>Type</th>
-                  <th>Audience</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {notifications.filter(n => {
-                  if (filterAudience === 'ANY') return true;
-                  if (filterAudience === 'DIRECT') return n.targetEmail != null;
-                  if (n.targetAudience) return n.targetAudience.includes(filterAudience);
-                  return false;
-                }).map(n => (
-                  <tr key={n.id} onClick={() => setSelectedNotification(n)} style={{ cursor: 'pointer' }} className="hoverable-row">
-                    <td><strong>{n.title}</strong></td>
-                    <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {n.message}
-                    </td>
-                    <td>
-                      <span style={{ fontSize: '0.78rem', background: '#f1f5f9', padding: '0.2rem 0.6rem', borderRadius: 999 }}>
-                        {n.type}
-                      </span>
-                    </td>
-                    <td>{n.targetAudience || n.targetEmail || '—'}</td>
-                    <td>
-                      <span style={{
-                        fontSize: '0.78rem', fontWeight: 700,
-                        color: n.published ? '#15803d' : '#b45309',
-                        background: n.published ? '#f0fdf4' : '#fef3c7',
-                        border: `1px solid ${n.published ? '#bbf7d0' : '#fde68a'}`,
-                        padding: '0.2rem 0.6rem', borderRadius: 999,
-                      }}>
-                        {n.published ? 'Published' : 'Draft'}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '0.82rem', color: '#6b7280' }}>{formatDate(n.createdAt)}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '0.4rem' }}>
-                        {n.type === 'ADMIN_BROADCAST' && (
-                          <ActionButton
-                            kind={n.published ? 'ghost' : 'approve'}
-                            onClick={(e) => { e.stopPropagation(); handleToggle(n.id); }}
-                            style={{ fontSize: '0.78rem', padding: '0.25rem 0.65rem' }}
-                          >
-                            {n.published ? 'Unpublish' : 'Publish'}
-                          </ActionButton>
-                        )}
-                        <ActionButton
-                          kind="danger"
-                          onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}
-                          style={{ fontSize: '0.78rem', padding: '0.25rem 0.65rem' }}
-                        >
-                          Delete
-                        </ActionButton>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
 
-      {/* ── Notification Detail Modal ── */}
+      {/* ── Notification detail modal ────────────────────────────────────── */}
       {selectedNotification && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999,
-          padding: '1rem'
-        }} onClick={() => setSelectedNotification(null)}>
-          <div style={{
-            background: 'white',
-            borderRadius: '1rem',
-            padding: '2rem',
-            maxWidth: '500px',
-            width: '100%',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-            position: 'relative'
-          }} onClick={e => e.stopPropagation()}>
-            <button 
+        <div
+          style={{
+            position: 'fixed', inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 9999, padding: '1rem',
+          }}
+          onClick={() => setSelectedNotification(null)}
+        >
+          <div
+            style={{
+              background: 'white', borderRadius: '1rem', padding: '2rem',
+              maxWidth: 500, width: '100%', position: 'relative',
+              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
               onClick={() => setSelectedNotification(null)}
               style={{
                 position: 'absolute', top: '1rem', right: '1.25rem',
-                background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer',
-                color: '#6b7280', fontWeight: 600
+                background: 'none', border: 'none', fontSize: '1.5rem',
+                cursor: 'pointer', color: '#6b7280', fontWeight: 600,
               }}
             >
               &times;
@@ -433,11 +407,21 @@ function AdminNotificationsPage() {
             <div style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
               <div>{formatDate(selectedNotification.createdAt)}</div>
               <div>
-                <strong>Type:</strong> <span style={{ background: '#f1f5f9', padding: '0.1rem 0.4rem', borderRadius: 4 }}>{selectedNotification.type}</span>
+                <strong>Type:</strong>{' '}
+                <span style={{ background: '#f1f5f9', padding: '0.1rem 0.4rem', borderRadius: 4 }}>
+                  {selectedNotification.type}
+                </span>
               </div>
-              <div><strong>Audience:</strong> {selectedNotification.targetAudience || selectedNotification.targetEmail || '—'}</div>
+              <div>
+                <strong>Audience:</strong>{' '}
+                {selectedNotification.targetAudience || selectedNotification.targetEmail || '—'}
+              </div>
             </div>
-            <div style={{ color: '#374151', lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: 0, background: '#f9fafb', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}>
+            <div style={{
+              color: '#374151', lineHeight: 1.6, whiteSpace: 'pre-wrap',
+              background: '#f9fafb', padding: '1rem', borderRadius: '0.5rem',
+              border: '1px solid #e5e7eb',
+            }}>
               {selectedNotification.message}
             </div>
           </div>

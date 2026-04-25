@@ -28,7 +28,6 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationReadRepository notificationReadRepository;
-    // ── NEW: injected for email delivery ─────────────────────────────────────
     private final EmailNotificationService emailNotificationService;
 
     // ── Admin: Create broadcast notification ─────────────────────────────────
@@ -41,7 +40,7 @@ public class NotificationService {
                 .message(request.getMessage().trim())
                 .type(NotificationType.ADMIN_BROADCAST)
                 .targetAudience(audience)
-                .published(request.isPublished())
+                .published(true)
                 .createdByEmail(adminEmail)
                 .build();
 
@@ -50,15 +49,13 @@ public class NotificationService {
         return NotificationDTO.from(saved, false);
     }
 
-    // ── Internal: Create targeted notification (booking / ticket / comment / registration)
-    // REQUIRES_NEW so a failure here does NOT roll back the caller's transaction.
+    // ── Internal: Create targeted notification ────────────────────────────────
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createTargetedNotification(String targetEmail,
                                            String title,
                                            String message,
                                            NotificationType type,
                                            Long referenceId) {
-        // 1. Save in-app notification (always)
         AppNotification notification = AppNotification.builder()
                 .title(title)
                 .message(message)
@@ -72,7 +69,6 @@ public class NotificationService {
         AppNotification saved = notificationRepository.save(notification);
         log.info("Targeted notification saved to DB: id={} to={} type={}", saved.getId(), targetEmail, type);
 
-        // 2. Send email notification
         log.info("Handing off to EmailNotificationService for: {}", targetEmail);
         emailNotificationService.sendNotificationEmail(targetEmail, title, message, type, referenceId);
     }
@@ -149,7 +145,8 @@ public class NotificationService {
     public NotificationDTO togglePublished(Long id) {
         AppNotification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new NotificationNotFoundException(id));
-        notification.setPublished(!notification.isPublished());
+        // FIX: Boolean wrapper type uses getPublished(), not isPublished()
+        notification.setPublished(!Boolean.TRUE.equals(notification.getPublished()));
         return NotificationDTO.from(notificationRepository.save(notification), false);
     }
 

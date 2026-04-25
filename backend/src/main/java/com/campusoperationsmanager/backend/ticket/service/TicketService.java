@@ -23,10 +23,12 @@ import com.campusoperationsmanager.backend.ticket.repository.TicketCommentReposi
 import com.campusoperationsmanager.backend.ticket.repository.TicketRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;  // FIX: was missing — this provides the `log` variable
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j  // FIX: added — without this, `log.warn(...)` and `log.error(...)` cannot compile
 public class TicketService {
 
     private final TicketRepository ticketRepository;
@@ -59,7 +61,6 @@ public class TicketService {
 
         Ticket savedTicket = ticketRepository.save(ticket);
 
-        // ── CHANGE: notify all enabled admins about the new ticket ───────────────
         try {
             String adminTitle   = "📩 New Ticket Submitted";
             String adminMessage = "A new ticket #" + savedTicket.getId()
@@ -88,7 +89,6 @@ public class TicketService {
         } catch (Exception e) {
             log.error("Global notification failure during ticket creation: {}", e.getMessage());
         }
-        // ── END CHANGE ───────────────────────────────────────────────────────────
 
         return toResponse(savedTicket);
     }
@@ -139,7 +139,6 @@ public class TicketService {
 
         validateTransition(ticket.getStatus(), newStatus, isAdmin);
 
-        // SLA: record first response time
         if (ticket.getStatus() == TicketStatus.OPEN
                 && newStatus != TicketStatus.OPEN
                 && ticket.getFirstResponseAt() == null) {
@@ -153,7 +152,6 @@ public class TicketService {
             }
         }
 
-        // Capture assigned technician email before switch so we can notify after save
         String technicianEmailToNotify = null;
 
         switch (newStatus) {
@@ -200,7 +198,6 @@ public class TicketService {
         ticket.setStatus(newStatus);
         Ticket savedTicket = ticketRepository.save(ticket);
 
-        // Notify ticket creator about status change
         try {
             notificationService.createTargetedNotification(
                     savedTicket.getCreatedByEmail(),
@@ -214,7 +211,6 @@ public class TicketService {
             // Don't let notification failure break the ticket flow
         }
 
-        // Notify assigned technician when admin assigns them
         if (technicianEmailToNotify != null) {
             try {
                 notificationService.createTargetedNotification(
@@ -233,7 +229,6 @@ public class TicketService {
             }
         }
 
-        // Notify all admins when a technician (non-admin) acts on a ticket
         if (!isAdmin) {
             String statusLabel = newStatus.name().replace("_", " ");
             String adminMessage = "Technician '" + userEmail + "' updated ticket #"
