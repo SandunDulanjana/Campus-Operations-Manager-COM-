@@ -22,6 +22,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Field as UiField,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
@@ -101,15 +109,15 @@ function InfoRow({ icon: Icon, label, value }) {
   )
 }
 
-function Field({ icon: Icon, label, children }) {
+function ProfileField({ icon: Icon, label, children }) {
   return (
-    <label className="flex flex-col gap-2">
-      <span className="flex items-center gap-2 text-sm font-medium">
-        <Icon className="text-muted-foreground" />
+    <UiField>
+      <FieldLabel>
+        <Icon />
         {label}
-      </span>
+      </FieldLabel>
       {children}
-    </label>
+    </UiField>
   )
 }
 
@@ -351,7 +359,8 @@ function TwoFactorSection({ user, onStatusChange }) {
         <Feedback type="error" message={err} />
 
         {step === 'auth' ? (
-          <form onSubmit={handlePasswordGate} className="flex flex-col gap-4 rounded-lg border p-4">
+          <form onSubmit={handlePasswordGate} className="rounded-lg border p-4">
+            <FieldGroup>
             <div>
               <p className="font-medium">Confirm identity</p>
               <p className="text-sm text-muted-foreground">
@@ -371,6 +380,7 @@ function TwoFactorSection({ user, onStatusChange }) {
                 Continue
               </Button>
             </div>
+            </FieldGroup>
           </form>
         ) : null}
 
@@ -429,8 +439,9 @@ function TwoFactorSection({ user, onStatusChange }) {
         ) : null}
 
         {flow === 'SMS' && step === 'phone' ? (
-          <form onSubmit={handleSendOtp} className="flex flex-col gap-4 rounded-lg border p-4">
-            <Field icon={PhoneIcon} label="Mobile number">
+          <form onSubmit={handleSendOtp} className="rounded-lg border p-4">
+            <FieldGroup>
+            <ProfileField icon={PhoneIcon} label="Mobile number">
               <Input
                 type="tel"
                 placeholder="+94 77 123 4567"
@@ -439,7 +450,7 @@ function TwoFactorSection({ user, onStatusChange }) {
                 autoFocus
                 required
               />
-            </Field>
+            </ProfileField>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={reset}>Back</Button>
               <Button type="submit" disabled={busy || !phoneInput.trim()}>
@@ -447,11 +458,13 @@ function TwoFactorSection({ user, onStatusChange }) {
                 Send OTP
               </Button>
             </div>
+            </FieldGroup>
           </form>
         ) : null}
 
         {flow === 'SMS' && step === 'otp' ? (
-          <form onSubmit={confirmSms} className="flex flex-col gap-4 rounded-lg border p-4">
+          <form onSubmit={confirmSms} className="rounded-lg border p-4">
+            <FieldGroup>
             {devCode ? (
               <Alert>
                 <KeyRoundIcon />
@@ -459,7 +472,7 @@ function TwoFactorSection({ user, onStatusChange }) {
                 <AlertDescription>{devCode}</AlertDescription>
               </Alert>
             ) : null}
-            <Field icon={KeyRoundIcon} label="Verification code">
+            <ProfileField icon={KeyRoundIcon} label="Verification code">
               <Input
                 type="text"
                 inputMode="numeric"
@@ -470,7 +483,7 @@ function TwoFactorSection({ user, onStatusChange }) {
                 autoFocus
                 required
               />
-            </Field>
+            </ProfileField>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => {
                 setStep('phone')
@@ -482,11 +495,13 @@ function TwoFactorSection({ user, onStatusChange }) {
                 Activate
               </Button>
             </div>
+            </FieldGroup>
           </form>
         ) : null}
 
         {flow === 'TOTP' && step === 'scan' ? (
-          <form onSubmit={confirmTotp} className="flex flex-col gap-4 rounded-lg border p-4">
+          <form onSubmit={confirmTotp} className="rounded-lg border p-4">
+            <FieldGroup>
             {qrData ? (
               <div className="flex flex-col items-center gap-3 rounded-lg bg-muted/40 p-4">
                 <img src={qrData} alt="Scan in authenticator app" className="size-48 rounded-lg border bg-background p-2" />
@@ -495,7 +510,7 @@ function TwoFactorSection({ user, onStatusChange }) {
                 </p>
               </div>
             ) : null}
-            <Field icon={KeyRoundIcon} label="Authenticator code">
+            <ProfileField icon={KeyRoundIcon} label="Authenticator code">
               <Input
                 type="text"
                 inputMode="numeric"
@@ -506,7 +521,7 @@ function TwoFactorSection({ user, onStatusChange }) {
                 autoFocus
                 required
               />
-            </Field>
+            </ProfileField>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={reset}>Back</Button>
               <Button type="submit" disabled={busy || code.length !== 6}>
@@ -514,6 +529,7 @@ function TwoFactorSection({ user, onStatusChange }) {
                 Activate
               </Button>
             </div>
+            </FieldGroup>
           </form>
         ) : null}
       </CardContent>
@@ -746,41 +762,42 @@ export default function ProfilePage() {
               <CardDescription>Update display name, phone, department, and notification preferences.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleProfileSave} className="flex flex-col gap-4">
+              <form onSubmit={handleProfileSave}>
+                <FieldGroup>
                 <Feedback type="success" message={profileSuccess} />
                 <Feedback type="error" message={profileError} />
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Field icon={UserIcon} label="Full name">
+                  <ProfileField icon={UserIcon} label="Full name">
                     <Input
                       value={profileForm.name}
                       onChange={(event) => setProfileForm((current) => ({ ...current, name: event.target.value }))}
                       placeholder="Your full name"
                       required
                     />
-                  </Field>
-                  <Field icon={PhoneIcon} label="Phone number">
+                  </ProfileField>
+                  <ProfileField icon={PhoneIcon} label="Phone number">
                     <Input
                       type="tel"
                       value={profileForm.phone}
                       onChange={(event) => setProfileForm((current) => ({ ...current, phone: event.target.value }))}
                       placeholder="+94 77 123 4567"
                     />
-                  </Field>
+                  </ProfileField>
                 </div>
-                <Field icon={Building2Icon} label="Department / Faculty">
+                <ProfileField icon={Building2Icon} label="Department / Faculty">
                   <Input
                     value={profileForm.department}
                     onChange={(event) => setProfileForm((current) => ({ ...current, department: event.target.value }))}
                     placeholder="Faculty of Computing"
                   />
-                </Field>
-                <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
-                  <div>
-                    <p className="font-medium">Receive email notifications</p>
-                    <p className="text-sm text-muted-foreground">
+                </ProfileField>
+                <UiField orientation="horizontal" className="rounded-lg border p-4">
+                  <FieldContent>
+                    <FieldTitle>Receive email notifications</FieldTitle>
+                    <FieldDescription>
                       Booking, ticket, and comment updates. Registration and password alerts are always sent.
-                    </p>
-                  </div>
+                    </FieldDescription>
+                  </FieldContent>
                   <Switch
                     checked={profileForm.emailNotificationsEnabled}
                     onCheckedChange={(checked) =>
@@ -788,13 +805,14 @@ export default function ProfilePage() {
                     }
                     aria-label="Receive email notifications"
                   />
-                </div>
+                </UiField>
                 <div className="flex justify-end">
                   <Button type="submit" disabled={profileLoading}>
                     {profileLoading ? <Loader2Icon data-icon="inline-start" className="animate-spin" /> : <CheckIcon data-icon="inline-start" />}
                     Save changes
                   </Button>
                 </div>
+                </FieldGroup>
               </form>
             </CardContent>
           </Card>
@@ -810,7 +828,8 @@ export default function ProfilePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handlePasswordSave} className="flex flex-col gap-4">
+                <form onSubmit={handlePasswordSave}>
+                  <FieldGroup>
                   <Feedback type="success" message={pwSuccess} />
                   <Feedback type="error" message={pwError} />
                   {!user?.hasPassword ? (
@@ -823,31 +842,31 @@ export default function ProfilePage() {
                     </Alert>
                   ) : null}
                   {user?.hasPassword ? (
-                    <Field icon={LockIcon} label="Current password">
+                    <ProfileField icon={LockIcon} label="Current password">
                       <PasswordInput
                         value={pwForm.currentPassword}
                         onChange={(event) => setPwForm((current) => ({ ...current, currentPassword: event.target.value }))}
                         placeholder="Enter current password"
                         required
                       />
-                    </Field>
+                    </ProfileField>
                   ) : null}
-                  <Field icon={LockIcon} label="New password">
+                  <ProfileField icon={LockIcon} label="New password">
                     <PasswordInput
                       value={pwForm.newPassword}
                       onChange={(event) => setPwForm((current) => ({ ...current, newPassword: event.target.value }))}
                       placeholder="At least 8 characters"
                       required
                     />
-                  </Field>
-                  <Field icon={LockIcon} label="Confirm new password">
+                  </ProfileField>
+                  <ProfileField icon={LockIcon} label="Confirm new password">
                     <PasswordInput
                       value={pwForm.confirmPassword}
                       onChange={(event) => setPwForm((current) => ({ ...current, confirmPassword: event.target.value }))}
                       placeholder="Re-enter new password"
                       required
                     />
-                  </Field>
+                  </ProfileField>
                   <PasswordStrength password={pwForm.newPassword} />
                   <Separator />
                   <div className="flex justify-end">
@@ -856,6 +875,7 @@ export default function ProfilePage() {
                       Update password
                     </Button>
                   </div>
+                  </FieldGroup>
                 </form>
               </CardContent>
             </Card>
