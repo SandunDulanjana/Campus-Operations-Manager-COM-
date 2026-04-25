@@ -1,9 +1,11 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.controller;
 
+import com.campusoperationsmanager.backend.booking.model.BookingStatus;
 import com.campusoperationsmanager.backend.booking.dto.BookingResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingDetailsResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingStatusUpdateRequest;
 import com.campusoperationsmanager.backend.booking.dto.CreateBookingRequest;
+import com.campusoperationsmanager.backend.booking.service.BookingService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;

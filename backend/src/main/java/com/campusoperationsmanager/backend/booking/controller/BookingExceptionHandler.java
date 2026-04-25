@@ -1,4 +1,8 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.controller;
+
+import com.campusoperationsmanager.backend.booking.service.BookingConflictException;
+import com.campusoperationsmanager.backend.booking.service.BookingNotFoundException;
+import com.campusoperationsmanager.backend.booking.service.BookingValidationException;
 import com.campusoperationsmanager.backend.shared.ApiErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

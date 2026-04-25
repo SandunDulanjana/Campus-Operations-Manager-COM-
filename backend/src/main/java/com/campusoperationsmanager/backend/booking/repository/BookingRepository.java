@@ -1,5 +1,7 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.repository;
 
+import com.campusoperationsmanager.backend.booking.model.Booking;
+import com.campusoperationsmanager.backend.booking.model.BookingStatus;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
