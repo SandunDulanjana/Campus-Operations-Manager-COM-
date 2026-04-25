@@ -136,7 +136,7 @@ function LoginPage() {
             <form className="login-form" onSubmit={handleSubmit}>
               <div className="login-inputs-row">
                 <label>
-                  Username
+                  University ID
                   <input
                     type="text"
                     value={username}

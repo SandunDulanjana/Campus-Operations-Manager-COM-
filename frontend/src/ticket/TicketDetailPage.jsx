@@ -287,17 +287,112 @@ function TicketDetailPage() {
         )}
       </div>
 
-      <div className="ticket-detail-body">
-        <div className="ticket-main-col">
-          {/* ── Core Details ── */}
-          <div className="ticket-card">
-            <div className="ticket-card-header">
-              <h2>Ticket Details</h2>
+      {/* ── SLA Card ── */}
+      {/* ── SLA Card ── */}
+      {(() => {
+        // Priority-based SLA targets
+        const slaTargets = {
+          LOW:      { responseMin: 240,  resolutionMin: 10080, responseLabel: '4 hours',  resolutionLabel: '7 days'    },
+          MEDIUM:   { responseMin: 120,  resolutionMin: 4320,  responseLabel: '2 hours',  resolutionLabel: '3 days'    },
+          HIGH:     { responseMin: 60,   resolutionMin: 2880,  responseLabel: '1 hour',   resolutionLabel: '48 hours'  },
+          CRITICAL: { responseMin: 15,   resolutionMin: 1440,  responseLabel: '15 min',   resolutionLabel: '24 hours'  },
+        }
+        const target = slaTargets[ticket.priority] || slaTargets.MEDIUM
+        const responseBreached = ticket.minutesToFirstResponse != null
+          && ticket.minutesToFirstResponse > target.responseMin
+        const resolutionBreached = ticket.minutesToResolution != null
+          && ticket.minutesToResolution > target.resolutionMin
+
+        return (
+          <div className="home-section-card" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h2 style={{ margin: 0 }}>SLA Performance</h2>
+              <span style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '0.2rem 0.7rem',
+                borderRadius: 999,
+                background: ticket.priority === 'CRITICAL' ? '#fef2f2'
+                  : ticket.priority === 'HIGH' ? '#eff6ff'
+                  : ticket.priority === 'MEDIUM' ? '#fffbeb'
+                  : '#f0fdf4',
+                color: ticket.priority === 'CRITICAL' ? '#b91c1c'
+                  : ticket.priority === 'HIGH' ? '#1d4ed8'
+                  : ticket.priority === 'MEDIUM' ? '#92400e'
+                  : '#166534',
+                border: `1px solid ${ticket.priority === 'CRITICAL' ? '#fecaca'
+                  : ticket.priority === 'HIGH' ? '#bfdbfe'
+                  : ticket.priority === 'MEDIUM' ? '#fde68a'
+                  : '#bbf7d0'}`,
+              }}>
+                {ticket.priority} Priority SLA Targets applied
+              </span>
             </div>
-            <div className="ticket-info-grid">
-              <div className="ticket-info-item" style={{ gridColumn: '1 / -1' }}>
-                <span className="ticket-info-label">Problem Description</span>
-                <p className="ticket-info-value" style={{ fontWeight: 400, lineHeight: 1.6 }}>{ticket.description}</p>
+            <div className="admin-stat-grid">
+              <SlaCard
+                label="Time to First Response"
+                value={formatDuration(ticket.minutesToFirstResponse)}
+                note={`Target: ${target.responseLabel}`}
+                breached={responseBreached}
+              />
+              <SlaCard
+                label="Time to Resolution"
+                value={formatDuration(ticket.minutesToResolution)}
+                note={`Target: ${target.resolutionLabel}`}
+                breached={resolutionBreached}
+              />
+              <SlaCard
+                label="SLA Status"
+                value={ticket.slaBreached ? 'Breached' : 'Within SLA'}
+                note={formatTicketLabel(ticket.status)}
+                breached={ticket.slaBreached}
+              />
+              <SlaCard
+                label="Priority Level"
+                value={ticket.priority}
+                note={formatTicketLabel(ticket.category)}
+                breached={ticket.priority === 'CRITICAL'}
+              />
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ── Attachments ── */}
+      {ticket.attachments?.length > 0 && (
+        <div className="home-section-card" style={{ padding: '1.25rem' }}>
+          <h2 style={{ margin: '0 0 1rem' }}>
+            Photo Evidence ({ticket.attachments.length}/3)
+          </h2>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            {ticket.attachments.map((att) => (
+              <div key={att.id}>
+                <img
+                  src={getAttachmentUrl(ticket.id, att.id)}
+                  alt={att.fileName}
+                  style={{
+                    width: 140, height: 140, objectFit: 'cover',
+                    borderRadius: '0.85rem',
+                    border: '1px solid var(--border-soft)',
+                    display: 'block',
+                  }}
+                />
+                <p style={{
+                  fontSize: '0.72rem', color: '#6b7280',
+                  margin: '0.25rem 0', maxWidth: 140,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {att.fileName}
+                </p>
+                {isAdmin && (
+                  <ActionButton
+                    kind="danger"
+                    onClick={() => handleDeleteAttachment(att.id)}
+                    style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
+                  >
+                    Delete
+                  </ActionButton>
+                )}
               </div>
               <InfoRow label="Location"     value={ticket.location} />
               <InfoRow label="Resource"     value={ticket.resourceId || 'Not linked to a resource'} />
@@ -313,11 +408,57 @@ function TicketDetailPage() {
                   <span className="ticket-info-label" style={{ color: '#166534' }}>Resolution Progress</span>
                   <p className="ticket-info-value" style={{ color: '#14532d' }}>{ticket.resolutionNotes}</p>
                 </div>
-              )}
-              {ticket.rejectionReason && (
-                <div className="ticket-info-item" style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1rem', background: '#fef2f2', borderRadius: '0.75rem', border: '1px solid #fee2e2' }}>
-                  <span className="ticket-info-label" style={{ color: '#991b1b' }}>Rejection Reason</span>
-                  <p className="ticket-info-value" style={{ color: '#7f1d1d' }}>{ticket.rejectionReason}</p>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        padding: '0.15rem 0.55rem',
+                        borderRadius: 999,
+                        background: comment.authorRole === 'Admin'
+                          ? '#fef2f2' : comment.authorRole === 'Technician'
+                          ? '#eff6ff' : '#f0fdf4',
+                        color: comment.authorRole === 'Admin'
+                          ? '#b91c1c' : comment.authorRole === 'Technician'
+                          ? '#1d4ed8' : '#166534',
+                        border: `1px solid ${comment.authorRole === 'Admin'
+                          ? '#fecaca' : comment.authorRole === 'Technician'
+                          ? '#bfdbfe' : '#bbf7d0'}`,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}>
+                        {comment.authorRole || 'User'}
+                      </span>
+                      <strong style={{ fontSize: '0.875rem' }}>
+                        {comment.authorName || comment.authorEmail}
+                      </strong>
+                      <span className="muted">{formatTicketDate(comment.createdAt)}</span>
+                    </div>
+                    
+                    {(user?.email === comment.authorEmail || isAdmin) && (
+                      <div className="booking-actions-row" style={{ margin: 0 }}>
+                        {user?.email === comment.authorEmail && (
+                          <ActionButton
+                            kind="ghost"
+                            onClick={() => { setEditingId(comment.id); setEditingText(comment.content) }}
+                            style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
+                          >
+                            Edit
+                          </ActionButton>
+                        )}
+                        <ActionButton
+                          kind="danger"
+                          onClick={() => handleDeleteComment(comment.id)}
+                          style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
+                        >
+                          Delete
+                        </ActionButton>
+                      </div>
+                    )}
+                  </div>
+                  <p style={{ margin: '0.5rem 0 0', color: '#374151' }}>{comment.content}</p>
                 </div>
               )}
             </div>

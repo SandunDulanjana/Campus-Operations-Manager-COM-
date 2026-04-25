@@ -24,11 +24,13 @@ import TicketDetailPage from './ticket/TicketDetailPage'
 import TechnicianLayout from './technician/TechnicianLayout'
 import TechnicianDashboardHome from './technician/TechnicianDashboardHome'
 import TechnicianNotificationsPage from './technician/TechnicianNotificationsPage'
+import TechnicianTicketAnalysis from './technician/TechnicianTicketAnalysis'
 import EnterUniversityIdPage from './auth/EnterUniversityIdPage'
 import SetupAccountPage from './auth/SetupAccountPage'
 import AdminTicketsPage from './admin/AdminTicketsPage'
 import AdminNotificationsPage from './admin/AdminNotificationsPage'
 import { TooltipProvider } from '@/components/ui/tooltip'
+
 
 function MaintenanceDashboard() {
   return <div className="page-content"><h1>Maintenance Manager Dashboard</h1></div>
@@ -85,8 +87,21 @@ function App() {
             {/* CHANGE: '/' is now public — any visitor can see the home page */}
             <Route path="/" element={<HomePage />} />
 
-            {/* Protected routes — require login */}
-            <Route path="/bookings" element={<RequireAuth><BookingPage /></RequireAuth>} />
+         <Route
+            path="/technician"
+            element={
+              <RequireAuth>
+                <RequireRole allowedRoles={['TECHNICIAN']}>
+                  <TechnicianLayout />
+                </RequireRole>
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard"       element={<TechnicianDashboardHome />} />
+            <Route path="notifications"   element={<TechnicianNotificationsPage />} />clea
+            <Route path="ticket-analysis" element={<TechnicianTicketAnalysis />} />
+          </Route>
 
 
             <Route

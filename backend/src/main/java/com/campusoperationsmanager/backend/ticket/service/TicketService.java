@@ -319,13 +319,33 @@ public class TicketService {
         List<TicketResponse.CommentResponse> comments = commentRepository
                 .findByTicketIdOrderByCreatedAtAsc(ticket.getId())
                 .stream()
-                .map(c -> TicketResponse.CommentResponse.builder()
-                        .id(c.getId())
-                        .content(c.getContent())
-                        .authorEmail(c.getAuthorEmail())
-                        .createdAt(c.getCreatedAt())
-                        .updatedAt(c.getUpdatedAt())
-                        .build())
+                .map(c -> {
+                    String authorRole = "User";
+                    String authorName = null;
+                    try {
+                        User author = userRepository.findByEmail(c.getAuthorEmail()).orElse(null);
+                        if (author != null) {
+                            authorName = author.getName();
+                            authorRole = switch (author.getRole()) {
+                                case ADMIN          -> "Admin";
+                                case TECHNICIAN     -> "Technician";
+                                case MAINTENANCEMNG -> "Maintenance Manager";
+                                case RECOURSEMNG    -> "Resource Manager";
+                                case BOOKINGMNG     -> "Booking Manager";
+                                default             -> "User";
+                            };
+                        }
+                    } catch (Exception ignored) { }
+                    return TicketResponse.CommentResponse.builder()
+                            .id(c.getId())
+                            .content(c.getContent())
+                            .authorEmail(c.getAuthorEmail())
+                            .authorRole(authorRole)
+                            .authorName(authorName)
+                            .createdAt(c.getCreatedAt())
+                            .updatedAt(c.getUpdatedAt())
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         List<TicketResponse.AttachmentInfo> attachments = attachmentRepository

@@ -1,71 +1,49 @@
-import { useMemo } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarSeparator,
-  SidebarTrigger,
-} from '@/components/ui/sidebar'
-import CampusMark from '@/components/icons/CampusMark'
-import {
-  BellIcon,
-  ChevronDownIcon,
-  CircleUserIcon,
-  LayoutDashboardIcon,
-  LogOutIcon,
-  SearchIcon,
-  Settings2Icon,
-} from 'lucide-react'
-import NotificationDropdown from '@/components/notifications/NotificationDropdown'
 
 const technicianLinks = [
-  { to: '/technician/dashboard',     label: 'Dashboard',     icon: LayoutDashboardIcon },
-  { to: '/technician/notifications', label: 'Notifications', icon: BellIcon },
+  { to: '/technician/dashboard',       label: 'Dashboard',       icon: 'dashboard'  },
+  { to: '/technician/notifications',   label: 'Notifications',   icon: 'notifications' },
+  { to: '/technician/ticket-analysis', label: 'Ticket Analysis', icon: 'analysis'   },
 ]
 
-const pageMeta = {
-  '/technician/dashboard': {
-    title: 'Technician Dashboard',
-    subtitle: 'Manage your assigned tasks and service requests.',
-  },
-  '/technician/notifications': {
-    title: 'Your Notifications',
-    subtitle: 'Stay updated on new assignments and ticket changes.',
-  },
+function NavIcon({ kind }) {
+  if (kind === 'dashboard') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="3" width="8" height="8" rx="1.5" />
+        <rect x="13" y="3" width="8" height="5" rx="1.5" />
+        <rect x="13" y="10" width="8" height="11" rx="1.5" />
+        <rect x="3" y="13" width="8" height="8" rx="1.5" />
+      </svg>
+    )
+  }
+  if (kind === 'notifications') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 4a4 4 0 0 0-4 4v1.3c0 1.1-.36 2.18-1.02 3.05L5.6 14.1A1 1 0 0 0 6.4 15.7h11.2a1 1 0 0 0 .8-1.6l-1.38-1.75A5.07 5.07 0 0 1 16 9.3V8a4 4 0 0 0-4-4Z" />
+        <path d="M10 18a2 2 0 0 0 4 0" />
+      </svg>
+    )
+  }
+  if (kind === 'analysis') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 20V10" />
+        <path d="M12 20V4" />
+        <path d="M6 20v-6" />
+      </svg>
+    )
+  }
+
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /></svg>
 }
 
 function TechnicianLayout() {
-  const { pathname } = useLocation()
+  const [collapsed, setCollapsed] = useState(false)
+  const { logout } = useAuth()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
-
-  const meta = useMemo(() => pageMeta[pathname] ?? pageMeta['/technician/dashboard'], [pathname])
-
-  const initials = user?.name
-    ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
-    : (user?.email?.[0].toUpperCase() || 'T')
 
   function handleLogout() {
     logout()
@@ -73,143 +51,59 @@ function TechnicianLayout() {
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar variant="inset" collapsible="icon">
-        <SidebarHeader className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-2">
-          <div className="flex flex-col gap-2 p-1 group-data-[collapsible=icon]:items-center">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <CampusMark className="size-5" />
-            </div>
-            <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-              <p className="text-[13px] font-semibold leading-tight text-sidebar-foreground">Smart Campus</p>
-              <p className="text-[10px] font-medium uppercase tracking-wider text-sidebar-foreground/60">
-                Operations Hub
-              </p>
-            </div>
+    <section className={collapsed ? 'admin-dashboard collapsed' : 'admin-dashboard'}>
+      <aside className="admin-sidebar" aria-label="Technician navigation">
+        <div className="admin-sidebar-top">
+          <div className="admin-sidebar-heading">
+            <p className="admin-sidebar-title">Technician Panel</p>
+            <p className="admin-sidebar-subtitle">Operations controls</p>
           </div>
-        </SidebarHeader>
-
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-[10px] font-semibold tracking-widest text-sidebar-foreground/40">TECHNICIAN PANEL</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {technicianLinks.map((link) => {
-                  const Icon = link.icon
-                  return (
-                    <SidebarMenuItem key={link.to}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={pathname === link.to}
-                        size="md"
-                        tooltip={link.label}
-                        className="transition-colors hover:bg-sidebar-accent/50 data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
-                      >
-                        <NavLink to={link.to}>
-                          <Icon className="size-4" />
-                          <span className="text-[12px] font-medium group-data-[collapsible=icon]:hidden">{link.label}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-
-        <SidebarSeparator className="bg-sidebar-border/50" />
-
-        <SidebarFooter className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-2">
-          {user ? (
-            <div className="flex items-center gap-3 p-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
-              <Avatar className="size-7 rounded-full bg-primary text-primary-foreground">
-                <AvatarFallback className="text-[10px] font-bold">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                <p className="truncate text-[11px] font-semibold text-sidebar-foreground leading-tight">{user.name || user.email}</p>
-                <span className="truncate text-[10px] uppercase font-medium tracking-tight text-sidebar-foreground/60">
-                  {user.role}
-                </span>
-              </div>
-            </div>
-          ) : null}
-        </SidebarFooter>
-      </Sidebar>
-
-      <SidebarInset className="min-h-svh bg-background">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-6">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger />
-            <div className="hidden md:block">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Field Operations</p>
-              <h1 className="text-[13px] font-semibold tracking-tight">{meta.title}</h1>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="relative hidden md:flex items-center gap-2 bg-background border border-border rounded-md px-3 py-1.5 w-52 transition-colors focus-within:border-primary/50">
-              <SearchIcon className="size-3.5 text-muted-foreground/60" />
-              <input
-                className="bg-transparent border-none text-[12px] placeholder:text-muted-foreground/40 outline-none w-full"
-                placeholder="Search..."
-              />
-            </div>
-            <NotificationDropdown />
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 transition-opacity hover:opacity-80 focus:outline-none">
-                    <Avatar className="size-8 rounded-full bg-primary text-primary-foreground">
-                      <AvatarFallback className="text-[10px] font-bold">{initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="hidden text-left md:block min-w-0">
-                      <p className="text-[12px] font-semibold leading-none text-foreground">{user.name || user.email}</p>
-                      <span className="text-[10px] uppercase tracking-tight text-muted-foreground">{user.role}</span>
-                    </div>
-                    <ChevronDownIcon className="hidden size-3 text-muted-foreground md:block" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-xl border-border bg-white shadow-lg">
-                  <DropdownMenuLabel className="px-3 py-2.5">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-semibold">{user.name || user.email}</span>
-                      <span className="text-xs text-muted-foreground font-normal">{user.email}</span>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-muted" />
-                  <DropdownMenuGroup className="p-1">
-                    <DropdownMenuItem onClick={() => navigate('/profile')} className="rounded-lg">
-                      <CircleUserIcon className="mr-2 size-4" />
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/profile')} className="rounded-lg">
-                      <Settings2Icon className="mr-2 size-4" />
-                      Account Settings
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator className="bg-muted" />
-                  <DropdownMenuItem onClick={handleLogout} className="rounded-lg text-destructive focus:bg-destructive/10 focus:text-destructive">
-                    <LogOutIcon className="mr-2 size-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
-          </div>
-        </header>
-
-        <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-          <div className="flex flex-col gap-1">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Technician Center</p>
-            <h2 className="text-3xl font-semibold tracking-tight">{meta.title}</h2>
-            <p className="max-w-3xl text-sm text-muted-foreground">{meta.subtitle}</p>
-          </div>
-          <Outlet />
+          <button
+            type="button"
+            className="admin-collapse-btn"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-label="Toggle sidebar"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              {collapsed ? <path d="m10 7 5 5-5 5" /> : <path d="m14 7-5 5 5 5" />}
+            </svg>
+          </button>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+
+        <nav className="admin-nav">
+          {technicianLinks.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) => isActive ? 'admin-nav-link active' : 'admin-nav-link'}
+            >
+              <span className="admin-nav-icon" aria-hidden="true">
+                <NavIcon kind={link.icon} />
+              </span>
+              <span className="admin-nav-text">{link.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="admin-sidebar-footer">
+          <button type="button" className="admin-logout-btn" onClick={handleLogout}>
+            <span className="admin-nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M10 4H5v16h5" />
+                <path d="M14 8l5 4-5 4" />
+                <path d="M9 12h10" />
+              </svg>
+            </span>
+            <span className="admin-nav-text">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <div className="admin-main-content">
+        <Outlet />
+      </div>
+    </section>
   )
 }
 
-export default TechnicianLayout
+export default TechnicianLayout

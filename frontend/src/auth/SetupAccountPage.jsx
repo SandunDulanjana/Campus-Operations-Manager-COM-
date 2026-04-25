@@ -121,7 +121,7 @@ export default function SetupAccountPage() {
           </h3>
           {info.username && (
             <p style={{ margin: '0 0 0.8rem', fontSize: '0.85rem', color: '#6b7280' }}>
-              Your username: <strong style={{ color: '#1f2937' }}>{info.username}</strong>
+              Your University ID: <strong style={{ color: '#1f2937' }}>{info.username}</strong>
             </p>
           )}
           {pwError && (
