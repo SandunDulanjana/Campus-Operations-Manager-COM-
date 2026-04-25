@@ -1,15 +1,69 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { createBooking, fetchApprovedWeeklyBookings, fetchMyBookings, updateBookingStatus } from '../api/bookingApi'
+import {
+  AlertCircleIcon,
+  CalendarDaysIcon,
+  CalendarIcon,
+  Clock3Icon,
+  FileUpIcon,
+  HistoryIcon,
+  PlusIcon,
+  RefreshCwIcon,
+  SendIcon,
+  Trash2Icon,
+  XIcon,
+} from 'lucide-react'
+import {
+  createBooking,
+  deleteBooking,
+  fetchApprovedWeeklyBookings,
+  fetchMyBookings,
+  resubmitBooking,
+  updateBookingStatus,
+} from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
 import { fetchWeeklyTimetable, uploadTimetable } from '../api/timetableApi'
 import { useAuth } from '../context/useAuth'
-import bookingIllustration from '../assets/hero.jpg'
-import HeroSection from '../components/layout/HeroSection'
-import StatusBanner from '../components/ui/StatusBanner'
-import StatusBadge from '../components/ui/StatusBadge'
-import ActionButton from '../components/ui/ActionButton'
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '../components/ui/field'
+import { Input } from '../components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table'
+import { Textarea } from '../components/ui/textarea'
 
 const RESOURCE_TYPE_WITH_ATTENDEES = new Set(['MEETING_ROOM', 'LECTURE_HALL', 'LAB'])
+const EMPTY_SELECT_VALUE = '__none__'
 
 const DEFAULT_FORM = {
   resourceId: '',
@@ -23,6 +77,30 @@ const DEFAULT_FORM = {
 
 const SLOT_START_HOUR = 6
 const SLOT_END_HOUR = 22
+
+function getErrorMessage(error, fallbackMessage) {
+  const status = error?.response?.status
+
+  if (status === 401) {
+    return 'Session expired or missing. Please log in again.'
+  }
+
+  if (status === 403) {
+    return 'You do not have permission to access bookings.'
+  }
+
+  return error?.response?.data?.error || fallbackMessage
+}
+
+function formatLabel(value) {
+  return value ? value.replaceAll('_', ' ') : '-'
+}
+
+function getBookingBadgeVariant(status) {
+  if (status === 'APPROVED') return 'secondary'
+  if (status === 'REJECTED' || status === 'CANCELLED') return 'destructive'
+  return 'outline'
+}
 
 function BookingPage() {
   const { user } = useAuth()
@@ -45,10 +123,11 @@ function BookingPage() {
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [editingBookingId, setEditingBookingId] = useState(null)
 
   useEffect(() => {
-  void loadResources()
-}, [])
+    void loadResources()
+  }, [])
 
   useEffect(() => {
     void loadMyBookings()
@@ -56,10 +135,10 @@ function BookingPage() {
   }, [user.id, user.role])
 
   useEffect(() => {
-  if (showTimetableModal) {
-    void loadWeeklyBookings()
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (showTimetableModal) {
+      void loadWeeklyBookings()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTimetableModal, timetableWeek])
 
   const selectedResource = useMemo(
@@ -69,6 +148,19 @@ function BookingPage() {
 
   const showExpectedAttendees =
     selectedResource && RESOURCE_TYPE_WITH_ATTENDEES.has(selectedResource.type)
+
+  const bookingStats = useMemo(() => {
+    const pending = myBookings.filter((booking) => booking.status === 'PENDING').length
+    const approved = myBookings.filter((booking) => booking.status === 'APPROVED').length
+    const rejected = myBookings.filter((booking) => booking.status === 'REJECTED').length
+
+    return {
+      total: myBookings.length,
+      pending,
+      approved,
+      rejected,
+    }
+  }, [myBookings])
 
   const weekDates = useMemo(() => {
     const start = new Date(timetableWeek)
@@ -94,8 +186,8 @@ function BookingPage() {
     try {
       const data = await fetchResources()
       setResources(data.filter((resource) => resource.status === 'ACTIVE'))
-    } catch {
-      setErrorMessage('Failed to load resources')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to load resources'))
     }
   }
 
@@ -103,8 +195,8 @@ function BookingPage() {
     try {
       const data = await fetchMyBookings(user)
       setMyBookings(data)
-    } catch {
-      setErrorMessage('Failed to load bookings')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to load bookings'))
     }
   }
 
@@ -156,13 +248,20 @@ function BookingPage() {
         equipmentType: showExpectedAttendees ? null : formData.equipmentType,
       }
 
-      await createBooking(payload, user)
+      if (editingBookingId) {
+        await resubmitBooking(editingBookingId, payload)
+        setSuccessMessage('Booking request resubmitted with status PENDING')
+      } else {
+        await createBooking(payload, user)
+        setSuccessMessage('Booking request created with status PENDING')
+      }
+
       setFormData(DEFAULT_FORM)
+      setEditingBookingId(null)
       setShowForm(false)
-      setSuccessMessage('Booking request created with status PENDING')
       await loadMyBookings()
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to create booking request')
+      setErrorMessage(getErrorMessage(error, 'Failed to create booking request'))
     } finally {
       setLoading(false)
     }
@@ -183,7 +282,25 @@ function BookingPage() {
       setSuccessMessage('Booking cancelled successfully')
       await loadMyBookings()
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to cancel booking')
+      setErrorMessage(getErrorMessage(error, 'Failed to cancel booking'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleDeleteBooking(bookingId) {
+    if (!window.confirm('Delete this booking request? This cannot be undone.')) {
+      return
+    }
+
+    clearMessages()
+    setLoading(true)
+    try {
+      await deleteBooking(bookingId)
+      setSuccessMessage('Booking deleted successfully')
+      await loadMyBookings()
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to delete booking'))
     } finally {
       setLoading(false)
     }
@@ -200,7 +317,7 @@ function BookingPage() {
       const result = await uploadTimetable(uploadFile, user)
       setUploadResult(result)
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to upload timetable')
+      setErrorMessage(getErrorMessage(error, 'Failed to upload timetable'))
     } finally {
       setUploading(false)
     }
@@ -223,7 +340,7 @@ function BookingPage() {
 
       setWeeklyBookings([...approvedBookings, ...normalizedTimetableSlots])
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to load bookings')
+      setErrorMessage(getErrorMessage(error, 'Failed to load bookings'))
     }
   }
 
@@ -275,287 +392,415 @@ function BookingPage() {
       .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
   }
 
+  function openResubmitForm(booking) {
+    setEditingBookingId(booking.id)
+    setFormData({
+      resourceId: String(booking.resourceId),
+      bookingDate: booking.bookingDate,
+      startTime: booking.startTime?.slice(0, 5) || '',
+      endTime: booking.endTime?.slice(0, 5) || '',
+      purpose: booking.purpose || '',
+      expectedAttendees: booking.expectedAttendees ? String(booking.expectedAttendees) : '',
+      equipmentType: booking.equipmentType || '',
+    })
+    clearMessages()
+    setShowForm(true)
+  }
+
+  function closeBookingForm() {
+    setShowForm(false)
+    setEditingBookingId(null)
+    setFormData(DEFAULT_FORM)
+  }
+
+  function closeUploadDialog() {
+    setShowUploadModal(false)
+    setUploadResult(null)
+    setUploadFile(null)
+  }
+
   return (
-    <section className="booking-page">
-      <HeroSection
-        title="Booking Management"
-        description="Request campus resources by selecting date, time range, and purpose. The system keeps the workflow structured and blocks conflicting schedules."
-        imageSrc={bookingIllustration}
-        imageAlt="Booking and scheduling illustration"
-        actions={
-          <ActionButton kind="primary" onClick={() => setShowForm(true)}>
-            Request a Booking
-          </ActionButton>
-        }
-      />
+    <section className="flex flex-col gap-6">
+      <Card>
+        <CardHeader className="gap-4 md:grid-cols-[1fr_auto] md:items-start">
+          <div className="flex flex-col gap-2">
+            <Badge variant="outline" className="w-fit">Booking workspace</Badge>
+            <CardTitle className="text-3xl font-semibold tracking-tight md:text-4xl">Booking Management</CardTitle>
+            <CardDescription>
+              Request campus resources by selecting date, time range, and purpose. Track approvals and weekly availability from one place.
+            </CardDescription>
+          </div>
+          <CardAction className="flex flex-wrap gap-2">
+            {user.role === 'ADMIN' ? (
+              <Button variant="outline" onClick={() => setShowUploadModal(true)}>
+                <FileUpIcon data-icon="inline-start" />
+                Upload timetable
+              </Button>
+            ) : null}
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTimetableWeek(getWeekStart(new Date()))
+                setShowTimetableModal(true)
+              }}
+            >
+              <CalendarDaysIcon data-icon="inline-start" />
+              View all bookings
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingBookingId(null)
+                setFormData(DEFAULT_FORM)
+                setShowForm(true)
+              }}
+            >
+              <PlusIcon data-icon="inline-start" />
+              Request booking
+            </Button>
+          </CardAction>
+        </CardHeader>
+      </Card>
 
-      <StatusBanner type="error" message={errorMessage} />
-      <StatusBanner type="success" message={successMessage} />
+      {errorMessage ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Request failed</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      <div className="booking-actions-row">
-        {user.role === 'ADMIN' && (
-          <ActionButton kind="primary" onClick={() => setShowUploadModal(true)}>
-            Upload Timetable
-          </ActionButton>
-        )}
-        <ActionButton kind="secondary" onClick={() => { setTimetableWeek(getWeekStart(new Date())); setShowTimetableModal(true); }}>
-          View All Bookings
-        </ActionButton>
+      {successMessage ? (
+        <Alert>
+          <SendIcon />
+          <AlertTitle>Request complete</AlertTitle>
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card>
+          <CardHeader>
+            <CardDescription>Total bookings</CardDescription>
+            <CardTitle className="text-3xl font-semibold">{bookingStats.total}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription>Pending review</CardDescription>
+            <CardTitle className="text-3xl font-semibold">{bookingStats.pending}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription>Approved</CardDescription>
+            <CardTitle className="text-3xl font-semibold">{bookingStats.approved}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription>Rejected</CardDescription>
+            <CardTitle className="text-3xl font-semibold">{bookingStats.rejected}</CardTitle>
+          </CardHeader>
+        </Card>
       </div>
 
-      {showForm ? (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowForm(false)}>
-          <div className="modal-window" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Request a Booking</h2>
-              <ActionButton kind="ghost" className="modal-close-icon" aria-label="Close" onClick={() => setShowForm(false)}>
-                &#10005;
-              </ActionButton>
-            </div>
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>My Bookings</CardTitle>
+          <CardDescription>Track current requests, approval status, and administrator review notes.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Resource</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Purpose</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {myBookings.length > 0 ? myBookings.map((booking) => (
+                <TableRow key={booking.id}>
+                  <TableCell className="font-medium">{booking.resourceName}</TableCell>
+                  <TableCell>{formatLabel(booking.resourceType)}</TableCell>
+                  <TableCell>{booking.bookingDate}</TableCell>
+                  <TableCell>{formatTime(booking.startTime)} - {formatTime(booking.endTime)}</TableCell>
+                  <TableCell className="max-w-64 truncate">{booking.purpose}</TableCell>
+                  <TableCell>
+                    <Badge variant={getBookingBadgeVariant(booking.status)}>{formatLabel(booking.status)}</Badge>
+                  </TableCell>
+                  <TableCell className="max-w-56 truncate">{booking.reviewReason || '-'}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      {booking.status === 'APPROVED' ? (
+                        <Button variant="destructive" size="sm" onClick={() => cancelBooking(booking.id)} disabled={loading}>
+                          <XIcon data-icon="inline-start" />
+                          Cancel
+                        </Button>
+                      ) : null}
+                      {booking.status === 'REJECTED' ? (
+                        <Button variant="outline" size="sm" onClick={() => openResubmitForm(booking)} disabled={loading}>
+                          <RefreshCwIcon data-icon="inline-start" />
+                          Revise
+                        </Button>
+                      ) : null}
+                      {['PENDING', 'REJECTED', 'CANCELLED'].includes(booking.status) ? (
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteBooking(booking.id)} disabled={loading}>
+                          <Trash2Icon data-icon="inline-start" />
+                          Delete
+                        </Button>
+                      ) : null}
+                      {!['APPROVED', 'REJECTED', 'PENDING', 'CANCELLED'].includes(booking.status) ? (
+                        <span className="text-muted-foreground">-</span>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                    No booking requests yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-            <form className="booking-form" onSubmit={submitBooking}>
-              <label>
-                Resource
-                <select
-                  required
-                  value={formData.resourceId}
-                  onChange={(event) => updateField('resourceId', event.target.value)}
+      <Dialog open={showForm} onOpenChange={(open) => (open ? setShowForm(true) : closeBookingForm())}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingBookingId ? 'Revise and Resubmit Booking' : 'Request a Booking'}</DialogTitle>
+            <DialogDescription>Select resource, date, time, and request details.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitBooking}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="booking-resource">Resource</FieldLabel>
+                <Select
+                  value={formData.resourceId || EMPTY_SELECT_VALUE}
+                  onValueChange={(value) => updateField('resourceId', value === EMPTY_SELECT_VALUE ? '' : value)}
                 >
-                  <option value="">Select a resource</option>
-                  {resources.map((resource) => (
-                    <option key={resource.id} value={resource.id}>
-                      {resource.name} ({resource.type})
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  <SelectTrigger id="booking-resource" className="w-full">
+                    <SelectValue placeholder="Select a resource" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={EMPTY_SELECT_VALUE}>Select a resource</SelectItem>
+                      {resources.map((resource) => (
+                        <SelectItem key={resource.id} value={String(resource.id)}>
+                          {resource.name} ({formatLabel(resource.type)})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
 
-              <label>
-                Date
-                <input
+              <Field>
+                <FieldLabel htmlFor="booking-date">Date</FieldLabel>
+                <Input
+                  id="booking-date"
                   type="date"
                   required
                   value={formData.bookingDate}
                   onChange={(event) => updateField('bookingDate', event.target.value)}
                 />
-              </label>
+              </Field>
 
-              <div className="time-row">
-                <label>
-                  Start Time
-                  <input
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="booking-start">Start Time</FieldLabel>
+                  <Input
+                    id="booking-start"
                     type="time"
                     required
                     value={formData.startTime}
                     onChange={(event) => updateField('startTime', event.target.value)}
                   />
-                </label>
-
-                <label>
-                  End Time
-                  <input
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="booking-end">End Time</FieldLabel>
+                  <Input
+                    id="booking-end"
                     type="time"
                     required
                     value={formData.endTime}
                     onChange={(event) => updateField('endTime', event.target.value)}
                   />
-                </label>
+                </Field>
               </div>
 
-              <label>
-                Purpose
-                <textarea
+              <Field>
+                <FieldLabel htmlFor="booking-purpose">Purpose</FieldLabel>
+                <Textarea
+                  id="booking-purpose"
                   required
                   maxLength={500}
                   value={formData.purpose}
                   onChange={(event) => updateField('purpose', event.target.value)}
                 />
-              </label>
+                <FieldDescription>Maximum 500 characters.</FieldDescription>
+              </Field>
 
               {showExpectedAttendees ? (
-                <label>
-                  Expected Attendees
-                  <input
+                <Field>
+                  <FieldLabel htmlFor="booking-attendees">Expected Attendees</FieldLabel>
+                  <Input
+                    id="booking-attendees"
                     type="number"
                     min="1"
                     required
                     value={formData.expectedAttendees}
                     onChange={(event) => updateField('expectedAttendees', event.target.value)}
                   />
-                </label>
+                </Field>
               ) : (
-                <label>
-                  Equipment Type
-                  <input
+                <Field>
+                  <FieldLabel htmlFor="booking-equipment">Equipment Type</FieldLabel>
+                  <Input
+                    id="booking-equipment"
                     type="text"
                     required
                     value={formData.equipmentType}
                     onChange={(event) => updateField('equipmentType', event.target.value)}
                   />
-                </label>
+                </Field>
               )}
+            </FieldGroup>
 
-              <ActionButton kind="primary" type="submit" disabled={loading}>
-                {loading ? 'Submitting...' : 'Submit Booking Request'}
-              </ActionButton>
-            </form>
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={closeBookingForm}>Cancel</Button>
+              <Button type="submit" disabled={loading}>
+                <SendIcon data-icon="inline-start" />
+                {loading ? 'Submitting...' : editingBookingId ? 'Resubmit Booking Request' : 'Submit Booking Request'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showUploadModal} onOpenChange={(open) => (open ? setShowUploadModal(true) : closeUploadDialog())}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Timetable</DialogTitle>
+            <DialogDescription>Upload CSV, XLS, or XLSX timetable data.</DialogDescription>
+          </DialogHeader>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="timetable-file">Timetable file</FieldLabel>
+              <Input
+                id="timetable-file"
+                type="file"
+                accept=".csv,.xls,.xlsx"
+                onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
+              />
+            </Field>
+            {uploadResult ? (
+              <Alert>
+                <FileUpIcon />
+                <AlertTitle>Upload complete</AlertTitle>
+                <AlertDescription>
+                  Uploaded: {uploadResult.inserted} rows, skipped: {uploadResult.skipped}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+          </FieldGroup>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeUploadDialog}>Cancel</Button>
+            <Button type="button" onClick={handleUpload} disabled={uploading}>
+              <FileUpIcon data-icon="inline-start" />
+              {uploading ? 'Uploading...' : 'Upload'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showTimetableModal} onOpenChange={setShowTimetableModal}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-6xl">
+          <DialogHeader>
+            <DialogTitle>All Approved Bookings</DialogTitle>
+            <DialogDescription>
+              {timetableWeek} - {toDateKey(weekEnd)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center justify-between gap-2">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setTimetableWeek(getWeekStart(new Date(new Date(timetableWeek).getTime() - 7 * 24 * 60 * 60 * 1000)))}
+            >
+              <HistoryIcon data-icon="inline-start" />
+              Previous
+            </Button>
+            <Badge variant="secondary">
+              <CalendarIcon data-icon="inline-start" />
+              Week view
+            </Badge>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setTimetableWeek(getWeekStart(new Date(new Date(timetableWeek).getTime() + 7 * 24 * 60 * 60 * 1000)))}
+            >
+              Next
+              <CalendarDaysIcon data-icon="inline-end" />
+            </Button>
           </div>
-        </div>
-      ) : null}
 
-      <div className="table-panel">
-        <div className="panel-header">
-          <div>
-            <h2>My Bookings</h2>
-            <p>Track your current requests, approval status, and any review notes from administrators.</p>
-          </div>
-        </div>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Resource</th>
-                <th>Type</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Purpose</th>
-                <th>Status</th>
-                <th>Reason</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {myBookings.map((booking) => (
-                <tr key={booking.id}>
-                  <td>{booking.resourceName}</td>
-                  <td>{booking.resourceType}</td>
-                  <td>{booking.bookingDate}</td>
-                  <td>
-                    {booking.startTime} - {booking.endTime}
-                  </td>
-                  <td>{booking.purpose}</td>
-                  <td>
-                    <StatusBadge status={booking.status} />
-                  </td>
-                  <td>{booking.reviewReason || '-'}</td>
-                  <td>
-                    {booking.status === 'APPROVED' ? (
-                      <ActionButton kind="danger" onClick={() => cancelBooking(booking.id)} disabled={loading}>
-                        Cancel
-                      </ActionButton>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {showUploadModal && (
-        <div className="modal-backdrop" role="presentation" onClick={() => { setShowUploadModal(false); setUploadResult(null); setUploadFile(null); }}>
-          <div className="modal-window" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Upload Timetable</h2>
-              <ActionButton kind="ghost" className="modal-close-icon" aria-label="Close" onClick={() => { setShowUploadModal(false); setUploadResult(null); setUploadFile(null); }}>
-                &#10005;
-              </ActionButton>
-            </div>
-            <div className="booking-form">
-              <label>
-                Select CSV File
-                <input
-                  type="file"
-                  accept=".csv,.xls,.xlsx"
-                  onChange={(e) => setUploadFile(e.target.files[0])}
-                />
-              </label>
-              {uploadResult && (
-                <div className="status-banner success">
-                  Uploaded: {uploadResult.inserted} rows, Skipped: {uploadResult.skipped}
+          <div className="overflow-auto rounded-xl border">
+            <div className="grid min-w-[900px] grid-cols-[96px_repeat(7,minmax(112px,1fr))] bg-card text-sm">
+              <div className="border-b border-r p-3 font-medium text-muted-foreground">Time</div>
+              {weekDates.map((dateValue) => (
+                <div key={toDateKey(dateValue)} className="flex flex-col gap-1 border-b border-r p-3 last:border-r-0">
+                  <span className="font-medium">{dateValue.toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                  <span className="text-xs text-muted-foreground">{toDateKey(dateValue)}</span>
                 </div>
-              )}
-              <ActionButton kind="primary" onClick={handleUpload} disabled={uploading}>
-                {uploading ? 'Uploading...' : 'Upload'}
-              </ActionButton>
-            </div>
-          </div>
-        </div>
-      )}
+              ))}
 
-      {showTimetableModal && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowTimetableModal(false)}>
-          <div className="modal-window" style={{ maxWidth: '900px' }} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>All Approved Bookings</h2>
-              <ActionButton kind="ghost" className="modal-close-icon" aria-label="Close" onClick={() => setShowTimetableModal(false)}>
-                &#10005;
-              </ActionButton>
-            </div>
-            <div className="timetable-controls">
-              <ActionButton
-                kind="ghost"
-                className="timetable-nav-btn"
-                aria-label="Previous week"
-                onClick={() => setTimetableWeek(getWeekStart(new Date(new Date(timetableWeek).getTime() - 7 * 24 * 60 * 60 * 1000)))}
-              >
-                &#8592;
-              </ActionButton>
-              <span>{timetableWeek} - {toDateKey(weekEnd)}</span>
-              <ActionButton
-                kind="ghost"
-                className="timetable-nav-btn"
-                aria-label="Next week"
-                onClick={() => setTimetableWeek(getWeekStart(new Date(new Date(timetableWeek).getTime() + 7 * 24 * 60 * 60 * 1000)))}
-              >
-                &#8594;
-              </ActionButton>
-            </div>
-            <div className="booking-calendar-wrap">
-              <div className="booking-calendar-grid">
-                <div className="calendar-corner">Time</div>
-                {weekDates.map((dateValue) => (
-                  <div key={toDateKey(dateValue)} className="calendar-day-header">
-                    <strong>{dateValue.toLocaleDateString(undefined, { weekday: 'short' })}</strong>
-                    <span>{toDateKey(dateValue)}</span>
+              {hourSlots.map((hour) => (
+                <Fragment key={`row-${hour}`}>
+                  <div className="border-b border-r p-3 text-xs text-muted-foreground">
+                    <Clock3Icon className="mr-1 inline" />
+                    {formatHourLabel(hour)}
                   </div>
-                ))}
-
-                {hourSlots.map((hour) => (
-                  <Fragment key={`row-${hour}`}>
-                    <div className="calendar-time-label">
-                      {formatHourLabel(hour)}
-                    </div>
-                    {weekDates.map((dateValue) => {
-                      const bookingsInSlot = getBookingsForSlot(dateValue, hour)
-                      return (
-                        <div
-                          key={`${toDateKey(dateValue)}-${hour}`}
-                          className={`calendar-cell${bookingsInSlot.length > 0 ? ' has-booking' : ''}`}
-                        >
+                  {weekDates.map((dateValue) => {
+                    const bookingsInSlot = getBookingsForSlot(dateValue, hour)
+                    return (
+                      <div key={`${toDateKey(dateValue)}-${hour}`} className="min-h-24 border-b border-r p-2 last:border-r-0">
+                        <div className="flex flex-col gap-2">
                           {bookingsInSlot.map((booking) => (
-                            <div key={booking.id} className="booking-cell-item">
-                              <span className="booking-cell-resource">{booking.resourceName}</span>
-                              <span className="booking-cell-time">
+                            <div key={booking.id} className="rounded-lg border bg-muted/50 p-2">
+                              <div className="truncate font-medium">{booking.resourceName}</div>
+                              <div className="text-xs text-muted-foreground">
                                 {formatTime(booking.startTime)}-{formatTime(booking.endTime)}
-                              </span>
+                              </div>
                             </div>
                           ))}
                         </div>
-                      )
-                    })}
-                  </Fragment>
-                ))}
-              </div>
-              {weeklyBookings.length === 0 ? (
-                <p className="calendar-empty-state">No approved bookings or lecture reservations found for this week</p>
-              ) : null}
+                      </div>
+                    )
+                  })}
+                </Fragment>
+              ))}
             </div>
           </div>
-        </div>
-      )}
+
+          {weeklyBookings.length === 0 ? (
+            <Alert>
+              <CalendarDaysIcon />
+              <AlertTitle>No bookings found</AlertTitle>
+              <AlertDescription>No approved bookings or lecture reservations found for this week.</AlertDescription>
+            </Alert>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

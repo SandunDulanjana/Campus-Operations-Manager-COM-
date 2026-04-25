@@ -1,8 +1,11 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.controller;
 
+import com.campusoperationsmanager.backend.booking.model.BookingStatus;
 import com.campusoperationsmanager.backend.booking.dto.BookingResponse;
+import com.campusoperationsmanager.backend.booking.dto.BookingDetailsResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingStatusUpdateRequest;
 import com.campusoperationsmanager.backend.booking.dto.CreateBookingRequest;
+import com.campusoperationsmanager.backend.booking.service.BookingService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
@@ -11,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,6 +50,15 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getUserBookings(userId));
     }
 
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<BookingDetailsResponse> getBookingDetails(
+        @PathVariable Long bookingId,
+        @AuthenticationPrincipal Long userId,
+        Authentication authentication
+    ) {
+        return ResponseEntity.ok(bookingService.getBookingDetails(bookingId, userId, isAdmin(authentication)));
+    }
+
     @GetMapping
     public ResponseEntity<List<BookingResponse>> getAllBookings(
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -76,6 +89,25 @@ public class BookingController {
             isAdmin(authentication)
         );
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{bookingId}/resubmit")
+    public ResponseEntity<BookingResponse> resubmitBooking(
+        @PathVariable Long bookingId,
+        @Valid @RequestBody CreateBookingRequest request,
+        @AuthenticationPrincipal Long userId
+    ) {
+        return ResponseEntity.ok(bookingService.resubmitBooking(bookingId, request, userId));
+    }
+
+    @DeleteMapping("/{bookingId}")
+    public ResponseEntity<Void> deleteBooking(
+        @PathVariable Long bookingId,
+        @AuthenticationPrincipal Long userId,
+        Authentication authentication
+    ) {
+        bookingService.deleteBooking(bookingId, userId, isAdmin(authentication));
+        return ResponseEntity.noContent().build();
     }
 
     private boolean isAdmin(Authentication authentication) {

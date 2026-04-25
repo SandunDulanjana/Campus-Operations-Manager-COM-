@@ -1,4 +1,4 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.service;
 
 public class BookingConflictException extends RuntimeException {
     public BookingConflictException(String message) {

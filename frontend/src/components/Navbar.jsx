@@ -1,96 +1,70 @@
-// FILE: frontend/src/components/Navbar.jsx
-
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/useAuth'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  BellIcon,
+  BookOpenIcon,
+  ChevronDownIcon,
+  CircleUserIcon,
+  ClipboardListIcon,
+  HomeIcon,
+  LogOutIcon,
+  SearchIcon,
+  Settings2Icon,
+  ShieldIcon,
+} from 'lucide-react'
+import CampusMark from '@/components/icons/CampusMark'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
 import {
   fetchMyNotifications,
   fetchUnreadCount,
-  markNotificationRead,
   markAllNotificationsRead,
+  markNotificationRead,
 } from '../api/notificationApi'
+import { useAuth } from '../context/useAuth'
 
-function HeaderIcon({ kind }) {
-  if (kind === 'bell') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 4a4 4 0 0 0-4 4v1.3c0 1.1-.36 2.18-1.02 3.05L5.6 14.1A1 1 0 0 0 6.4 15.7h11.2a1 1 0 0 0 .8-1.6l-1.38-1.75A5.07 5.07 0 0 1 16 9.3V8a4 4 0 0 0-4-4Z" />
-        <path d="M10 18a2 2 0 0 0 4 0" />
-      </svg>
-    )
-  }
-  if (kind === 'home') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 11.5 12 5l8 6.5" />
-        <path d="M7.5 10.75V19h9v-8.25" />
-      </svg>
-    )
-  }
-  if (kind === 'search') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="11" cy="11" r="6.5" />
-        <path d="m16 16 4 4" />
-      </svg>
-    )
-  }
-  if (kind === 'chevron') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="m7 10 5 5 5-5" />
-      </svg>
-    )
-  }
-  if (kind === 'stack') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 4 4.75 7.5 12 11l7.25-3.5L12 4Z" />
-        <path d="M4.75 12.25 12 15.75l7.25-3.5" />
-        <path d="M4.75 16.75 12 20.25l7.25-3.5" />
-      </svg>
-    )
-  }
-  if (kind === 'brand') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M6 16.5V8.2c0-.7.36-1.34.96-1.7L12 3.5l5.04 3c.6.36.96 1 .96 1.7v8.3c0 .7-.36 1.34-.96 1.7L12 21l-5.04-2.8A1.97 1.97 0 0 1 6 16.5Z" />
-        <path d="M9.2 10.8 12 9l2.8 1.8V14L12 15.8 9.2 14v-3.2Z" />
-        <path d="M12 3.5v5.4" />
-      </svg>
-    )
-  }
-  return null
+function getInitials(name) {
+  if (!name) return '?'
+  return name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+}
+
+function formatNotifDate(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const diffMin = Math.floor((new Date() - date) / 60000)
+  if (diffMin < 1) return 'Just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  const diffH = Math.floor(diffMin / 60)
+  if (diffH < 24) return `${diffH}h ago`
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
 }
 
 function Navbar() {
   const { user, logout } = useAuth()
-  const location = useLocation()
   const navigate = useNavigate()
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isResourceOpen, setIsResourceOpen] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const [notifOpen, setNotifOpen]         = useState(false)
   const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount]     = useState(0)
-  const [notifLoading, setNotifLoading]   = useState(false)
-  const notifRef = useRef(null)
-
-  const isAdminRoute      = location.pathname.startsWith('/admin')
-  const isTechnicianRoute = location.pathname.startsWith('/technician')
-  const isTicketRoute     = location.pathname.startsWith('/tickets/')
-  const profileAreaRef = useRef(null)
-  const resourceAreaRef = useRef(null)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [notifLoading, setNotifLoading] = useState(false)
 
   const loadUnreadCount = useCallback(async () => {
     if (!user) return
     try {
-      const count = await fetchUnreadCount()
-      setUnreadCount(count)
-    } catch { /* silent */ }
+      setUnreadCount(await fetchUnreadCount())
+    } catch {
+      setUnreadCount(0)
+    }
   }, [user])
 
   useEffect(() => {
@@ -99,423 +73,208 @@ function Navbar() {
     return () => clearInterval(interval)
   }, [loadUnreadCount])
 
-  useEffect(() => {
-    if (!notifOpen) return
-    function handler(e) {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setNotifOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [notifOpen])
-
-  useEffect(() => {
-    function handlePointerDown(event) {
-      if (profileAreaRef.current && !profileAreaRef.current.contains(event.target)) {
-        setIsMenuOpen(false)
-      }
-      if (resourceAreaRef.current && !resourceAreaRef.current.contains(event.target)) {
-        setIsResourceOpen(false)
-      }
-    }
-    function handleEscape(event) {
-      if (event.key === 'Escape') {
-        setIsMenuOpen(false)
-        setIsResourceOpen(false)
-        setIsSearchOpen(false)
-        setNotifOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handlePointerDown)
-    document.addEventListener('keydown', handleEscape)
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown)
-      document.removeEventListener('keydown', handleEscape)
-    }
-  }, [])
-
-  async function openNotifPanel() {
-    setNotifOpen(true)
+  async function loadNotifications() {
+    if (!user) return
     setNotifLoading(true)
     try {
-      const data = await fetchMyNotifications()
-      setNotifications(data)
-    } catch { /* silent */ }
-    finally { setNotifLoading(false) }
+      setNotifications(await fetchMyNotifications())
+      await loadUnreadCount()
+    } catch {
+      setNotifications([])
+    } finally {
+      setNotifLoading(false)
+    }
   }
 
   async function handleMarkRead(id) {
     await markNotificationRead(id)
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-    setUnreadCount(prev => Math.max(0, prev - 1))
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    )
+    setUnreadCount((current) => Math.max(0, current - 1))
   }
 
   async function handleMarkAllRead() {
     await markAllNotificationsRead()
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setNotifications((current) => current.map((notification) => ({ ...notification, read: true })))
     setUnreadCount(0)
   }
 
   function handleLogout() {
     logout()
-    setIsMenuOpen(false)
     navigate('/login')
   }
 
-  // ── CHANGE: guest navbar now shows Overview + Resources links + Login pill ──
-  if (!user) {
-    return (
-      <header className="site-header">
-        <div className="top-header">
-          <Link to="/" className="brand" aria-label="Go to home page">
-            <span className="brand-mark" aria-hidden="true">
-              <HeaderIcon kind="brand" />
-            </span>
-            <div>
-              <p className="brand-title">Smart Campus</p>
-              <p className="brand-subtitle">Operations Hub</p>
-            </div>
-          </Link>
-
-          <nav aria-label="Public landing navigation" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            
-            <a  href="#landing-overview"
-              style={{
-                color: 'var(--text-strong)',
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: '0.95rem',
-                padding: '0.45rem 0.9rem',
-                borderRadius: '0.6rem',
-              }}
-            >
-              Overview
-            </a>
-            
-            <a  href="#landing-resources"
-              style={{
-                color: 'var(--text-strong)',
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: '0.95rem',
-                padding: '0.45rem 0.9rem',
-                borderRadius: '0.6rem',
-              }}
-            >
-              Resources
-            </a>
-            <Link
-              to="/login"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textDecoration: 'none',
-                padding: '0.55rem 1.4rem',
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                borderRadius: '999px',
-                background: 'linear-gradient(135deg, var(--brand-600) 0%, var(--accent-700) 100%)',
-                color: '#ffffff',
-                marginLeft: '0.5rem',
-                boxShadow: '0 6px 18px rgba(20,108,105,0.22)',
-                transition: 'transform 140ms, box-shadow 140ms',
-              }}
-            >
-              Login
-            </Link>
-          </nav>
-        </div>
-      </header>
-    )
-  }
-  // ── END CHANGE ──
-
-  const initials = user.name
-    ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
-    : '?'
+  const initials = getInitials(user?.name)
 
   return (
-    <>
-      <header className="site-header">
-        <div className="top-header">
-          <Link to="/" className="brand" aria-label="Go to home page">
-            <span className="brand-mark" aria-hidden="true">
-              <HeaderIcon kind="brand" />
+    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Go to home page">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border bg-card text-foreground shadow-sm">
+            <CampusMark className="size-7" />
+          </span>
+          <span className="hidden min-w-0 sm:block">
+            <span className="block truncate text-sm font-semibold">Smart Campus</span>
+            <span className="block truncate text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+              Operations Hub
             </span>
-            <div>
-              <p className="brand-title">Smart Campus</p>
-              <p className="brand-subtitle">Operations Hub</p>
-            </div>
-          </Link>
+          </span>
+        </Link>
 
-          <div className="top-actions">
-            <div style={{ position: 'relative' }} ref={notifRef}>
-              <button
-                type="button"
-                className="notify-btn"
-                aria-label="Notifications"
-                onClick={() => notifOpen ? setNotifOpen(false) : openNotifPanel()}
-              >
-                <span className="nav-icon-shell" aria-hidden="true">
-                  <HeaderIcon kind="bell" />
-                </span>
-                {unreadCount > 0 && (
-                  <span className="notify-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
-                )}
-              </button>
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
+          <Button variant="ghost" asChild>
+            <Link to="/">
+              <HomeIcon data-icon="inline-start" />
+              Home
+            </Link>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost">
+                <BookOpenIcon data-icon="inline-start" />
+                Resources
+                <ChevronDownIcon data-icon="inline-end" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                  <Link to="/bookings">
+                    <BookOpenIcon data-icon="inline-start" />
+                    Bookings
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant="ghost" asChild>
+            <Link to="/tickets/my">
+              <ClipboardListIcon data-icon="inline-start" />
+              Tickets
+            </Link>
+          </Button>
+        </nav>
 
-              {notifOpen && (
-                <div style={{
-                  position: 'absolute', top: 'calc(100% + 0.6rem)', right: 0,
-                  width: 360, maxHeight: 480, background: '#fff',
-                  border: '1px solid #e5e7eb', borderRadius: '1rem',
-                  boxShadow: '0 20px 44px rgba(16,33,43,0.14)',
-                  zIndex: 100, display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                }}>
-                  <div style={{ padding: '1rem 1.1rem 0.75rem', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                      Notifications{' '}
-                      {unreadCount > 0 && (
-                        <span style={{ fontSize: '0.78rem', background: '#dc2626', color: '#fff', borderRadius: 999, padding: '0.1rem 0.45rem', marginLeft: '0.35rem' }}>
-                          {unreadCount}
-                        </span>
-                      )}
-                    </h3>
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={handleMarkAllRead}
-                        style={{ fontSize: '0.78rem', color: '#16a34a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
-                      >
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="relative hidden lg:block">
+            <SearchIcon className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
+            <Input className="w-64 pl-8" placeholder="Search..." />
+          </div>
+
+          {!user ? (
+            <Button asChild>
+              <Link to="/login">Login</Link>
+            </Button>
+          ) : (
+            <>
+              <DropdownMenu onOpenChange={(open) => open && loadNotifications()}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon-sm" aria-label="Notifications">
+                    <BellIcon />
+                    {unreadCount > 0 ? (
+                      <Badge className="absolute -mt-7 ml-7 h-5 min-w-5 justify-center rounded-full px-1 text-[10px]">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </Badge>
+                    ) : null}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuLabel className="flex items-center justify-between gap-2">
+                    <span>Notifications</span>
+                    {unreadCount > 0 ? (
+                      <Button variant="ghost" size="sm" onClick={handleMarkAllRead}>
                         Mark all read
-                      </button>
-                    )}
-                  </div>
-
-                  <div style={{ overflowY: 'auto', flex: 1 }}>
+                      </Button>
+                    ) : null}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
                     {notifLoading ? (
-                      <p style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>Loading…</p>
+                      <DropdownMenuItem disabled>Loading notifications...</DropdownMenuItem>
                     ) : notifications.length === 0 ? (
-                      <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>
-                        <p style={{ color: '#94a3b8', margin: 0 }}>No notifications yet</p>
-                      </div>
+                      <DropdownMenuItem disabled>No notifications yet</DropdownMenuItem>
                     ) : (
-                      notifications.map(n => (
-                        <div
-                          key={n.id}
-                          onClick={() => !n.read && handleMarkRead(n.id)}
-                          style={{
-                            padding: '0.85rem 1.1rem',
-                            borderBottom: '1px solid #f9fafb',
-                            background: n.read ? '#fff' : '#f0fdf4',
-                            cursor: n.read ? 'default' : 'pointer',
-                            transition: 'background 140ms',
-                          }}
+                      notifications.slice(0, 8).map((notification) => (
+                        <DropdownMenuItem
+                          key={notification.id}
+                          onClick={() => !notification.read && handleMarkRead(notification.id)}
+                          className="items-start gap-3"
                         >
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
-                            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>
-                              {getNotifIcon(n.type)}
+                          <BellIcon data-icon="inline-start" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">{notification.title}</span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {notification.message}
                             </span>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: n.read ? 500 : 700, color: '#1f2937', lineHeight: 1.4 }}>
-                                {n.title}
-                              </p>
-                              <p style={{ margin: '0.2rem 0 0', fontSize: '0.81rem', color: '#6b7280', lineHeight: 1.45 }}>
-                                {n.message}
-                              </p>
-                              <p style={{ margin: '0.25rem 0 0', fontSize: '0.74rem', color: '#9ca3af' }}>
-                                {formatNotifDate(n.createdAt)}
-                              </p>
-                            </div>
-                            {!n.read && (
-                              <span style={{ width: 8, height: 8, borderRadius: 999, background: '#16a34a', flexShrink: 0, marginTop: '0.3rem' }} />
-                            )}
-                          </div>
-                        </div>
+                            <span className="block text-xs text-muted-foreground">
+                              {formatNotifDate(notification.createdAt)}
+                            </span>
+                          </span>
+                          {!notification.read ? <Badge variant="secondary">New</Badge> : null}
+                        </DropdownMenuItem>
                       ))
                     )}
-                  </div>
-                </div>
-              )}
-            </div>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-            <div className="profile-area" ref={profileAreaRef}>
-              <button
-                type="button"
-                className="profile-btn"
-                onClick={() => {
-                  setIsMenuOpen((state) => !state)
-                  setIsResourceOpen(false)
-                }}
-                aria-haspopup="menu"
-                aria-expanded={isMenuOpen}
-              >
-                <span className="avatar">{user.profilePicture
-                  ? <img src={user.profilePicture} alt={user.name} className="avatar avatar-photo" />
-                  : <span className="avatar">{initials}</span>
-                }</span>
-                <span className="profile-copy">
-                  <span className="profile-eyebrow">{user.role}</span>
-                  <span className="profile-name">{user.name}</span>
-                </span>
-                <span className={`profile-chevron${isMenuOpen ? ' open' : ''}`} aria-hidden="true">
-                  <HeaderIcon kind="chevron" />
-                </span>
-              </button>
-
-              {isMenuOpen && (
-                <div className="profile-menu" role="menu">
-                  <Link to="/profile" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                    My Profile
-                  </Link>
-                  {user.role === 'TECHNICIAN' && !isTechnicianRoute && (
-                     <Link to="/technician/dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                         Technician Dashboard
-                    </Link>
-)}
-                  {user.role === 'MAINTENANCEMNG' && (
-                    <Link to="/maintenance-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Maintenance Dashboard
-                    </Link>
-                  )}
-                  {user.role === 'RECOURSEMNG' && (
-                    <Link to="/resource-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Resource Dashboard
-                    </Link>
-                  )}
-                  {user.role === 'BOOKINGMNG' && (
-                    <Link to="/booking-dashboard" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Booking Dashboard
-                    </Link>
-                  )}
-                  {user.role === 'ADMIN' && !isAdminRoute && (
-                    <Link to="/admin" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                      Admin Dashboard
-                    </Link>
-                  )}
-                  {(isAdminRoute || isTechnicianRoute) && (
-                    <Link to="/" role="menuitem" className="menu-item" onClick={() => setIsMenuOpen(false)}>
-                       Home
-                    </Link>
-      )}
-                        <button type="button" role="menuitem" className="menu-item" onClick={handleLogout}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-auto justify-start rounded-xl px-2.5 py-2">
+                    <Avatar>
+                      <AvatarImage src={user.profilePicture || ''} alt={user.name || user.email} />
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden min-w-0 md:block">
+                      <span className="block truncate text-sm font-medium leading-none">
+                        {user.name || user.email}
+                      </span>
+                      <span className="block truncate text-xs uppercase tracking-[0.22em] text-muted-foreground">
+                        {user.role}
+                      </span>
+                    </span>
+                    <ChevronDownIcon className="hidden text-muted-foreground md:block" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <span className="block truncate text-sm font-medium">{user.name || user.email}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <CircleUserIcon data-icon="inline-start" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <Settings2Icon data-icon="inline-start" />
+                      Account Settings
+                    </DropdownMenuItem>
+                    {user.role === 'ADMIN' ? (
+                      <DropdownMenuItem onClick={() => navigate('/admin/dashboard')}>
+                        <ShieldIcon data-icon="inline-start" />
+                        Admin Dashboard
+                      </DropdownMenuItem>
+                    ) : null}
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOutIcon data-icon="inline-start" />
                     Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
-
-        {!isAdminRoute && !isTechnicianRoute && !isTicketRoute && (
-          <div className="sub-header">
-            <nav className="sub-nav" aria-label="Primary navigation">
-              <Link to="/" className="home-icon-link" title="Home">
-                <span className="nav-icon-shell" aria-hidden="true">
-                  <HeaderIcon kind="home" />
-                </span>
-              </Link>
-              <div className="resource-dropdown" ref={resourceAreaRef}>
-                <button
-                  type="button"
-                  className="sub-link-btn"
-                  onClick={() => setIsResourceOpen((state) => !state)}
-                  aria-haspopup="menu"
-                  aria-expanded={isResourceOpen}
-                >
-                  <span className="nav-icon-shell" aria-hidden="true">
-                    <HeaderIcon kind="stack" />
-                  </span>
-                  <span>Resources</span>
-                  <span className={`sub-link-chevron${isResourceOpen ? ' open' : ''}`} aria-hidden="true">
-                    <HeaderIcon kind="chevron" />
-                  </span>
-                </button>
-                {isResourceOpen && (
-                  <div className="resource-menu" role="menu">
-                    <Link to="/bookings" className="menu-item" role="menuitem" onClick={() => setIsResourceOpen(false)}>
-                      Bookings
-                    </Link>
-                  </div>
-                )}
-              </div>
-              <Link to="/tickets/my" className="sub-link-btn" style={{ textDecoration: 'none' }}>
-                <span className="nav-icon-shell" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: '1rem', height: '1rem', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                    <rect x="9" y="3" width="6" height="4" rx="1" />
-                    <path d="M9 12h6M9 16h4" />
-                  </svg>
-                </span>
-                <span>Tickets</span>
-              </Link>
-            </nav>
-            <button
-              type="button"
-              className="search-btn"
-              onClick={() => setIsSearchOpen((state) => !state)}
-              aria-expanded={isSearchOpen}
-              aria-label="Toggle search"
-            >
-              <span className="nav-icon-shell" aria-hidden="true">
-                <HeaderIcon kind="search" />
-              </span>
-            </button>
-            {isSearchOpen && (
-              <div className="inline-search" role="search">
-                <input
-                  type="search"
-                  className="search-input"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="search-close-btn"
-                  aria-label="Close search"
-                  onClick={() => { setSearchQuery(''); setIsSearchOpen(false) }}
-                >
-                  ×
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </header>
-    </>
+      </div>
+      <Separator />
+    </header>
   )
-}
-
-// CHANGE: Added REGISTRATION_REQUEST case to getNotifIcon
-// Location: frontend/src/components/Navbar.jsx
-// Find the existing getNotifIcon function (near bottom of file, just before formatNotifDate)
-// and REPLACE the entire function with the version below:
-
-function getNotifIcon(type) {
-  switch (type) {
-    case 'BOOKING_APPROVED':      return '✅'
-    case 'BOOKING_REJECTED':      return '❌'
-    case 'BOOKING_CANCELLED':     return '🚫'
-    case 'TICKET_STATUS_CHANGED': return '🔧'
-    case 'COMMENT_ADDED':         return '💬'
-    case 'ADMIN_BROADCAST':       return '📢'
-    case 'REGISTRATION_REQUEST':  return '📋'   // ← NEW LINE ADDED
-    default:                      return '🔔'
-  }
-}
-
-function formatNotifDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  const now = new Date()
-  const diffMin = Math.floor((now - d) / 60000)
-  if (diffMin < 1)  return 'Just now'
-  if (diffMin < 60) return `${diffMin}m ago`
-  const diffH = Math.floor(diffMin / 60)
-  if (diffH < 24)   return `${diffH}h ago`
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
 }
 
 export default Navbar

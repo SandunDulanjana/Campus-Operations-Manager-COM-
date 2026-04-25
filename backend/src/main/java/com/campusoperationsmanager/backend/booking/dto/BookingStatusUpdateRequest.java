@@ -1,6 +1,6 @@
 package com.campusoperationsmanager.backend.booking.dto;
 
-import com.campusoperationsmanager.backend.booking.BookingStatus;
+import com.campusoperationsmanager.backend.booking.model.BookingStatus;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 

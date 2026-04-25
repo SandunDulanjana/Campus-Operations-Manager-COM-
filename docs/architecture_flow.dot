@@ -1,0 +1,115 @@
+digraph SmartCampusFlow {
+    rankdir=LR;
+    node [shape=box, fontname="Arial", fontsize=9];
+    edge [fontname="Arial", fontsize=8];
+    graph [fontsize=14, pad=0.5];
+
+    // ===== CLIENT (React) =====
+    "Client" [label="React Frontend\n(localhost:5173)", style=filled, fillcolor="#E0F2F1"];
+    
+    "HomePage" [label="HomePage\n(Landing)"];
+    "LoginPage" [label="LoginPage\n+ OAuthCallback"];
+    "BookingPage" [label="BookingPage"];
+    "CreateTicket" [label="CreateTicketPage"];
+    "AdminDash" [label="AdminDashboard"];
+    
+    "API_Services" [label="API Services\n(authApi.js)\n(bookingApi.js)\n(ticketApi.js)", style=filled, fillcolor="#B2DFDB"];
+    "Axios" [shape=ellipse, label="Axios HTTP Client\n+ JWT Interceptor"];
+    "AuthCtx" [label="AuthContext\n(useAuth)", style=filled, fillcolor="#80CBC4"];
+
+    // ===== API GATEWAY =====
+    "SpringBoot" [label="Spring Boot Backend\n(localhost:8081)", style=filled, fillcolor="#E3F2FD"];
+
+    // Controllers
+    "AuthCtl" [label="AuthController\n/api/auth\nPOST login\nPOST verify-2fa", style=bold, fillcolor="#90CAF9"];
+    "UserCtl" [label="UserController\n/api/users"];
+    "BookCtl" [label="BookingController\n/api/bookings\nPOST bookings\nGET bookings/me", style=bold, fillcolor="#90CAF9"];
+    "ResCtl" [label="ResourceController\n/api/resources"];
+    "TickCtl" [label="TicketController\n/api/v1/tickets\nPOST tickets\nGET tickets", style=bold, fillcolor="#90CAF9"];
+    "NotifCtl" [label="NotificationController\n/api/notifications"];
+
+    // Services
+    "UserSvc" [label="UserService", fillcolor="#A5D6A7"];
+    "TwoFactorSvc" [label="TwoFactorService", fillcolor="#A5D6A7"];
+    "BookSvc" [label="BookingService\ncreateBooking()\ncheckConflict()", style=bold, fillcolor="#81C784"];
+    "ResSvc" [label="ResourceService", fillcolor="#A5D6A7"];
+    "TickSvc" [label="TicketService\ncreateTicket()", style=bold, fillcolor="#81C784"];
+    "NotifSvc" [label="NotificationService", fillcolor="#A5D6A7"];
+
+    // Repositories
+    "UserRepo" [label="UserRepository", fillcolor="#FFCCBC"];
+    "BookRepo" [label="BookingRepository", fillcolor="#FFCCBC"];
+    "ResRepo" [label="ResourceRepository", fillcolor="#FFCCBC"];
+    "TickRepo" [label="TicketRepository", fillcolor="#FFCCBC"];
+
+    // Entities/Models
+    "User" [label="User Entity\nid|email|role", fillcolor="#F48FB1"];
+    "Booking" [label="Booking Entity\nid|date|time|status", fillcolor="#F48FB1"];
+    "Resource" [label="Resource Entity\nid|name|type", fillcolor="#F48FB1"];
+    "Ticket" [label="Ticket Entity\nid|title|status", fillcolor="#F48FB1"];
+
+    // Security
+    "Security" [label="Security Layer\nSecurityConfig\nJwtFilter\nOAuth2", style=filled, fillcolor="#C5CAE9"];
+
+    // Database
+    "PostgreSQL" [shape=cylinder, label="PostgreSQL\n(Neon)", style=filled, fillcolor="#CE93D8"];
+
+    // ===== RELATIONSHIPS =====
+
+    // Client pages to API services
+    "Client" -> "HomePage" [style=dashed];
+    "Client" -> "LoginPage";
+    "Client" -> "BookingPage";
+    "Client" -> "CreateTicket";
+    "Client" -> "AdminDash";
+    
+    "HomePage" -> "API_Services";
+    "LoginPage" -> "API_Services";
+    "BookingPage" -> "API_Services";
+    "CreateTicket" -> "API_Services";
+    "AdminDash" -> "API_Services";
+    
+    "API_Services" -> "Axios";
+    "AuthCtx" -> "Axios" [style=dashed];
+
+    // Axios to Backend with JWT
+    "Axios" -> "SpringBoot" [label="HTTP + Bearer JWT", color=blue, penwidth=2];
+    
+    // Security filters request
+    "SpringBoot" -> "Security";
+    "Security" -> "AuthCtl" [label="protects"];
+    "Security" -> "BookCtl" [label="protects"];
+    "Security" -> "TickCtl" [label="protects"];
+
+    // Controllers to Services
+    "AuthCtl" -> "UserSvc" [label="login()"];
+    "AuthCtl" -> "TwoFactorSvc";
+    "AuthCtl" -> "Security" [label="generateJWT()"];
+    
+    "BookCtl" -> "BookSvc";
+    "ResCtl" -> "ResSvc";
+    "TickCtl" -> "TickSvc";
+    "NotifCtl" -> "NotifSvc";
+
+    // Services to Repositories
+    "UserSvc" -> "UserRepo";
+    "BookSvc" -> "BookRepo";
+    "BookSvc" -> "ResRepo";
+    "ResSvc" -> "ResRepo";
+    "TickSvc" -> "TickRepo";
+
+    // Repositories to Entities
+    "UserRepo" -> "User";
+    "BookRepo" -> "Booking";
+    "ResRepo" -> "Resource";
+    "TickRepo" -> "Ticket";
+
+    // Entities to Database
+    "User" -> "PostgreSQL" [label="JDBC", color=red, penwidth=2];
+    "Booking" -> "PostgreSQL" [color=red];
+    "Resource" -> "PostgreSQL" [color=red];
+    "Ticket" -> "PostgreSQL" [color=red];
+
+    // Key endpoint annotations
+    {rank=same; "AuthCtl", "BookCtl", "TickCtl" }
+}

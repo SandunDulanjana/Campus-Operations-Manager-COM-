@@ -1,33 +1,48 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ActionButton from '../components/ui/ActionButton'
-import StatusBanner from '../components/ui/StatusBanner'
+import { AlertCircleIcon, ClipboardListIcon, PlusIcon, ShieldCheckIcon } from 'lucide-react'
 import {
   fetchMyTickets,
   formatTicketLabel,
   formatTicketDate,
-  getStatusBadgeClass,
-  getPriorityBadgeClass,
   TICKET_STATUSES,
 } from '../api/ticketApi'
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Skeleton } from '../components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs'
+
+function getStatusVariant(status) {
+  if (status === 'REJECTED') return 'destructive'
+  if (status === 'RESOLVED' || status === 'CLOSED') return 'secondary'
+  return 'outline'
+}
+
+function getPriorityVariant(priority) {
+  if (priority === 'CRITICAL') return 'destructive'
+  if (priority === 'HIGH') return 'secondary'
+  return 'outline'
+}
 
 function MyTicketsPage() {
   const navigate = useNavigate()
-  const [tickets, setTickets]     = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [errorMessage, setError]  = useState('')
+  const [tickets, setTickets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [errorMessage, setError] = useState('')
   const [activeFilter, setFilter] = useState('ALL')
 
   useEffect(() => {
     void loadTickets()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function loadTickets() {
     setLoading(true)
+    setError('')
     try {
-      const data = await fetchMyTickets()
-      setTickets(data)
+      setTickets(await fetchMyTickets())
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to load your tickets')
     } finally {
@@ -35,122 +50,149 @@ function MyTicketsPage() {
     }
   }
 
-  const displayed = activeFilter === 'ALL'
-    ? tickets
-    : tickets.filter((t) => t.status === activeFilter)
+  const displayed = useMemo(
+    () => activeFilter === 'ALL' ? tickets : tickets.filter((ticket) => ticket.status === activeFilter),
+    [activeFilter, tickets],
+  )
+
+  const stats = useMemo(() => ({
+    total: tickets.length,
+    open: tickets.filter((ticket) => ticket.status === 'OPEN').length,
+    active: tickets.filter((ticket) => ticket.status === 'IN_PROGRESS').length,
+    breached: tickets.filter((ticket) => ticket.slaBreached).length,
+  }), [tickets])
 
   return (
-    <section className="admin-resources-page">
-
-      <div className="home-section-card" style={{ padding: '1.5rem' }}>
-        <div className="panel-header">
-          <div>
-            <h1>My Tickets</h1>
-            <p>Track the status of your submitted incident reports.</p>
+    <section className="flex flex-col gap-6">
+      <Card>
+        <CardHeader className="gap-4 md:grid-cols-[1fr_auto] md:items-start">
+          <div className="flex flex-col gap-2">
+            <Badge variant="outline" className="w-fit">Service desk</Badge>
+            <CardTitle className="text-3xl font-semibold tracking-tight md:text-4xl">My Tickets</CardTitle>
+            <CardDescription>Track submitted incident reports, SLA state, and technician progress.</CardDescription>
           </div>
-          <ActionButton kind="primary" onClick={() => navigate('/tickets/new')}>
-            + Report Incident
-          </ActionButton>
-        </div>
+          <Button onClick={() => navigate('/tickets/new')}>
+            <PlusIcon data-icon="inline-start" />
+            Report Incident
+          </Button>
+        </CardHeader>
+      </Card>
+
+      {errorMessage ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Request failed</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <TicketStat label="Total tickets" value={stats.total} />
+        <TicketStat label="Open" value={stats.open} />
+        <TicketStat label="In progress" value={stats.active} />
+        <TicketStat label="SLA breached" value={stats.breached} />
       </div>
 
-      <StatusBanner type="error" message={errorMessage} />
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Ticket Queue</CardTitle>
+          <CardDescription>Filter by status and open a ticket for full comments, attachments, and workflow history.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Tabs value={activeFilter} onValueChange={setFilter}>
+            <TabsList className="flex h-auto flex-wrap justify-start">
+              {['ALL', ...TICKET_STATUSES].map((status) => (
+                <TabsTrigger key={status} value={status}>
+                  {formatTicketLabel(status)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
 
-      <div className="home-section-card" style={{ padding: '1rem' }}>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {['ALL', ...TICKET_STATUSES].map((s) => (
-            <button
-              key={s}
-              type="button"
-              className={activeFilter === s ? 'primary-btn' : 'ghost-btn'}
-              onClick={() => setFilter(s)}
-              style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem', width: 'auto' }}
-            >
-              {formatTicketLabel(s)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="table-panel">
-
-        {loading && (
-          <p style={{ color: '#64748b', padding: '2rem', textAlign: 'center' }}>
-            Loading your tickets...
-          </p>
-        )}
-
-        {!loading && displayed.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-            <p style={{ color: '#64748b', marginBottom: '1rem' }}>
-              {activeFilter === 'ALL'
-                ? 'You have not submitted any tickets yet.'
-                : `No tickets with status "${formatTicketLabel(activeFilter)}".`}
-            </p>
-            {activeFilter === 'ALL' && (
-              <ActionButton kind="primary" onClick={() => navigate('/tickets/new')}>
-                Report your first incident
-              </ActionButton>
-            )}
-          </div>
-        )}
-
-        {!loading && displayed.length > 0 && (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Title</th>
-                  <th>Status</th>
-                  <th>Priority</th>
-                  <th>Location</th>
-                  <th>Created</th>
-                  <th>SLA</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayed.map((ticket) => (
-                  <tr key={ticket.id}>
-                    <td>{ticket.id}</td>
-                    <td>
-                      <strong>{ticket.title}</strong>
-                      <span className="muted">{formatTicketLabel(ticket.category)}</span>
-                    </td>
-                    <td>
-                      <span className={getStatusBadgeClass(ticket.status)}>
-                        {formatTicketLabel(ticket.status)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={getPriorityBadgeClass(ticket.priority)}>
-                        {ticket.priority}
-                      </span>
-                    </td>
-                    <td>{ticket.location}</td>
-                    <td>
-                      <span className="muted">{formatTicketDate(ticket.createdAt)}</span>
-                    </td>
-                    <td>
-                      {ticket.slaBreached
-                        ? <span className="badge rejected">⚠ Breached</span>
-                        : <span className="badge approved">✓ OK</span>
-                      }
-                    </td>
-                    <td>
-                      <ActionButton kind="ghost" onClick={() => navigate(`/tickets/${ticket.id}`)}>
+          {loading ? (
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>#</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>SLA</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {displayed.length > 0 ? displayed.map((ticket) => (
+                  <TableRow key={ticket.id}>
+                    <TableCell className="font-medium">{ticket.id}</TableCell>
+                    <TableCell className="max-w-80 whitespace-normal">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">{ticket.title}</span>
+                        <span className="text-sm text-muted-foreground">{formatTicketLabel(ticket.category)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(ticket.status)}>{formatTicketLabel(ticket.status)}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getPriorityVariant(ticket.priority)}>{ticket.priority}</Badge>
+                    </TableCell>
+                    <TableCell>{ticket.location}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatTicketDate(ticket.createdAt)}</TableCell>
+                    <TableCell>
+                      <Badge variant={ticket.slaBreached ? 'destructive' : 'secondary'}>
+                        <ShieldCheckIcon data-icon="inline-start" />
+                        {ticket.slaBreached ? 'Breached' : 'OK'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/tickets/${ticket.id}`)}>
                         View
-                      </ActionButton>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-40 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center gap-3">
+                        <ClipboardListIcon />
+                        <span>
+                          {activeFilter === 'ALL'
+                            ? 'You have not submitted any tickets yet.'
+                            : `No tickets with status "${formatTicketLabel(activeFilter)}".`}
+                        </span>
+                        {activeFilter === 'ALL' ? (
+                          <Button onClick={() => navigate('/tickets/new')}>Report your first incident</Button>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </section>
+  )
+}
+
+function TicketStat({ label, value }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className="text-3xl font-semibold">{value}</CardTitle>
+      </CardHeader>
+    </Card>
   )
 }
 

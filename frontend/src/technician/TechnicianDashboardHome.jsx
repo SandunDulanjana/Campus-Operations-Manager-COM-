@@ -1,42 +1,59 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AlertCircleIcon, ShieldCheckIcon } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
-import ActionButton from '../components/ui/ActionButton'
-import StatusBanner from '../components/ui/StatusBanner'
 import {
   fetchAssignedTickets,
   formatTicketLabel,
   formatTicketDate,
-  getStatusBadgeClass,
-  getPriorityBadgeClass,
 } from '../api/ticketApi'
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Skeleton } from '../components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs'
 
 const STATUS_FILTERS = [
-  { value: 'ALL',         label: 'All' },
+  { value: 'ALL', label: 'All' },
   { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'RESOLVED',    label: 'Resolved' },
-  { value: 'CLOSED',      label: 'Closed' },
-  { value: 'REJECTED',    label: 'Rejected' },
+  { value: 'RESOLVED', label: 'Resolved' },
+  { value: 'CLOSED', label: 'Closed' },
+  { value: 'REJECTED', label: 'Rejected' },
 ]
+
+const CLOSED_STATUSES = ['CLOSED', 'RESOLVED', 'REJECTED']
+
+function getStatusVariant(status) {
+  if (status === 'REJECTED') return 'destructive'
+  if (status === 'RESOLVED' || status === 'CLOSED') return 'secondary'
+  return 'outline'
+}
+
+function getPriorityVariant(priority) {
+  if (priority === 'CRITICAL') return 'destructive'
+  if (priority === 'HIGH') return 'secondary'
+  return 'outline'
+}
 
 function TechnicianDashboardHome() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [tickets, setTickets]       = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [errorMessage, setError]    = useState('')
-  const [activeFilter, setFilter]   = useState('ALL')
+  const [tickets, setTickets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [errorMessage, setError] = useState('')
+  const [activeFilter, setFilter] = useState('ALL')
 
   useEffect(() => {
     void loadTickets()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function loadTickets() {
     setLoading(true)
+    setError('')
     try {
-      const data = await fetchAssignedTickets()
-      setTickets(data)
+      setTickets(await fetchAssignedTickets())
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to load assigned tickets')
     } finally {
@@ -44,219 +61,134 @@ function TechnicianDashboardHome() {
     }
   }
 
-  const inProgress = tickets.filter((t) => t.status === 'IN_PROGRESS').length
-  const resolved   = tickets.filter((t) => t.status === 'RESOLVED').length
-  const breached   = tickets.filter((t) => t.slaBreached).length
-  const total      = tickets.length
+  const stats = useMemo(() => ({
+    total: tickets.length,
+    inProgress: tickets.filter((ticket) => ticket.status === 'IN_PROGRESS').length,
+    resolved: tickets.filter((ticket) => ticket.status === 'RESOLVED').length,
+    breached: tickets.filter((ticket) => ticket.slaBreached).length,
+  }), [tickets])
 
-  const filteredTickets = activeFilter === 'ALL'
-    ? tickets
-    : tickets.filter((t) => t.status === activeFilter)
-
-  const closedStatuses = ['CLOSED', 'RESOLVED', 'REJECTED']
+  const filteredTickets = useMemo(
+    () => activeFilter === 'ALL' ? tickets : tickets.filter((ticket) => ticket.status === activeFilter),
+    [activeFilter, tickets],
+  )
 
   return (
-    <section className="admin-home-page">
+    <section className="flex flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <Badge variant="outline" className="w-fit">Technician workspace</Badge>
+          <CardTitle className="text-3xl font-semibold tracking-tight md:text-4xl">Dashboard</CardTitle>
+          <CardDescription>
+            Welcome, <span className="font-medium text-foreground">{user?.name || user?.email}</span>. Monitor assigned tickets and SLA risk.
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
-      <div className="admin-home-header">
-        <h1>Dashboard</h1>
-        <p>
-          Welcome, <strong>{user?.name || user?.email}</strong>.
-          Monitor your assigned tickets and notifications from one workspace.
-        </p>
+      {errorMessage ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Request failed</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Total assigned" value={stats.total} />
+        <StatCard label="In progress" value={stats.inProgress} />
+        <StatCard label="Resolved" value={stats.resolved} />
+        <StatCard label="SLA breached" value={stats.breached} />
       </div>
 
-      <div className="admin-stat-grid">
-        <article className="admin-stat-card">
-          <p>Total Assigned</p>
-          <h2>{total}</h2>
-        </article>
-        <article className="admin-stat-card">
-          <p>In Progress</p>
-          <h2>{inProgress}</h2>
-        </article>
-        <article className="admin-stat-card">
-          <p>Resolved</p>
-          <h2>{resolved}</h2>
-        </article>
-        <article
-          className="admin-stat-card"
-          style={breached > 0 ? { borderTop: '3px solid #dc2626' } : {}}
-        >
-          <p>SLA Breached</p>
-          <h2 style={breached > 0 ? { color: '#b91c1c' } : {}}>{breached}</h2>
-        </article>
-      </div>
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Assigned Tickets</CardTitle>
+          <CardDescription>{filteredTickets.length} tickets in current view.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Tabs value={activeFilter} onValueChange={setFilter}>
+            <TabsList className="flex h-auto flex-wrap justify-start">
+              {STATUS_FILTERS.map((filter) => (
+                <TabsTrigger key={filter.value} value={filter.value}>{filter.label}</TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
 
-      <StatusBanner type="error" message={errorMessage} />
-
-      <div className="table-panel">
-
-        {/* ── Header row with title + filter buttons ── */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.75rem',
-          padding: '0.25rem 0 1rem',
-        }}>
-          <h2 style={{ margin: 0 }}>
-            Assigned Tickets
-            <span style={{
-              marginLeft: '0.6rem',
-              fontSize: '0.82rem',
-              fontWeight: 600,
-              color: '#64748b',
-              background: '#f1f5f9',
-              border: '1px solid #e2e8f0',
-              borderRadius: 999,
-              padding: '0.15rem 0.6rem',
-            }}>
-              {filteredTickets.length}
-            </span>
-          </h2>
-
-          {/* ── Status filter pills ── */}
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-            {STATUS_FILTERS.map((f) => {
-              const isActive = activeFilter === f.value
-              const isClosed = f.value === 'CLOSED'
-              return (
-                <button
-                  key={f.value}
-                  type="button"
-                  onClick={() => setFilter(f.value)}
-                  style={{
-                    padding: '0.35rem 0.85rem',
-                    borderRadius: 999,
-                    border: isActive
-                      ? `2px solid ${isClosed ? '#6b7280' : 'var(--brand-600)'}`
-                      : '1.5px solid #e2e8f0',
-                    background: isActive
-                      ? isClosed ? '#6b7280' : 'var(--brand-600)'
-                      : '#ffffff',
-                    color: isActive ? '#ffffff' : isClosed ? '#6b7280' : '#374151',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 140ms ease',
-                  }}
-                >
-                  {f.label}
-                 
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {loading && (
-          <p style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
-            Loading your assigned tickets...
-          </p>
-        )}
-
-        {!loading && filteredTickets.length === 0 && (
-          <p style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
-            {activeFilter === 'ALL'
-              ? 'No tickets are currently assigned to you.'
-              : `No ${activeFilter.toLowerCase().replace('_', ' ')} tickets found.`}
-          </p>
-        )}
-
-        {!loading && filteredTickets.length > 0 && (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Title</th>
-                  <th>Status</th>
-                  <th>Priority</th>
-                  <th>Location</th>
-                  <th>Created</th>
-                  <th>SLA</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTickets.map((ticket) => {
-                  const isClosed = closedStatuses.includes(ticket.status)
+          {loading ? (
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>#</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>SLA</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTickets.length > 0 ? filteredTickets.map((ticket) => {
+                  const isClosed = CLOSED_STATUSES.includes(ticket.status)
                   return (
-                    <tr
-                      key={ticket.id}
-                      style={isClosed ? {
-                        opacity: 0.55,
-                        background: '#f8fafc',
-                      } : {}}
-                    >
-                      <td>
-                        <span style={{ color: isClosed ? '#9ca3af' : 'inherit' }}>
-                          {ticket.id}
-                        </span>
-                      </td>
-                      <td>
-                        <strong style={{ color: isClosed ? '#9ca3af' : 'inherit' }}>
-                          {ticket.title}
-                        </strong>
-                        {isClosed && (
-                          <span style={{
-                            marginLeft: '0.5rem',
-                            fontSize: '0.68rem',
-                            fontWeight: 700,
-                            background: '#e5e7eb',
-                            color: '#6b7280',
-                            borderRadius: 999,
-                            padding: '0.1rem 0.5rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                          }}>
-                            Closed
-                          </span>
-                        )}
-                        <span className="muted">{formatTicketLabel(ticket.category)}</span>
-                      </td>
-                      <td>
-                        <span className={getStatusBadgeClass(ticket.status)}>
-                          {formatTicketLabel(ticket.status)}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={getPriorityBadgeClass(ticket.priority)}>
-                          {ticket.priority}
-                        </span>
-                      </td>
-                      <td style={{ color: isClosed ? '#9ca3af' : 'inherit' }}>
-                        {ticket.location}
-                      </td>
-                      <td>
-                        <span className="muted">{formatTicketDate(ticket.createdAt)}</span>
-                      </td>
-                      <td>
-                        {ticket.slaBreached
-                          ? <span className="badge rejected">⚠ Breached</span>
-                          : <span className="badge approved">✔ OK</span>
-                        }
-                      </td>
-                      <td>
-                        <ActionButton
-                          kind={isClosed ? 'ghost' : 'ghost'}
-                          onClick={() => navigate(`/tickets/${ticket.id}`)}
-                          style={isClosed ? { opacity: 0.6 } : {}}
-                        >
+                    <TableRow key={ticket.id} className={isClosed ? 'opacity-60' : undefined}>
+                      <TableCell className="font-medium">{ticket.id}</TableCell>
+                      <TableCell className="max-w-80 whitespace-normal">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium">{ticket.title}</span>
+                          <span className="text-sm text-muted-foreground">{formatTicketLabel(ticket.category)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell><Badge variant={getStatusVariant(ticket.status)}>{formatTicketLabel(ticket.status)}</Badge></TableCell>
+                      <TableCell><Badge variant={getPriorityVariant(ticket.priority)}>{ticket.priority}</Badge></TableCell>
+                      <TableCell>{ticket.location}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatTicketDate(ticket.createdAt)}</TableCell>
+                      <TableCell>
+                        <Badge variant={ticket.slaBreached ? 'destructive' : 'secondary'}>
+                          <ShieldCheckIcon data-icon="inline-start" />
+                          {ticket.slaBreached ? 'Breached' : 'OK'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/tickets/${ticket.id}`)}>
                           Open
-                        </ActionButton>
-                      </td>
-                    </tr>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                }) : (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                      {activeFilter === 'ALL'
+                        ? 'No tickets are currently assigned to you.'
+                        : `No ${activeFilter.toLowerCase().replaceAll('_', ' ')} tickets found.`}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </section>
+  )
+}
+
+function StatCard({ label, value }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className="text-3xl font-semibold">{value}</CardTitle>
+      </CardHeader>
+    </Card>
   )
 }
 

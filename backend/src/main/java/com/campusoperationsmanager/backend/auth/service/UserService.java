@@ -224,7 +224,7 @@ public class UserService {
         emailNotificationService.sendPasswordResetSuccessEmail(user.getEmail(), user.getName() != null ? user.getName() : user.getEmail());
     }
 
-    private static final int TOKEN_BYTE_LENGTH = 36;
+    private static final int TOKEN_BYTE_LENGTH = 32;
 
     public Map.Entry<User, String> createPendingUser(CreateUserRequest req) {
         String email = req.getEmail().trim().toLowerCase();

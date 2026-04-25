@@ -1,143 +1,245 @@
-import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { useMemo } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/useAuth'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarSeparator,
+  SidebarTrigger,
+} from '@/components/ui/sidebar'
+import CampusMark from '@/components/icons/CampusMark'
+import {
+  BellIcon,
+  BoxesIcon,
+  ChevronDownIcon,
+  CircleUserIcon,
+  LayoutDashboardIcon,
+  LogOutIcon,
+  SearchIcon,
+  Settings2Icon,
+  TicketIcon,
+  UserCogIcon,
+  UsersIcon,
+} from 'lucide-react'
 
-// ── CHANGE 1: Added 'notifications' entry to this array ──────────────────────
 const adminLinks = [
-  { to: '/admin/dashboard',     label: 'Dashboard',     icon: 'dashboard'     },
-  { to: '/admin/bookings',      label: 'Bookings',      icon: 'bookings'      },
-  { to: '/admin/tickets',       label: 'Tickets',       icon: 'tickets'       },
-  { to: '/admin/users',         label: 'Users',         icon: 'users'         },
-  { to: '/admin/resources',     label: 'Resources',     icon: 'resources'     },
-  { to: '/admin/notifications', label: 'Notifications', icon: 'notifications' }, // ← ADD THIS LINE
+  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
+  { to: '/admin/bookings', label: 'Bookings', icon: UserCogIcon },
+  { to: '/admin/tickets', label: 'Tickets', icon: TicketIcon },
+  { to: '/admin/users', label: 'Users', icon: UsersIcon },
+  { to: '/admin/resources', label: 'Resources', icon: BoxesIcon },
+  { to: '/admin/notifications', label: 'Notifications', icon: BellIcon },
 ]
 
-function NavIcon({ kind }) {
-  if (kind === 'dashboard') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="3" y="3" width="8" height="8" rx="1.5" />
-        <rect x="13" y="3" width="8" height="5" rx="1.5" />
-        <rect x="13" y="10" width="8" height="11" rx="1.5" />
-        <rect x="3" y="13" width="8" height="8" rx="1.5" />
-      </svg>
-    )
-  }
-
-  if (kind === 'bookings') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="3" y="5" width="18" height="16" rx="2" />
-        <path d="M8 3v4M16 3v4M3 10h18" />
-      </svg>
-    )
-  }
-
-  if (kind === 'tickets') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-        <rect x="9" y="3" width="6" height="4" rx="1" />
-        <path d="M9 12h6M9 16h4" />
-      </svg>
-    )
-  }
-
-  if (kind === 'users') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="9" cy="8" r="3" />
-        <path d="M3 20c0-3 2.7-5 6-5s6 2 6 5" />
-        <circle cx="17" cy="9" r="2.2" />
-        <path d="M14.5 20c.3-1.9 1.9-3.4 4.2-3.8" />
-      </svg>
-    )
-  }
-
-  if (kind === 'resources') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 7l8-4 8 4-8 4-8-4z" />
-        <path d="M4 12l8 4 8-4" />
-        <path d="M4 17l8 4 8-4" />
-      </svg>
-    )
-  }
-
-  // ── CHANGE 2: Added this entire 'notifications' icon block ──────────────────
-  if (kind === 'notifications') {   // ← ADD THIS ENTIRE BLOCK (lines below until closing brace)
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 4a4 4 0 0 0-4 4v1.3c0 1.1-.36 2.18-1.02 3.05L5.6 14.1A1 1 0 0 0 6.4 15.7h11.2a1 1 0 0 0 .8-1.6l-1.38-1.75A5.07 5.07 0 0 1 16 9.3V8a4 4 0 0 0-4-4Z" />
-        <path d="M10 18a2 2 0 0 0 4 0" />
-      </svg>
-    )
-  }                                  // ← END OF ADDED BLOCK
-
-  // This default return was already here — NO CHANGE
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" />
-    </svg>
-  )
+const pageMeta = {
+  '/admin/dashboard': {
+    title: 'Operations Dashboard',
+    subtitle: 'Campus activity, requests, and approvals in one place.',
+  },
+  '/admin/bookings': {
+    title: 'Booking Review',
+    subtitle: 'Inspect requests, approve schedules, and resolve conflicts.',
+  },
+  '/admin/tickets': {
+    title: 'Incident Tickets',
+    subtitle: 'Track service issues, priority, and technician progress.',
+  },
+  '/admin/users': {
+    title: 'User Management',
+    subtitle: 'Approve registrations, roles, and access decisions.',
+  },
+  '/admin/resources': {
+    title: 'Resource Management',
+    subtitle: 'Maintain campus spaces, equipment, and availability windows.',
+  },
+  '/admin/notifications': {
+    title: 'Notifications',
+    subtitle: 'Broadcast updates and control delivery to campus roles.',
+  },
 }
 
-// Everything below this line is UNCHANGED from your original file
 function AdminLayout() {
-  const [collapsed, setCollapsed] = useState(false)
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+
+  const meta = useMemo(() => pageMeta[pathname] ?? pageMeta['/admin/dashboard'], [pathname])
+  const initials = user?.name
+    ? user.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+    : 'A'
+
+  function handleLogout() {
+    logout()
+    navigate('/login')
+  }
 
   return (
-    <section className={collapsed ? 'admin-dashboard collapsed' : 'admin-dashboard'}>
-      <aside className="admin-sidebar" aria-label="Admin navigation">
-        <div className="admin-sidebar-top">
-          <div className="admin-sidebar-heading">
-            <p className="admin-sidebar-title">Admin Panel</p>
-            <p className="admin-sidebar-subtitle">Operations controls</p>
-          </div>
-          <button
-            type="button"
-            className="admin-collapse-btn"
-            onClick={() => setCollapsed((current) => !current)}
-            aria-label="Toggle sidebar"
+    <SidebarProvider>
+      <Sidebar variant="inset" collapsible="icon">
+        <SidebarHeader className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-2">
+          <Card
+            size="sm"
+            className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:rounded-lg group-data-[collapsible=icon]:border-sidebar-border/70 group-data-[collapsible=icon]:bg-sidebar-accent/30"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              {collapsed ? <path d="m10 7 5 5-5 5" /> : <path d="m14 7-5 5 5 5" />}
-            </svg>
-          </button>
-        </div>
+            <CardHeader className="px-0 group-data-[collapsible=icon]:px-0">
+              <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border bg-background text-foreground shadow-sm group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-lg group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:shadow-none">
+                  <CampusMark className="size-7 group-data-[collapsible=icon]:size-5" />
+                </div>
+                <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                  <CardTitle className="truncate text-[1.05rem] font-semibold text-sidebar-foreground">Smart Campus</CardTitle>
+                  <CardDescription className="truncate text-[0.67rem] font-medium uppercase tracking-[0.18em] text-sidebar-foreground/60">
+                    Operations Hub
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+        </SidebarHeader>
 
-        <nav className="admin-nav">
-          {adminLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) => (isActive ? 'admin-nav-link active' : 'admin-nav-link')}
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminLinks.map((link) => {
+                  const Icon = link.icon
+                  return (
+                    <SidebarMenuItem key={link.to}>
+                      <SidebarMenuButton asChild isActive={pathname === link.to} size="lg" tooltip={link.label}>
+                        <NavLink to={link.to}>
+                          <Icon />
+                          <span className="group-data-[collapsible=icon]:hidden">{link.label}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+
+        <SidebarSeparator />
+
+        <SidebarFooter className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-2">
+          {user ? (
+            <Card
+              size="sm"
+              className="gap-0 border-sidebar-border/70 bg-sidebar-accent/30 py-0 shadow-none group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:overflow-hidden group-data-[collapsible=icon]:rounded-lg group-data-[collapsible=icon]:border-sidebar-border/70 group-data-[collapsible=icon]:bg-sidebar-accent/30"
             >
-              <span className="admin-nav-icon" aria-hidden="true">
-                <NavIcon kind={link.icon} />
-              </span>
-              <span className="admin-nav-text">{link.label}</span>
-            </NavLink>
-          ))}
-        </nav>
+              <CardContent className="px-0 group-data-[collapsible=icon]:px-0">
+                <div className="flex items-center gap-3 p-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
+                  <Avatar size="lg" className="group-data-[collapsible=icon]:size-8">
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                    <p className="truncate text-sm font-medium text-sidebar-foreground">{user.name || user.email}</p>
+                    <span className="truncate text-xs uppercase tracking-[0.22em] text-sidebar-foreground/60">
+                      {user.role}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </SidebarFooter>
+      </Sidebar>
 
-        <div className="admin-sidebar-footer">
-          <button type="button" className="admin-logout-btn">
-            <span className="admin-nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M10 4H5v16h5" />
-                <path d="M14 8l5 4-5 4" />
-                <path d="M9 12h10" />
-              </svg>
-            </span>
-            <span className="admin-nav-text">Logout</span>
-          </button>
+      <SidebarInset className="min-h-svh bg-background">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-6">
+          <div className="flex items-center gap-3">
+            <SidebarTrigger />
+            <div className="hidden md:block">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Experimental Migration</p>
+              <h1 className="text-sm font-medium tracking-tight">{meta.title}</h1>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="relative hidden md:block">
+              <SearchIcon className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
+              <Input className="w-72 pl-8" placeholder="Search admin pages..." />
+            </div>
+            <Button variant="outline" size="icon-sm">
+              <BellIcon />
+            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-auto justify-start rounded-xl px-2.5 py-2">
+                    <Avatar>
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="hidden md:block min-w-0">
+                      <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
+                      <span className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{user.role}</span>
+                    </div>
+                    <ChevronDownIcon className="hidden text-muted-foreground md:block" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-medium">{user.name || user.email}</span>
+                      <span className="text-xs text-muted-foreground">{user.email}</span>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <CircleUserIcon data-icon="inline-start" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <Settings2Icon data-icon="inline-start" />
+                      Account Settings
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOutIcon data-icon="inline-start" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </div>
+        </header>
+
+        <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+          <div className="flex flex-col gap-1">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Control Center</p>
+            <h2 className="text-3xl font-semibold tracking-tight">{meta.title}</h2>
+            <p className="max-w-3xl text-sm text-muted-foreground">{meta.subtitle}</p>
+          </div>
+          <Outlet />
         </div>
-      </aside>
-
-      <div className="admin-main-content">
-        <Outlet />
-      </div>
-    </section>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
 

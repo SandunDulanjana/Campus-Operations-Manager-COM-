@@ -1,4 +1,4 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,110 +8,113 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "bookings")
-public class Booking {
+@Table(name = "booking_history")
+public class BookingHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private Long resourceId;
+    private Long bookingId;
 
     @Column(nullable = false)
-    private String resourceName;
+    private Long actorUserId;
 
     @Column(nullable = false)
-    private String resourceType;
+    private String actorName;
 
-    @Column(nullable = false)
-    private Long userId;
+    @Enumerated(EnumType.STRING)
+    private BookingStatus fromStatus;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private BookingStatus toStatus;
+
+    @Column(length = 500)
+    private String note;
+
+    @Column
     private LocalDate bookingDate;
 
-    @Column(nullable = false)
+    @Column
     private LocalTime startTime;
 
-    @Column(nullable = false)
+    @Column
     private LocalTime endTime;
 
-    @Column(nullable = false, length = 500)
+    @Column(length = 500)
     private String purpose;
 
     private Integer expectedAttendees;
 
+    @Column(length = 120)
     private String equipmentType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private BookingStatus status;
-
-    @Column(length = 500)
-    private String reviewReason;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(nullable = false)
-    private Instant updatedAt;
-
     @PrePersist
     public void onCreate() {
-        Instant now = Instant.now();
-        createdAt = now;
-        updatedAt = now;
-        if (status == null) {
-            status = BookingStatus.PENDING;
-        }
-    }
-
-    @PreUpdate
-    public void onUpdate() {
-        updatedAt = Instant.now();
+        createdAt = Instant.now();
     }
 
     public Long getId() {
         return id;
     }
 
-    public Long getResourceId() {
-        return resourceId;
+    public Long getBookingId() {
+        return bookingId;
     }
 
-    public void setResourceId(Long resourceId) {
-        this.resourceId = resourceId;
+    public void setBookingId(Long bookingId) {
+        this.bookingId = bookingId;
     }
 
-    public String getResourceName() {
-        return resourceName;
+    public Long getActorUserId() {
+        return actorUserId;
     }
 
-    public void setResourceName(String resourceName) {
-        this.resourceName = resourceName;
+    public void setActorUserId(Long actorUserId) {
+        this.actorUserId = actorUserId;
     }
 
-    public String getResourceType() {
-        return resourceType;
+    public String getActorName() {
+        return actorName;
     }
 
-    public void setResourceType(String resourceType) {
-        this.resourceType = resourceType;
+    public void setActorName(String actorName) {
+        this.actorName = actorName;
     }
 
-    public Long getUserId() {
-        return userId;
+    public BookingStatus getFromStatus() {
+        return fromStatus;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setFromStatus(BookingStatus fromStatus) {
+        this.fromStatus = fromStatus;
+    }
+
+    public BookingStatus getToStatus() {
+        return toStatus;
+    }
+
+    public void setToStatus(BookingStatus toStatus) {
+        this.toStatus = toStatus;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public LocalDate getBookingDate() {
@@ -162,27 +165,7 @@ public class Booking {
         this.equipmentType = equipmentType;
     }
 
-    public BookingStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(BookingStatus status) {
-        this.status = status;
-    }
-
-    public String getReviewReason() {
-        return reviewReason;
-    }
-
-    public void setReviewReason(String reviewReason) {
-        this.reviewReason = reviewReason;
-    }
-
     public Instant getCreatedAt() {
         return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
     }
 }
