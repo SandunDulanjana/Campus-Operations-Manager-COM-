@@ -1,25 +1,29 @@
 import { useEffect, useState } from 'react'
+import { BellIcon, CheckIcon, InboxIcon, MailCheckIcon, AlertCircleIcon } from 'lucide-react'
 import {
   fetchMyNotifications,
   markNotificationRead,
   markAllNotificationsRead,
 } from '../api/notificationApi'
-import StatusBanner from '../components/ui/StatusBanner'
-import ActionButton from '../components/ui/ActionButton'
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Skeleton } from '../components/ui/skeleton'
 
 function TechnicianNotificationsPage() {
   const [notifications, setNotifications] = useState([])
-  const [loading, setLoading]             = useState(false)
-  const [error, setError]                 = useState('')
-  const [success, setSuccess]             = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   useEffect(() => { void loadNotifications() }, [])
 
   async function loadNotifications() {
     setLoading(true)
+    setError('')
     try {
-      const data = await fetchMyNotifications()
-      setNotifications(data)
+      setNotifications(await fetchMyNotifications())
     } catch {
       setError('Failed to load notifications')
     } finally {
@@ -47,85 +51,94 @@ function TechnicianNotificationsPage() {
   }
 
   function formatDate(dateStr) {
-    if (!dateStr) return '–'
+    if (!dateStr) return '-'
     return new Date(dateStr).toLocaleString('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     })
   }
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const unreadCount = notifications.filter((notification) => !notification.read).length
 
   return (
-    <section className="admin-resources-page">
-      <div className="admin-section-card">
-        <div className="panel-header">
-          <div>
-            <h1>Notifications</h1>
-            <p>View announcements and updates sent to you by campus administration.</p>
+    <section className="flex flex-col gap-6">
+      <Card>
+        <CardHeader className="gap-4 md:grid-cols-[1fr_auto] md:items-start">
+          <div className="flex flex-col gap-2">
+            <Badge variant="outline" className="w-fit">Notification center</Badge>
+            <CardTitle className="text-3xl font-semibold tracking-tight md:text-4xl">Notifications</CardTitle>
+            <CardDescription>View announcements and updates sent by campus administration.</CardDescription>
           </div>
-          {unreadCount > 0 && (
-            <ActionButton kind="approve" onClick={handleMarkAllRead}>
-              Mark all as read ({unreadCount})
-            </ActionButton>
-          )}
-        </div>
-        <StatusBanner type="success" message={success} />
-        <StatusBanner type="error"   message={error} />
-      </div>
+          {unreadCount > 0 ? (
+            <Button onClick={handleMarkAllRead}>
+              <MailCheckIcon data-icon="inline-start" />
+              Mark all read ({unreadCount})
+            </Button>
+          ) : null}
+        </CardHeader>
+      </Card>
 
-      <div className="table-panel">
-        <h2>Your Notifications ({notifications.length})</h2>
-        {loading ? (
-          <p style={{ padding: '1rem', color: '#6b7280' }}>Loading…</p>
-        ) : notifications.length === 0 ? (
-          <p style={{ padding: '1rem', color: '#6b7280' }}>No notifications yet.</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.5rem 0' }}>
-            {notifications.map((n) => (
-              <div
-                key={n.id}
-                style={{
-                  padding: '1rem 1.25rem',
-                  background: n.read ? '#f8fafc' : '#f0f9ff',
-                  border: `1px solid ${n.read ? '#e2e8f0' : '#bae6fd'}`,
-                  borderRadius: '0.9rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: '1rem',
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.3rem' }}>
-                    <strong style={{ fontSize: '0.97rem', color: '#1f2937' }}>{n.title}</strong>
-                    {!n.read && (
-                      <span style={{
-                        fontSize: '0.68rem', fontWeight: 700,
-                        background: '#2563eb', color: '#fff',
-                        borderRadius: 999, padding: '0.15rem 0.55rem',
-                      }}>
-                        NEW
-                      </span>
-                    )}
+      {success ? (
+        <Alert>
+          <CheckIcon />
+          <AlertTitle>Updated</AlertTitle>
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {error ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Request failed</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Your Notifications ({notifications.length})</CardTitle>
+          <CardDescription>{unreadCount} unread messages.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {loading ? (
+            <>
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </>
+          ) : notifications.length === 0 ? (
+            <div className="flex min-h-40 flex-col items-center justify-center gap-3 text-muted-foreground">
+              <InboxIcon />
+              <p>No notifications yet.</p>
+            </div>
+          ) : notifications.map((notification) => (
+            <Card key={notification.id} size="sm">
+              <CardContent className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="flex gap-3">
+                  <div className="rounded-lg border bg-muted p-2 text-muted-foreground">
+                    <BellIcon />
                   </div>
-                  <p style={{ margin: '0 0 0.4rem', color: '#374151', fontSize: '0.9rem' }}>{n.message}</p>
-                  <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>{formatDate(n.createdAt)}</span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{notification.title}</span>
+                      {!notification.read ? <Badge>New</Badge> : null}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{notification.message}</p>
+                    <span className="text-xs text-muted-foreground">{formatDate(notification.createdAt)}</span>
+                  </div>
                 </div>
-                {!n.read && (
-                  <ActionButton
-                    kind="ghost"
-                    onClick={() => handleMarkRead(n.id)}
-                    style={{ fontSize: '0.78rem', padding: '0.25rem 0.65rem', flexShrink: 0 }}
-                  >
+                {!notification.read ? (
+                  <Button variant="outline" size="sm" onClick={() => handleMarkRead(notification.id)}>
                     Mark read
-                  </ActionButton>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  </Button>
+                ) : null}
+              </CardContent>
+            </Card>
+          ))}
+        </CardContent>
+      </Card>
     </section>
   )
 }
