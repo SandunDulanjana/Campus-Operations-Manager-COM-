@@ -1,18 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { AlertCircleIcon, CheckIcon, KeyRoundIcon } from 'lucide-react'
 import { resetPassword } from '../api/authApi'
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '../components/ui/field'
+import { Input } from '../components/ui/input'
 
 export default function ResetPasswordPage() {
-  const navigate  = useNavigate()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [keyword, setKeyword]         = useState('')
+  const [keyword, setKeyword] = useState('')
   const [newPassword, setNewPassword] = useState('')
-  const [confirm, setConfirm]         = useState('')
-  const [loading, setLoading]         = useState(false)
-  const [error, setError]             = useState('')
-  const [success, setSuccess]         = useState(false)
+  const [confirm, setConfirm] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
-  // Auto-fill keyword from URL if present
   useEffect(() => {
     const kw = searchParams.get('keyword')
     if (kw) setKeyword(kw.toUpperCase())
@@ -20,12 +25,12 @@ export default function ResetPasswordPage() {
 
   const strength = newPassword.length < 8 ? 'Too short' : newPassword.length < 12 ? 'Weak' : newPassword.length < 16 ? 'Good' : 'Strong'
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function handleSubmit(event) {
+    event.preventDefault()
     setError('')
-    if (!keyword.trim())                    { setError('Please enter your reset keyword.');          return }
-    if (newPassword.length < 8)             { setError('Password must be at least 8 characters.');  return }
-    if (newPassword !== confirm)            { setError('Passwords do not match.');                   return }
+    if (!keyword.trim()) { setError('Please enter your reset keyword.'); return }
+    if (newPassword.length < 8) { setError('Password must be at least 8 characters.'); return }
+    if (newPassword !== confirm) { setError('Passwords do not match.'); return }
 
     setLoading(true)
     try {
@@ -34,124 +39,91 @@ export default function ResetPasswordPage() {
       setTimeout(() => navigate('/login'), 3000)
     } catch (err) {
       setError(err?.response?.data || 'Failed to reset password. Please try again.')
-    } finally { setLoading(false) }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="login-brand" style={{ marginBottom: '1.5rem' }}>
-          <div style={{
-            width: '3rem', height: '3rem', borderRadius: '0.85rem',
-            background: 'linear-gradient(145deg, var(--accent-700), var(--brand-700))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 20px rgba(20,108,105,0.22)'
-          }}>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
+    <main className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex size-12 items-center justify-center rounded-xl border bg-muted">
+              <KeyRoundIcon />
+            </div>
+            <div>
+              <CardTitle className="text-2xl">New Password</CardTitle>
+              <CardDescription>Smart Campus Operations Hub</CardDescription>
+            </div>
           </div>
-          <div>
-            <h1 className="login-title" style={{ fontSize: '1.3rem' }}>New Password</h1>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: '0.85rem' }}>Smart Campus Operations Hub</p>
-          </div>
-        </div>
-
-        {!success ? (
-          <>
-            <p style={{ margin: '0 0 1.2rem', color: '#374151', fontSize: '0.92rem', lineHeight: 1.55 }}>
-              {searchParams.get('keyword') 
-                ? "Your identity has been verified via the secure link. Please choose your new password below."
-                : "Enter the reset keyword from your email and choose a new password."
-              }
-            </p>
-            {error && <p className="login-error">{error}</p>}
-            <form className="login-form" onSubmit={handleSubmit}>
-              {!searchParams.get('keyword') && (
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600, color: '#374151' }}>
-                  Reset Keyword
-                  <input
-                    type="text"
-                    value={keyword}
-                    onChange={e => setKeyword(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                    placeholder="e.g. ABC12345"
-                    style={{ letterSpacing: '0.18em', fontWeight: 700, fontSize: '1.1rem' }}
-                    maxLength={8}
-                    autoFocus
-                    required
-                  />
-                </label>
-              )}
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600, color: '#374151' }}>
-                New Password
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  autoComplete="new-password"
-                  required
-                />
-                {newPassword && (
-                  <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', marginTop: '0.25rem' }}>
-                    {[8, 12, 16].map(t => (
-                      <div key={t} style={{
-                        flex: 1, height: 4, borderRadius: 999,
-                        background: newPassword.length >= t ? 'var(--brand-500)' : '#e2e8f0',
-                        transition: 'background 200ms'
-                      }} />
-                    ))}
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, minWidth: '4rem' }}>
-                      {strength}
-                    </span>
-                  </div>
-                )}
-              </label>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontWeight: 600, color: '#374151' }}>
-                Confirm Password
-                <input
-                  type="password"
-                  value={confirm}
-                  onChange={e => setConfirm(e.target.value)}
-                  placeholder="Re-enter new password"
-                  autoComplete="new-password"
-                  required
-                />
-              </label>
-              <button
-                type="submit"
-                className="profile-save-btn"
-                disabled={loading}
-                style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}
-              >
-                {loading ? 'Resetting…' : 'Set New Password'}
-              </button>
-            </form>
-            <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.88rem' }}>
-              <Link to="/forgot-password" style={{ color: 'var(--brand-600)', fontWeight: 600, textDecoration: 'none' }}>
-                Request a new keyword
-              </Link>
-              {' · '}
-              <Link to="/login" style={{ color: 'var(--brand-600)', fontWeight: 600, textDecoration: 'none' }}>
-                Back to login
-              </Link>
-            </p>
-          </>
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#15803d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 0.75rem', display: 'block' }}>
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            <h2 style={{ margin: '0 0 0.5rem', color: '#166534' }}>Password reset!</h2>
-            <p style={{ margin: '0 0 1rem', color: '#374151', fontSize: '0.92rem' }}>
-              Your password has been updated. Redirecting to login…
-            </p>
-            <Link to="/login" className="profile-save-btn" style={{ display: 'inline-flex', justifyContent: 'center', textDecoration: 'none' }}>
-              Go to Login
-            </Link>
-          </div>
-        )}
-      </div>
-    </div>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {!success ? (
+            <>
+              <CardDescription>
+                {searchParams.get('keyword')
+                  ? 'Identity verified. Choose your new password below.'
+                  : 'Enter reset keyword from email and choose new password.'}
+              </CardDescription>
+              {error ? (
+                <Alert variant="destructive">
+                  <AlertCircleIcon />
+                  <AlertTitle>Reset failed</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              ) : null}
+              <form onSubmit={handleSubmit}>
+                <FieldGroup>
+                  {!searchParams.get('keyword') ? (
+                    <Field>
+                      <FieldLabel htmlFor="reset-keyword">Reset Keyword</FieldLabel>
+                      <Input
+                        id="reset-keyword"
+                        value={keyword}
+                        onChange={(event) => setKeyword(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                        placeholder="ABC12345"
+                        className="font-semibold tracking-[0.18em]"
+                        maxLength={8}
+                        autoFocus
+                        required
+                      />
+                    </Field>
+                  ) : null}
+                  <Field>
+                    <FieldLabel htmlFor="new-password">New Password</FieldLabel>
+                    <Input id="new-password" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="At least 8 characters" autoComplete="new-password" required />
+                    {newPassword ? <FieldDescription>Strength: {strength}</FieldDescription> : null}
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
+                    <Input id="confirm-password" type="password" value={confirm} onChange={(event) => setConfirm(event.target.value)} placeholder="Re-enter new password" autoComplete="new-password" required />
+                  </Field>
+                </FieldGroup>
+                <Button type="submit" className="mt-4 w-full" disabled={loading}>
+                  {loading ? 'Resetting...' : 'Set New Password'}
+                </Button>
+              </form>
+              <div className="flex justify-center gap-2 text-sm">
+                <Link className="font-medium text-primary hover:underline" to="/forgot-password">Request new keyword</Link>
+                <span className="text-muted-foreground">·</span>
+                <Link className="font-medium text-primary hover:underline" to="/login">Back to login</Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <Alert>
+                <CheckIcon />
+                <AlertTitle>Password reset</AlertTitle>
+                <AlertDescription>Your password has been updated. Redirecting to login.</AlertDescription>
+              </Alert>
+              <Button asChild>
+                <Link to="/login">Go to Login</Link>
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </main>
   )
 }
