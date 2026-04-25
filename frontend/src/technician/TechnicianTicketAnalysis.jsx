@@ -1,114 +1,47 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { AlertCircleIcon, RefreshCwIcon } from 'lucide-react'
 import { fetchAssignedTickets } from '../api/ticketApi'
-import StatusBanner from '../components/ui/StatusBanner'
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select'
+import { Skeleton } from '../components/ui/skeleton'
 
-const STATUS_COLORS = {
-  IN_PROGRESS: '#2d6f95',
-  RESOLVED:    '#15803d',
-  CLOSED:      '#6b7280',
-  
-}
-
-const PRIORITY_COLORS = {
-  LOW:      '#15803d',
-  MEDIUM:   '#b7791f',
-  HIGH:     '#2d6f95',
-  CRITICAL: '#dc2626',
-}
-
-function DonutChart({ data, colors, total, label }) {
-  const size = 160
-  const cx = size / 2
-  const cy = size / 2
-  const r = 58
-  const strokeWidth = 22
-  const circumference = 2 * Math.PI * r
-
-  let offset = 0
-  const segments = data.map((item) => {
-    const pct = total > 0 ? item.count / total : 0
-    const dash = pct * circumference
-    const seg = { ...item, dash, offset }
-    offset += dash
-    return seg
-  })
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-      <div style={{ position: 'relative', flexShrink: 0 }}>
-        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth={strokeWidth} />
-          {segments.map((seg) => (
-            seg.count > 0 && (
-              <circle
-                key={seg.label}
-                cx={cx} cy={cy} r={r}
-                fill="none"
-                stroke={colors[seg.key] || '#94a3b8'}
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${seg.dash} ${circumference - seg.dash}`}
-                strokeDashoffset={-seg.offset}
-                strokeLinecap="butt"
-              />
-            )
-          ))}
-        </svg>
-        <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-        }}>
-          <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>
-            {total}
-          </span>
-          <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            {label}
-          </span>
-        </div>
-      </div>
-
-      {/* Legend + bars */}
-      <div style={{ flex: 1, minWidth: 180, display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-        {segments.map((seg) => {
-          const pct = total > 0 ? Math.round((seg.count / total) * 100) : 0
-          return (
-            <div key={seg.label}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', color: '#374151', fontWeight: 600 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: colors[seg.key] || '#94a3b8', flexShrink: 0 }} />
-                  {seg.label}
-                </span>
-                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                  {seg.count} tickets · {pct}%
-                </span>
-              </div>
-              <div style={{ height: 6, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%',
-                  width: `${pct}%`,
-                  background: colors[seg.key] || '#94a3b8',
-                  borderRadius: 999,
-                  transition: 'width 600ms ease',
-                }} />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
+const DATE_RANGES = [
+  { value: 'ALL', label: 'All time' },
+  { value: '7D', label: 'Last 7 days' },
+  { value: '30D', label: 'Last 30 days' },
+  { value: '90D', label: 'Last 90 days' },
+]
 
 function TechnicianTicketAnalysis() {
-  const [tickets, setTickets]   = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState('')
-  const [dateRange, setRange]   = useState('ALL')
+  const [tickets, setTickets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [dateRange, setDateRange] = useState('ALL')
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void loadTickets()
+  }, [])
 
-  async function load() {
+  async function loadTickets() {
     setLoading(true)
+    setError('')
     try {
       const data = await fetchAssignedTickets()
       setTickets(data)
@@ -119,189 +52,207 @@ function TechnicianTicketAnalysis() {
     }
   }
 
-  // ── Date filtering ──────────────────────────────────────────
-  function filterByDate(list) {
-    if (dateRange === 'ALL') return list
-    const now = new Date()
+  const filteredTickets = useMemo(() => {
+    if (dateRange === 'ALL') return tickets
+
     const cutoff = new Date()
-    if (dateRange === '7D')  cutoff.setDate(now.getDate() - 7)
-    if (dateRange === '30D') cutoff.setDate(now.getDate() - 30)
-    if (dateRange === '90D') cutoff.setDate(now.getDate() - 90)
-    return list.filter((t) => new Date(t.createdAt) >= cutoff)
-  }
+    if (dateRange === '7D') cutoff.setDate(cutoff.getDate() - 7)
+    if (dateRange === '30D') cutoff.setDate(cutoff.getDate() - 30)
+    if (dateRange === '90D') cutoff.setDate(cutoff.getDate() - 90)
 
-  const filtered = filterByDate(tickets)
-  const total    = filtered.length
+    return tickets.filter((ticket) => new Date(ticket.createdAt) >= cutoff)
+  }, [dateRange, tickets])
 
-  // ── Status data ─────────────────────────────────────────────
-  const statusData = [
-    { key: 'IN_PROGRESS', label: 'In Progress', count: filtered.filter((t) => t.status === 'IN_PROGRESS').length },
-    { key: 'RESOLVED',    label: 'Resolved',    count: filtered.filter((t) => t.status === 'RESOLVED').length },
-    { key: 'CLOSED',      label: 'Closed',      count: filtered.filter((t) => t.status === 'CLOSED').length },
-    
-  ]
+  const total = filteredTickets.length
+  const slaBreached = filteredTickets.filter((ticket) => ticket.slaBreached).length
+  const slaOk = total - slaBreached
 
-  // ── Priority data ────────────────────────────────────────────
-  const priorityData = [
-    { key: 'LOW',      label: 'Low',      count: filtered.filter((t) => t.priority === 'LOW').length },
-    { key: 'MEDIUM',   label: 'Medium',   count: filtered.filter((t) => t.priority === 'MEDIUM').length },
-    { key: 'HIGH',     label: 'High',     count: filtered.filter((t) => t.priority === 'HIGH').length },
-    { key: 'CRITICAL', label: 'Critical', count: filtered.filter((t) => t.priority === 'CRITICAL').length },
-  ]
+  const statusData = useMemo(
+    () => [
+      countTickets(filteredTickets, 'status', 'IN_PROGRESS', 'In progress'),
+      countTickets(filteredTickets, 'status', 'RESOLVED', 'Resolved'),
+      countTickets(filteredTickets, 'status', 'CLOSED', 'Closed'),
+    ],
+    [filteredTickets]
+  )
 
-  const slaBreached = filtered.filter((t) => t.slaBreached).length
-  const slaOk       = total - slaBreached
+  const priorityData = useMemo(
+    () => [
+      countTickets(filteredTickets, 'priority', 'LOW', 'Low'),
+      countTickets(filteredTickets, 'priority', 'MEDIUM', 'Medium'),
+      countTickets(filteredTickets, 'priority', 'HIGH', 'High'),
+      countTickets(filteredTickets, 'priority', 'CRITICAL', 'Critical'),
+    ],
+    [filteredTickets]
+  )
 
   return (
-    <section className="admin-home-page">
+    <section className="flex flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Ticket Analysis</CardTitle>
+          <CardDescription>
+            Monitor assigned ticket distribution, priority pressure, and SLA health.
+          </CardDescription>
+          <CardAction className="flex items-center gap-2">
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger aria-label="Date range" className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {DATE_RANGES.map((range) => (
+                    <SelectItem key={range.value} value={range.value}>
+                      {range.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={loadTickets} disabled={loading}>
+              <RefreshCwIcon data-icon="inline-start" />
+              Refresh
+            </Button>
+          </CardAction>
+        </CardHeader>
+      </Card>
 
-      {/* ── Header ── */}
-      <div className="admin-home-header">
-        <div>
-          <p style={{ margin: '0 0 0.2rem', fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Administration
-          </p>
-          <h1 style={{ margin: 0 }}>Ticket Analysis</h1>
-          <p style={{ margin: '0.3rem 0 0', color: '#64748b' }}>
-            Monitor your ticket distributions with a clean, interactive analytics view.
-          </p>
-        </div>
-
-        {/* Date range filter + refresh */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Date Range
-            </span>
-            <select
-              value={dateRange}
-              onChange={(e) => setRange(e.target.value)}
-              style={{
-                padding: '0.5rem 0.9rem',
-                borderRadius: '0.75rem',
-                border: '1.5px solid #e2e8f0',
-                fontSize: '0.88rem',
-                fontWeight: 600,
-                color: '#374151',
-                background: '#fff',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="ALL">All Time</option>
-              <option value="7D">Last 7 Days</option>
-              <option value="30D">Last 30 Days</option>
-              <option value="90D">Last 90 Days</option>
-            </select>
-          </div>
-          <button
-            onClick={load}
-            style={{
-              marginTop: '1.2rem',
-              padding: '0.5rem 1.1rem',
-              borderRadius: '0.75rem',
-              border: '1.5px solid #e2e8f0',
-              background: '#fff',
-              fontSize: '0.88rem',
-              fontWeight: 700,
-              color: '#374151',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-            }}
-          >
-            ↻ Refresh
-          </button>
-        </div>
-      </div>
-
-      <StatusBanner type="error" message={error} />
+      {error ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Request failed</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
 
       {loading ? (
-        <p style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading analysis...</p>
+        <AnalysisSkeleton />
       ) : (
         <>
-          {/* ── Top 3 stat cards ── */}
-          <div className="admin-stat-grid">
-            <article className="admin-stat-card">
-              <p>Total Tickets</p>
-              <h2>{total}</h2>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Filtered by {dateRange === 'ALL' ? 'All Time' : dateRange}</span>
-            </article>
-            <article className="admin-stat-card">
-              <p>Status Tickets</p>
-              <h2>{total}</h2>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                {statusData.filter((s) => s.count > 0).map((s) => s.label).join(', ') || '—'}
-              </span>
-            </article>
-            <article className="admin-stat-card">
-              <p>Priority Tickets</p>
-              <h2>{total}</h2>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                {priorityData.filter((p) => p.count > 0).map((p) => p.label).join(', ') || '—'}
-              </span>
-            </article>
-            <article
-              className="admin-stat-card"
-              style={slaBreached > 0 ? { borderTop: '3px solid #dc2626' } : {}}
-            >
-              <p>SLA Breached</p>
-              <h2 style={slaBreached > 0 ? { color: '#b91c1c' } : {}}>{slaBreached}</h2>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{slaOk} within SLA</span>
-            </article>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard title="Filtered tickets" value={total} detail={selectedRangeLabel(dateRange)} />
+            <MetricCard
+              title="Active work"
+              value={statusData.find((item) => item.key === 'IN_PROGRESS')?.count || 0}
+              detail="Tickets still in progress"
+            />
+            <MetricCard
+              title="Critical priority"
+              value={priorityData.find((item) => item.key === 'CRITICAL')?.count || 0}
+              detail="Needs fastest response"
+            />
+            <MetricCard title="SLA breached" value={slaBreached} detail={`${slaOk} within SLA`} />
           </div>
 
-          {/* ── Distribution Overview heading ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', margin: '0.5rem 0' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand-600)' }} />
-            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Distribution Overview
-            </span>
-          </div>
-
-          {/* ── Two chart cards side by side ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
-
-            {/* Status chart */}
-            <div className="admin-section-card" style={{ padding: '1.5rem' }}>
-              <div style={{ marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                  <span style={{ fontSize: '1rem' }}>📊</span>
-                  <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>Ticket Status Analysis</h2>
-                </div>
-                <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
-                  IN PROGRESS, RESOLVED, CLOSED
-                </p>
-              </div>
-              {total === 0 ? (
-                <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem 0' }}>No tickets in this range.</p>
-              ) : (
-                <DonutChart data={statusData} colors={STATUS_COLORS} total={total} label="Statuses" />
-              )}
-            </div>
-
-            {/* Priority chart */}
-            <div className="admin-section-card" style={{ padding: '1.5rem' }}>
-              <div style={{ marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                  <span style={{ fontSize: '1rem' }}>🏷</span>
-                  <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>Ticket Priority Analysis</h2>
-                </div>
-                <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
-                  LOW, MEDIUM, HIGH, CRITICAL
-                </p>
-              </div>
-              {total === 0 ? (
-                <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem 0' }}>No tickets in this range.</p>
-              ) : (
-                <DonutChart data={priorityData} colors={PRIORITY_COLORS} total={total} label="Priorities" />
-              )}
-            </div>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <DistributionCard
+              title="Status distribution"
+              description="Current ticket states in selected date range."
+              items={statusData}
+              total={total}
+            />
+            <DistributionCard
+              title="Priority distribution"
+              description="Priority mix for assigned technician workload."
+              items={priorityData}
+              total={total}
+            />
           </div>
         </>
       )}
     </section>
+  )
+}
+
+function countTickets(tickets, field, key, label) {
+  return {
+    key,
+    label,
+    count: tickets.filter((ticket) => ticket[field] === key).length,
+  }
+}
+
+function selectedRangeLabel(value) {
+  return DATE_RANGES.find((range) => range.value === value)?.label || 'Selected range'
+}
+
+function MetricCard({ title, value, detail }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardDescription>{title}</CardDescription>
+        <CardTitle className="text-3xl">{value}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">{detail}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function DistributionCard({ title, description, items, total }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        {total === 0 ? (
+          <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+            No tickets in this range.
+          </div>
+        ) : (
+          items.map((item) => {
+            const percent = total > 0 ? Math.round((item.count / total) * 100) : 0
+            return (
+              <div key={item.key} className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="font-medium">{item.label}</p>
+                  <p className="text-sm text-muted-foreground">{percent}% of filtered tickets</p>
+                </div>
+                <Badge variant="secondary">{item.count}</Badge>
+              </div>
+            )
+          })
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function AnalysisSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => (
+          <Card key={item}>
+            <CardHeader>
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-12" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-4 w-32" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div className="grid gap-4 xl:grid-cols-2">
+        {[0, 1].map((item) => (
+          <Card key={item}>
+            <CardHeader>
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   )
 }
 
