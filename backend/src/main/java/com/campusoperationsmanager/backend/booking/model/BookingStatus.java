@@ -1,4 +1,4 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.model;
 
 public enum BookingStatus {
     PENDING,

@@ -1,4 +1,4 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

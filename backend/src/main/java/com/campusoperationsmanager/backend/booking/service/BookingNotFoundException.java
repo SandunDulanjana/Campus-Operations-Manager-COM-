@@ -1,4 +1,4 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.service;
 
 public class BookingNotFoundException extends RuntimeException {
     public BookingNotFoundException(Long id) {

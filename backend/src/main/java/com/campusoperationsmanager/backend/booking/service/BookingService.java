@@ -1,5 +1,8 @@
-package com.campusoperationsmanager.backend.booking;
+package com.campusoperationsmanager.backend.booking.service;
 
+import com.campusoperationsmanager.backend.booking.model.Booking;
+import com.campusoperationsmanager.backend.booking.model.BookingHistory;
+import com.campusoperationsmanager.backend.booking.model.BookingStatus;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,6 +20,8 @@ import com.campusoperationsmanager.backend.booking.dto.BookingDetailsResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingStatusUpdateRequest;
 import com.campusoperationsmanager.backend.booking.dto.CreateBookingRequest;
+import com.campusoperationsmanager.backend.booking.repository.BookingHistoryRepository;
+import com.campusoperationsmanager.backend.booking.repository.BookingRepository;
 import com.campusoperationsmanager.backend.notification.model.NotificationType;
 import com.campusoperationsmanager.backend.notification.service.NotificationService;
 import com.campusoperationsmanager.backend.resource.model.Resource;

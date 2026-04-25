@@ -1,7 +1,7 @@
 package com.campusoperationsmanager.backend.booking.dto;
 
-import com.campusoperationsmanager.backend.booking.BookingHistory;
-import com.campusoperationsmanager.backend.booking.BookingStatus;
+import com.campusoperationsmanager.backend.booking.model.BookingHistory;
+import com.campusoperationsmanager.backend.booking.model.BookingStatus;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
