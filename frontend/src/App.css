@@ -1737,6 +1737,188 @@
   font-size: 1.45rem;
 }
 
+.booking-stat-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 1rem;
+}
+
+.booking-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 96px;
+  padding: 0.95rem 1rem;
+}
+
+.booking-stat-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.9rem;
+  flex-shrink: 0;
+}
+
+.booking-stat-card__icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.booking-stat-card__icon--total {
+  background: #eef6ff;
+  color: #1d4ed8;
+}
+
+.booking-stat-card__icon--pending {
+  background: #fff7ed;
+  color: #d97706;
+}
+
+.booking-stat-card__icon--approved {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.booking-details-modal {
+  max-width: 920px;
+}
+
+.booking-details-modal__subhead {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+}
+
+.booking-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.booking-details-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #fff;
+  padding: 1rem;
+}
+
+.booking-details-card h3 {
+  margin: 0 0 0.9rem;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.booking-details-card dl {
+  margin: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.booking-details-card dl div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.booking-details-card dt {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.booking-details-card dd {
+  margin: 0;
+  color: #111827;
+}
+
+.booking-history-card {
+  margin-top: 1rem;
+}
+
+.booking-history-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.booking-history-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.9rem;
+  background: #f8fafc;
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.booking-history-item__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.15rem;
+  color: #475569;
+  font-size: 0.88rem;
+}
+
+.booking-history-item__status {
+  margin: 0;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.booking-history-item__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.booking-history-item__details div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.booking-history-item__details span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.booking-history-item__details strong {
+  color: #334155;
+  font-size: 0.92rem;
+}
+
+.booking-history-empty {
+  margin: 0;
+  color: #475569;
+}
+
+.admin-bookings-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.95rem;
+  flex-wrap: wrap;
+}
+
+.admin-bookings-actions-row .primary-btn,
+.admin-bookings-actions-row .secondary-btn {
+  width: auto;
+  border-radius: 999px;
+  padding-left: 1.05rem;
+  padding-right: 1.05rem;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.admin-bookings-actions-row .secondary-btn {
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+}
+
+.admin-bookings-actions-row .secondary-btn:hover {
+  background: #f4f7f6;
+}
+
 .admin-section-card {
   padding: 1rem;
 }
@@ -1795,6 +1977,21 @@
 .admin-filter-row .primary-btn {
   width: auto;
   min-width: 140px;
+  height: 2.75rem;
+  border-radius: 0.82rem;
+}
+
+.admin-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.admin-filter-actions .primary-btn,
+.admin-filter-actions .ghost-btn {
+  width: auto;
+  min-width: 120px;
   height: 2.75rem;
   border-radius: 0.82rem;
 }
@@ -3180,7 +3377,22 @@ tbody tr:hover td {
     flex-wrap: wrap;
   }
 
+  .admin-bookings-actions-row {
+    justify-content: flex-start;
+  }
+
   .admin-filter-row .primary-btn {
+    width: 100%;
+  }
+
+  .admin-filter-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-filter-actions .primary-btn,
+  .admin-filter-actions .ghost-btn {
     width: 100%;
   }
 

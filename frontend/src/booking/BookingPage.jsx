@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { createBooking, fetchApprovedWeeklyBookings, fetchMyBookings, updateBookingStatus } from '../api/bookingApi'
+import { createBooking, fetchApprovedWeeklyBookings, fetchMyBookings, resubmitBooking, updateBookingStatus } from '../api/bookingApi'
 import { fetchResources } from '../api/resourceApi'
 import { fetchWeeklyTimetable, uploadTimetable } from '../api/timetableApi'
 import { useAuth } from '../context/useAuth'
@@ -24,6 +24,20 @@ const DEFAULT_FORM = {
 const SLOT_START_HOUR = 6
 const SLOT_END_HOUR = 22
 
+function getErrorMessage(error, fallbackMessage) {
+  const status = error?.response?.status
+
+  if (status === 401) {
+    return 'Session expired or missing. Please log in again.'
+  }
+
+  if (status === 403) {
+    return 'You do not have permission to access bookings.'
+  }
+
+  return error?.response?.data?.error || fallbackMessage
+}
+
 function BookingPage() {
   const { user } = useAuth()
   const [resources, setResources] = useState([])
@@ -45,6 +59,7 @@ function BookingPage() {
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [editingBookingId, setEditingBookingId] = useState(null)
 
   useEffect(() => {
   void loadResources()
@@ -94,8 +109,8 @@ function BookingPage() {
     try {
       const data = await fetchResources()
       setResources(data.filter((resource) => resource.status === 'ACTIVE'))
-    } catch {
-      setErrorMessage('Failed to load resources')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to load resources'))
     }
   }
 
@@ -103,8 +118,8 @@ function BookingPage() {
     try {
       const data = await fetchMyBookings(user)
       setMyBookings(data)
-    } catch {
-      setErrorMessage('Failed to load bookings')
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'Failed to load bookings'))
     }
   }
 
@@ -156,13 +171,20 @@ function BookingPage() {
         equipmentType: showExpectedAttendees ? null : formData.equipmentType,
       }
 
-      await createBooking(payload, user)
+      if (editingBookingId) {
+        await resubmitBooking(editingBookingId, payload)
+        setSuccessMessage('Booking request resubmitted with status PENDING')
+      } else {
+        await createBooking(payload, user)
+        setSuccessMessage('Booking request created with status PENDING')
+      }
+
       setFormData(DEFAULT_FORM)
+      setEditingBookingId(null)
       setShowForm(false)
-      setSuccessMessage('Booking request created with status PENDING')
       await loadMyBookings()
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to create booking request')
+      setErrorMessage(getErrorMessage(error, 'Failed to create booking request'))
     } finally {
       setLoading(false)
     }
@@ -183,7 +205,7 @@ function BookingPage() {
       setSuccessMessage('Booking cancelled successfully')
       await loadMyBookings()
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to cancel booking')
+      setErrorMessage(getErrorMessage(error, 'Failed to cancel booking'))
     } finally {
       setLoading(false)
     }
@@ -200,7 +222,7 @@ function BookingPage() {
       const result = await uploadTimetable(uploadFile, user)
       setUploadResult(result)
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to upload timetable')
+      setErrorMessage(getErrorMessage(error, 'Failed to upload timetable'))
     } finally {
       setUploading(false)
     }
@@ -223,7 +245,7 @@ function BookingPage() {
 
       setWeeklyBookings([...approvedBookings, ...normalizedTimetableSlots])
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'Failed to load bookings')
+      setErrorMessage(getErrorMessage(error, 'Failed to load bookings'))
     }
   }
 
@@ -275,6 +297,27 @@ function BookingPage() {
       .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
   }
 
+  function openResubmitForm(booking) {
+    setEditingBookingId(booking.id)
+    setFormData({
+      resourceId: String(booking.resourceId),
+      bookingDate: booking.bookingDate,
+      startTime: booking.startTime?.slice(0, 5) || '',
+      endTime: booking.endTime?.slice(0, 5) || '',
+      purpose: booking.purpose || '',
+      expectedAttendees: booking.expectedAttendees ? String(booking.expectedAttendees) : '',
+      equipmentType: booking.equipmentType || '',
+    })
+    clearMessages()
+    setShowForm(true)
+  }
+
+  function closeBookingForm() {
+    setShowForm(false)
+    setEditingBookingId(null)
+    setFormData(DEFAULT_FORM)
+  }
+
   return (
     <section className="booking-page">
       <HeroSection
@@ -283,7 +326,7 @@ function BookingPage() {
         imageSrc={bookingIllustration}
         imageAlt="Booking and scheduling illustration"
         actions={
-          <ActionButton kind="primary" onClick={() => setShowForm(true)}>
+          <ActionButton kind="primary" onClick={() => { setEditingBookingId(null); setFormData(DEFAULT_FORM); setShowForm(true) }}>
             Request a Booking
           </ActionButton>
         }
@@ -304,11 +347,11 @@ function BookingPage() {
       </div>
 
       {showForm ? (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowForm(false)}>
+        <div className="modal-backdrop" role="presentation" onClick={closeBookingForm}>
           <div className="modal-window" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
-              <h2>Request a Booking</h2>
-              <ActionButton kind="ghost" className="modal-close-icon" aria-label="Close" onClick={() => setShowForm(false)}>
+              <h2>{editingBookingId ? 'Revise and Resubmit Booking' : 'Request a Booking'}</h2>
+              <ActionButton kind="ghost" className="modal-close-icon" aria-label="Close" onClick={closeBookingForm}>
                 &#10005;
               </ActionButton>
             </div>
@@ -396,7 +439,7 @@ function BookingPage() {
               )}
 
               <ActionButton kind="primary" type="submit" disabled={loading}>
-                {loading ? 'Submitting...' : 'Submit Booking Request'}
+                {loading ? 'Submitting...' : editingBookingId ? 'Resubmit Booking Request' : 'Submit Booking Request'}
               </ActionButton>
             </form>
           </div>
@@ -442,6 +485,10 @@ function BookingPage() {
                     {booking.status === 'APPROVED' ? (
                       <ActionButton kind="danger" onClick={() => cancelBooking(booking.id)} disabled={loading}>
                         Cancel
+                      </ActionButton>
+                    ) : booking.status === 'REJECTED' ? (
+                      <ActionButton kind="ghost" onClick={() => openResubmitForm(booking)} disabled={loading}>
+                        Revise & Resubmit
                       </ActionButton>
                     ) : (
                       '-'

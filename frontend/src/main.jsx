@@ -1,46 +1,47 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import axios from 'axios'           // ← ADD
+import axios from 'axios'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
 
 const TOKEN_KEY = 'campus-jwt-token'
 
-// ── Restore JWT on page refresh ───────────────────────────────────────────────
-// WHY: axios.defaults are cleared on refresh. This re-sets the header
-//      from localStorage so all API calls (including adminApi) are authenticated.
 const storedToken = localStorage.getItem(TOKEN_KEY)
 if (storedToken) {
   axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
 }
 
-// ── Interceptor: keep header in sync for every future request ─────────────────
-axios.interceptors.request.use(config => {
+axios.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY)
-  if (token) config.headers['Authorization'] = `Bearer ${token}`
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  } else if (config.headers?.Authorization) {
+    delete config.headers.Authorization
+  }
+
   return config
 })
 
-// ── Intercept 401 responses → clear session and redirect to login ─────────────
 axios.interceptors.response.use(
-  response => response,
-  error => {
+  (response) => response,
+  (error) => {
     if (error?.response?.status === 401) {
-      localStorage.removeItem('campus-jwt-token')
+      localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem('campus-user')
       delete axios.defaults.headers.common['Authorization']
 
       const publicPaths = ['/login', '/oauth2', '/forgot-password', '/reset-password', '/setup-account', '/enter-university-id']
-      const isPublic = publicPaths.some(p => window.location.pathname.startsWith(p))
+      const isPublic = publicPaths.some((path) => window.location.pathname.startsWith(path))
       if (!isPublic) {
         const returnTo = window.location.pathname + window.location.search
         window.location.href = `/login?returnTo=${encodeURIComponent(returnTo)}`
       }
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 createRoot(document.getElementById('root')).render(

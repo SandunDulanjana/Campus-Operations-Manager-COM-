@@ -1,6 +1,7 @@
 package com.campusoperationsmanager.backend.booking;
 
 import com.campusoperationsmanager.backend.booking.dto.BookingResponse;
+import com.campusoperationsmanager.backend.booking.dto.BookingDetailsResponse;
 import com.campusoperationsmanager.backend.booking.dto.BookingStatusUpdateRequest;
 import com.campusoperationsmanager.backend.booking.dto.CreateBookingRequest;
 import jakarta.validation.Valid;
@@ -46,6 +47,15 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getUserBookings(userId));
     }
 
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<BookingDetailsResponse> getBookingDetails(
+        @PathVariable Long bookingId,
+        @AuthenticationPrincipal Long userId,
+        Authentication authentication
+    ) {
+        return ResponseEntity.ok(bookingService.getBookingDetails(bookingId, userId, isAdmin(authentication)));
+    }
+
     @GetMapping
     public ResponseEntity<List<BookingResponse>> getAllBookings(
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -76,6 +86,15 @@ public class BookingController {
             isAdmin(authentication)
         );
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{bookingId}/resubmit")
+    public ResponseEntity<BookingResponse> resubmitBooking(
+        @PathVariable Long bookingId,
+        @Valid @RequestBody CreateBookingRequest request,
+        @AuthenticationPrincipal Long userId
+    ) {
+        return ResponseEntity.ok(bookingService.resubmitBooking(bookingId, request, userId));
     }
 
     private boolean isAdmin(Authentication authentication) {
