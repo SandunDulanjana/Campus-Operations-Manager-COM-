@@ -31,6 +31,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import CampusMark from '@/components/icons/CampusMark'
+import NotificationBell from '@/components/NotificationBell'
 import {
   BellIcon,
   BoxesIcon,
@@ -184,9 +185,7 @@ function AdminLayout() {
               <SearchIcon className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
               <Input className="w-72 pl-8" placeholder="Search admin pages..." />
             </div>
-            <Button variant="outline" size="icon-sm">
-              <BellIcon />
-            </Button>
+            <NotificationBell />
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
