@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -406,31 +407,32 @@ function AdminBookingsPage() {
             </Alert>
           ) : null}
 
-          <form className="grid gap-4 rounded-xl border bg-muted/30 p-4 md:grid-cols-2 xl:grid-cols-5" onSubmit={applyFilters}>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="booking-date">Date</label>
+          <form className="rounded-xl border bg-muted/30 p-4" onSubmit={applyFilters}>
+            <FieldGroup className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <Field>
+              <FieldLabel htmlFor="booking-date">Date</FieldLabel>
               <Input id="booking-date" type="date" value={filters.selectedDate} onChange={(event) => updateFilter('selectedDate', event.target.value)} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="booking-month">Month</label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="booking-month">Month</FieldLabel>
               <Input id="booking-month" type="month" value={filters.selectedMonth} onChange={(event) => updateFilter('selectedMonth', event.target.value)} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Resource Type</label>
+            </Field>
+            <Field>
+              <FieldLabel>Resource Type</FieldLabel>
               <Select value={filters.resourceType || '__all__'} onValueChange={(value) => updateFilter('resourceType', value === '__all__' ? '' : value)}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
                     <SelectItem value="__all__">All</SelectItem>
                     {resourceTypes.map((type) => (
-                      <SelectItem key={type} value={type}>{type.replace('_', ' ')}</SelectItem>
+                      <SelectItem key={type} value={type}>{type.replaceAll('_', ' ')}</SelectItem>
                     ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Status</label>
+            </Field>
+            <Field>
+              <FieldLabel>Status</FieldLabel>
               <Select value={filters.status || '__all__'} onValueChange={(value) => updateFilter('status', value === '__all__' ? '' : value)}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -443,11 +445,12 @@ function AdminBookingsPage() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
             <div className="flex items-end gap-2">
               <Button className="flex-1" type="submit" disabled={loading}>{loading ? 'Loading...' : 'Apply'}</Button>
               <Button variant="outline" type="button" disabled={loading} onClick={() => { void resetFilters() }}>Reset</Button>
             </div>
+            </FieldGroup>
           </form>
 
           <div className="rounded-xl border">
@@ -598,8 +601,16 @@ function AdminBookingsPage() {
             <DialogTitle>Upload Timetable</DialogTitle>
             <DialogDescription>Upload CSV, XLS, or XLSX timetable data.</DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <Input type="file" accept=".csv,.xls,.xlsx" onChange={(event) => setUploadFile(event.target.files?.[0] || null)} />
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="admin-timetable-file">Timetable file</FieldLabel>
+              <Input
+                id="admin-timetable-file"
+                type="file"
+                accept=".csv,.xls,.xlsx"
+                onChange={(event) => setUploadFile(event.target.files?.[0] || null)}
+              />
+            </Field>
             {uploadResult ? (
               <Alert>
                 <CheckIcon />
@@ -607,10 +618,13 @@ function AdminBookingsPage() {
                 <AlertDescription>Uploaded: {uploadResult.inserted} rows. Skipped: {uploadResult.skipped}.</AlertDescription>
               </Alert>
             ) : null}
-          </div>
+          </FieldGroup>
           <DialogFooter>
             <Button variant="outline" onClick={closeUploadModal}>Cancel</Button>
-            <Button onClick={handleUpload} disabled={uploading}>{uploading ? 'Uploading...' : 'Upload'}</Button>
+            <Button onClick={handleUpload} disabled={uploading}>
+              <UploadIcon data-icon="inline-start" />
+              {uploading ? 'Uploading...' : 'Upload'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -636,7 +650,7 @@ function AdminBookingsPage() {
             </Button>
           </div>
           <div className="overflow-x-auto rounded-xl border">
-            <div className="grid min-w-[900px]" style={{ gridTemplateColumns: '92px repeat(7, minmax(110px, 1fr))' }}>
+            <div className="grid min-w-[900px] grid-cols-[92px_repeat(7,minmax(110px,1fr))]">
               <div className="border-b border-r bg-muted/50 p-3 text-sm font-medium">Time</div>
               {weekDates.map((dateValue) => (
                 <div key={toDateKey(dateValue)} className="border-b border-r bg-muted/50 p-3 text-sm">
@@ -667,7 +681,11 @@ function AdminBookingsPage() {
             </div>
           </div>
           {weeklyBookings.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No approved bookings or lecture reservations found for this week.</p>
+            <Alert>
+              <CalendarIcon />
+              <AlertTitle>No bookings found</AlertTitle>
+              <AlertDescription>No approved bookings or lecture reservations found for this week.</AlertDescription>
+            </Alert>
           ) : null}
         </DialogContent>
       </Dialog>
