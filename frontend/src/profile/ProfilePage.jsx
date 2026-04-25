@@ -432,7 +432,7 @@ export default function ProfilePage() {
   const { user, updateUser } = useAuth()
 
   // Feature 3 FIX: always initialize form from empty strings; useEffect + API fetch sets real values
-  const [profileForm, setProfileForm] = useState({ name: '', phone: '', department: '' })
+  const [profileForm, setProfileForm] = useState({ name: '', phone: '', department: '', emailNotificationsEnabled: true })
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileSuccess, setProfileSuccess] = useState('')
   const [profileError,   setProfileError]   = useState('')
@@ -457,10 +457,16 @@ export default function ProfilePage() {
         name:       fresh.name       || '',
         phone:      fresh.phone      || '',
         department: fresh.department || '',
+        emailNotificationsEnabled: fresh.emailNotificationsEnabled ?? true,
       })
     }).catch(() => {
       // Fallback to context user if API fails (e.g. token expired)
-      if (user) setProfileForm({ name: user.name || '', phone: user.phone || '', department: user.department || '' })
+      if (user) setProfileForm({ 
+        name: user.name || '', 
+        phone: user.phone || '', 
+        department: user.department || '', 
+        emailNotificationsEnabled: user.emailNotificationsEnabled ?? true 
+      })
     })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -499,6 +505,7 @@ export default function ProfilePage() {
         name:       updated.name       || '',
         phone:      updated.phone      || '',
         department: updated.department || '',
+        emailNotificationsEnabled: updated.emailNotificationsEnabled ?? true,
       })
       setProfileSuccess('Profile updated successfully!')
     } catch (err) {
@@ -601,7 +608,7 @@ export default function ProfilePage() {
           <Banner type="error"   msg={profileError} />
           <form className="profile-form" onSubmit={handleProfileSave}>
             <FieldRow iconKind="mail" label="Email address" locked value={user?.email} />
-            {user?.username && <FieldRow iconKind="user" label="Username" locked value={user.username} />}
+            {user?.username && <FieldRow iconKind="user" label="University ID" locked value={user.username} />}
             <FieldRow iconKind="user" label="Full name">
               <input className="profile-input" value={profileForm.name}
                 onChange={e => setProfileForm(f => ({ ...f, name: e.target.value }))}
@@ -617,6 +624,22 @@ export default function ProfilePage() {
                 onChange={e => setProfileForm(f => ({ ...f, department: e.target.value }))}
                 placeholder="e.g. Faculty of Computing" />
             </FieldRow>
+
+            <div style={{ marginTop: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={profileForm.emailNotificationsEnabled}
+                  onChange={e => setProfileForm(f => ({ ...f, emailNotificationsEnabled: e.target.checked }))}
+                  style={{ width: '1.25rem', height: '1.25rem', accentColor: 'var(--brand-600)' }}
+                />
+                <div>
+                  <div style={{ fontWeight: 600, color: '#1e293b' }}>Receive Email Notifications</div>
+                  <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Get updates about bookings, tickets, and comments. Registration and password alerts are always sent.</div>
+                </div>
+              </label>
+            </div>
+
             <div className="profile-form-footer">
               <button type="submit" className="profile-save-btn" disabled={profileLoading}>
                 {profileLoading

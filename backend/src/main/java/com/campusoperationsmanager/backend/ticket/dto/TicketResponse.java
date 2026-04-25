@@ -43,16 +43,17 @@ public class TicketResponse {
     private List<AttachmentInfo> attachments;
 
     // Inner class for comments embedded in ticket response
-    @Data
+   @Data
     @Builder
     public static class CommentResponse {
         private Long id;
         private String content;
         private String authorEmail;
+        private String authorRole;   
+        private String authorName;   
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
     }
-
     // Inner class for attachment metadata (NOT the actual image bytes)
     @Data
     @Builder
