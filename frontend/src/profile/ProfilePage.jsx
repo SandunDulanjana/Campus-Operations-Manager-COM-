@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  ArrowLeftIcon,
   BadgeCheckIcon,
   Building2Icon,
   CameraIcon,
@@ -17,6 +18,7 @@ import {
   SmartphoneIcon,
   UserIcon,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -538,6 +540,7 @@ function TwoFactorSection({ user, onStatusChange }) {
 }
 
 export default function ProfilePage() {
+  const navigate = useNavigate()
   const { user, updateUser } = useAuth()
   const [profileForm, setProfileForm] = useState({
     name: '',
@@ -684,7 +687,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 md:p-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 py-6">
+      <div className="flex items-center justify-between gap-3">
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          <ArrowLeftIcon data-icon="inline-start" />
+          Back
+        </Button>
+        <Badge variant="outline">Account Center</Badge>
+      </div>
       <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="grid gap-0 lg:grid-cols-[0.85fr_1.15fr]">

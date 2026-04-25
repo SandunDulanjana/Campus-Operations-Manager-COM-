@@ -58,8 +58,7 @@ function App() {
   const { user } = useAuth()
   const isAdminRoute = location.pathname.startsWith('/admin')
   const isTechnicianRoute = location.pathname.startsWith('/technician')
-  const isProfileRoute = location.pathname === '/profile'
-  const isAppShellRoute = isAdminRoute || isTechnicianRoute || isProfileRoute
+  const isAppShellRoute = isAdminRoute || isTechnicianRoute
   const isLoginRoute = location.pathname === '/login'
     || location.pathname === '/oauth/callback'
     || location.pathname.startsWith('/oauth2')
