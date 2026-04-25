@@ -1,0 +1,43 @@
+resourceName,slotDate,startTime,endTime,facultyName,courseCode
+Research room,2026-04-27,08:00,10:00,Dr. Perera,CS101
+A-301 Meeting Room,2026-04-27,08:00,10:00,Ms. Fernando,CS101-LAB
+dsfsfb,2026-04-27,10:30,12:30,Prof. Silva,SE201
+MAC LAB,2026-04-27,10:30,12:30,Mr. Jayasinghe,SE201-LAB
+Research room,2026-04-27,13:00,15:00,Dr. Ramanayake,IT205
+dsfsfb,2026-04-27,15:30,17:30,Ms. Nisansala,IT205-TUT
+Research room,2026-04-28,08:00,10:00,Prof. Wijesinghe,CS202
+A-301 Meeting Room,2026-04-28,08:00,10:00,Mr. Gunawardena,CS202-LAB
+dsfsfb,2026-04-28,10:30,12:30,Dr. De Silva,IS110
+MAC LAB,2026-04-28,10:30,12:30,Ms. Fernando,IS110-LAB
+Research room,2026-04-28,13:00,15:00,Prof. Karunaratne,SE220
+dsfsfb,2026-04-28,15:30,17:30,Mr. Jayasinghe,SE220-TUT
+Research room,2026-04-29,08:00,10:00,Dr. Perera,DA301
+A-301 Meeting Room,2026-04-29,08:00,10:00,Ms. Nisansala,DA301-LAB
+dsfsfb,2026-04-29,10:30,12:30,Prof. Silva,CS315
+MAC LAB,2026-04-29,10:30,12:30,Mr. Gunawardena,CS315-LAB
+Research room,2026-04-29,13:00,15:00,Dr. Ramanayake,NE210
+dsfsfb,2026-04-29,15:30,17:30,Ms. Fernando,NE210-TUT
+Research room,2026-04-30,08:00,10:00,Prof. Karunaratne,SE330
+A-301 Meeting Room,2026-04-30,08:00,10:00,Mr. Jayasinghe,SE330-LAB
+dsfsfb,2026-04-30,10:30,12:30,Dr. De Silva,IT240
+MAC LAB,2026-04-30,10:30,12:30,Ms. Nisansala,IT240-LAB
+Research room,2026-04-30,13:00,15:00,Prof. Wijesinghe,CS250
+dsfsfb,2026-04-30,15:30,17:30,Mr. Gunawardena,CS250-TUT
+Research room,2026-05-01,08:00,10:00,Dr. Perera,CS340
+A-301 Meeting Room,2026-05-01,08:00,10:00,Ms. Fernando,CS340-LAB
+dsfsfb,2026-05-01,10:30,12:30,Prof. Silva,SE310
+MAC LAB,2026-05-01,10:30,12:30,Mr. Jayasinghe,SE310-LAB
+Research room,2026-05-01,13:00,15:00,Dr. Ramanayake,IT260
+dsfsfb,2026-05-01,15:30,17:30,Ms. Nisansala,IT260-TUT
+Research room,2026-05-02,08:00,10:00,Prof. Karunaratne,WKD101
+A-301 Meeting Room,2026-05-02,08:00,10:00,Mr. Gunawardena,WKD101-LAB
+dsfsfb,2026-05-02,10:30,12:30,Dr. De Silva,WKD201
+MAC LAB,2026-05-02,10:30,12:30,Ms. Fernando,WKD201-LAB
+Research room,2026-05-02,13:00,15:00,Prof. Wijesinghe,WKD202
+dsfsfb,2026-05-02,15:30,17:30,Mr. Jayasinghe,WKD202-TUT
+Research room,2026-05-03,08:00,10:00,Dr. Perera,WKD301
+A-301 Meeting Room,2026-05-03,08:00,10:00,Ms. Nisansala,WKD301-LAB
+dsfsfb,2026-05-03,10:30,12:30,Prof. Silva,WKD320
+MAC LAB,2026-05-03,10:30,12:30,Mr. Gunawardena,WKD320-LAB
+Research room,2026-05-03,13:00,15:00,Dr. Ramanayake,WKD330
+dsfsfb,2026-05-03,15:30,17:30,Ms. Fernando,WKD330-TUT
