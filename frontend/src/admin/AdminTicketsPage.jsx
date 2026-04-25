@@ -29,21 +29,6 @@ import {
   TICKET_STATUSES,
 } from '../api/ticketApi'
 
-const STATUS_COLORS = {
-  OPEN: 'var(--chart-1)',
-  IN_PROGRESS: 'var(--chart-2)',
-  RESOLVED: 'var(--chart-3)',
-  CLOSED: 'var(--chart-4)',
-  REJECTED: 'var(--destructive)',
-}
-
-const PRIORITY_COLORS = {
-  LOW: 'var(--chart-3)',
-  MEDIUM: 'var(--chart-2)',
-  HIGH: 'var(--chart-1)',
-  CRITICAL: 'var(--destructive)',
-}
-
 function getStatusVariant(status) {
   if (status === 'REJECTED') return 'destructive'
   if (status === 'IN_PROGRESS') return 'secondary'
@@ -54,76 +39,6 @@ function getPriorityVariant(priority) {
   if (priority === 'CRITICAL') return 'destructive'
   if (priority === 'HIGH') return 'default'
   return 'outline'
-}
-
-function DonutChart({ data, colors, total, label }) {
-  const size = 150
-  const center = 75
-  const radius = 54
-  const strokeWidth = 18
-  const circumference = 2 * Math.PI * radius
-  let offset = 0
-  const segments = data.map((item) => {
-    const dash = total > 0 ? (item.count / total) * circumference : 0
-    const segment = { ...item, dash, offset }
-    offset += dash
-    return segment
-  })
-
-  return (
-    <div className="flex flex-col gap-5 md:flex-row md:items-center">
-      <div className="relative shrink-0">
-        <svg width={size} height={size} className="-rotate-90">
-          <circle cx={center} cy={center} r={radius} fill="none" stroke="var(--muted)" strokeWidth={strokeWidth} />
-          {segments.map((segment) => segment.count > 0 && (
-            <circle
-              key={segment.label}
-              cx={center}
-              cy={center}
-              r={radius}
-              fill="none"
-              stroke={colors[segment.key] || 'var(--muted-foreground)'}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${segment.dash} ${circumference - segment.dash}`}
-              strokeDashoffset={-segment.offset}
-            />
-          ))}
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-semibold tracking-tight">{total}</span>
-          <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</span>
-        </div>
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
-        {segments.map((segment) => {
-          const percent = total > 0 ? Math.round((segment.count / total) * 100) : 0
-          return (
-            <div key={segment.label} className="flex flex-col gap-1">
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="flex items-center gap-2 font-medium">
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ background: colors[segment.key] || 'var(--muted-foreground)' }}
-                  />
-                  {segment.label}
-                </span>
-                <span className="text-muted-foreground">{segment.count} | {percent}%</span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${percent}%`,
-                    background: colors[segment.key] || 'var(--muted-foreground)',
-                  }}
-                />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
 }
 
 function AdminTicketsPage() {
@@ -221,24 +136,18 @@ function AdminTicketsPage() {
 
       {!loading && allTickets.length > 0 ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle>Ticket Status Analysis</CardTitle>
-              <CardDescription>Distribution across active ticket states.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <DonutChart data={statusChartData} colors={STATUS_COLORS} total={allTickets.length} label="Status" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle>Ticket Priority Analysis</CardTitle>
-              <CardDescription>Priority mix for current ticket queue.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <DonutChart data={priorityChartData} colors={PRIORITY_COLORS} total={allTickets.length} label="Priority" />
-            </CardContent>
-          </Card>
+          <DistributionCard
+            title="Ticket Status Analysis"
+            description="Distribution across active ticket states."
+            items={statusChartData}
+            total={allTickets.length}
+          />
+          <DistributionCard
+            title="Ticket Priority Analysis"
+            description="Priority mix for current ticket queue."
+            items={priorityChartData}
+            total={allTickets.length}
+          />
         </div>
       ) : null}
 
@@ -352,6 +261,31 @@ function AdminTicketsPage() {
         </CardContent>
       </Card>
     </section>
+  )
+}
+
+function DistributionCard({ title, description, items, total }) {
+  return (
+    <Card>
+      <CardHeader className="border-b">
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3 pt-4">
+        {items.map((item) => {
+          const percent = total > 0 ? Math.round((item.count / total) * 100) : 0
+          return (
+            <div key={item.key} className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="font-medium">{item.label}</p>
+                <p className="text-sm text-muted-foreground">{percent}% of all tickets</p>
+              </div>
+              <Badge variant="secondary">{item.count}</Badge>
+            </div>
+          )
+        })}
+      </CardContent>
+    </Card>
   )
 }
 
