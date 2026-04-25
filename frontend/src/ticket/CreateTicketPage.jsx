@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AlertCircleIcon, ArrowLeftIcon, ImagePlusIcon, SendIcon, XIcon } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
-import ActionButton from '../components/ui/ActionButton'
-import StatusBanner from '../components/ui/StatusBanner'
 import { fetchActiveResources } from '../api/resourceApi'
 import {
   TICKET_CATEGORIES,
@@ -11,57 +10,48 @@ import {
   formatTicketLabel,
   uploadAttachment,
 } from '../api/ticketApi'
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '../components/ui/field'
+import { Input } from '../components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select'
+import { Textarea } from '../components/ui/textarea'
 
-// Red border + shadow style for invalid fields
-const ERROR_STYLE = {
-  borderColor: '#dc2626',
-  boxShadow: '0 0 0 3px rgba(220,38,38,0.12)',
-}
-
-// Small red error message shown below a field
-function FieldError({ message }) {
-  if (!message) return null
-  return (
-    <span style={{
-      color: '#dc2626',
-      fontSize: '0.78rem',
-      marginTop: '0.2rem',
-      display: 'block',
-      fontWeight: 500,
-    }}>
-      ⚠ {message}
-    </span>
-  )
-}
+const EMPTY_SELECT_VALUE = '__none__'
 
 function CreateTicketPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
-  const [resources, setResources]   = useState([])
+  const [resources, setResources] = useState([])
   const [resLoading, setResLoading] = useState(true)
-
   const [form, setForm] = useState({
-    title:        '',
-    description:  '',
-    category:     '',
-    priority:     '',
-    resourceId:   '',
-    location:     '',
-    contactName:  user?.name  || '',
+    title: '',
+    description: '',
+    category: '',
+    priority: '',
+    resourceId: '',
+    location: '',
+    contactName: user?.name || '',
     contactEmail: user?.email || '',
     contactPhone: '',
   })
-
-  // Tracks which fields have validation errors
   const [fieldErrors, setFieldErrors] = useState({})
-
-  const [files, setFiles]       = useState([])
+  const [files, setFiles] = useState([])
   const [previews, setPreviews] = useState([])
-  const fileInputRef            = useRef(null)
-  const [loading, setLoading]   = useState(false)
-  const [errorMsg, setError]    = useState('')
-  const [successMsg, setOk]     = useState('')
+  const fileInputRef = useRef(null)
+  const [loading, setLoading] = useState(false)
+  const [errorMsg, setError] = useState('')
+  const [successMsg, setOk] = useState('')
 
   useEffect(() => {
     void loadResources()
@@ -70,8 +60,7 @@ function CreateTicketPage() {
   async function loadResources() {
     setResLoading(true)
     try {
-      const data = await fetchActiveResources()
-      setResources(data)
+      setResources(await fetchActiveResources())
     } catch {
       setResources([])
     } finally {
@@ -81,46 +70,45 @@ function CreateTicketPage() {
 
   function updateField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }))
-    // Clear the error for this field as user types
     if (fieldErrors[field]) {
       setFieldErrors((prev) => ({ ...prev, [field]: '' }))
     }
   }
 
   function handleResourceChange(resourceId) {
-    updateField('resourceId', resourceId)
-    if (!resourceId) {
+    const nextResourceId = resourceId === EMPTY_SELECT_VALUE ? '' : resourceId
+    updateField('resourceId', nextResourceId)
+    if (!nextResourceId) {
       updateField('location', '')
       return
     }
-    const selected = resources.find((r) => String(r.id) === String(resourceId))
+    const selected = resources.find((resource) => String(resource.id) === String(nextResourceId))
     if (selected?.location) {
       updateField('location', selected.location)
     }
   }
 
-  function handleFileChange(e) {
-    const selected = Array.from(e.target.files)
+  function handleFileChange(event) {
+    const selected = Array.from(event.target.files)
     const combined = [...files, ...selected].slice(0, 3)
     setFiles(combined)
-    setPreviews(combined.map((f) => URL.createObjectURL(f)))
-    e.target.value = ''
+    setPreviews(combined.map((file) => URL.createObjectURL(file)))
+    event.target.value = ''
   }
 
   function removeFile(index) {
-    setFiles(files.filter((_, i) => i !== index))
-    setPreviews(previews.filter((_, i) => i !== index))
+    setFiles(files.filter((_, currentIndex) => currentIndex !== index))
+    setPreviews(previews.filter((_, currentIndex) => currentIndex !== index))
   }
 
-  // ── Client-side validation before calling API ─────────────
   function validateForm() {
     const errors = {}
-    if (!form.title.trim())        errors.title        = 'Title is required'
-    if (!form.description.trim())  errors.description  = 'Description is required'
-    if (!form.category)            errors.category     = 'Please select a category'
-    if (!form.priority)            errors.priority     = 'Please select a priority'
-    if (!form.location.trim())     errors.location     = 'Location is required'
-    if (!form.contactName.trim())  errors.contactName  = 'Your name is required'
+    if (!form.title.trim()) errors.title = 'Title is required'
+    if (!form.description.trim()) errors.description = 'Description is required'
+    if (!form.category) errors.category = 'Please select a category'
+    if (!form.priority) errors.priority = 'Please select a priority'
+    if (!form.location.trim()) errors.location = 'Location is required'
+    if (!form.contactName.trim()) errors.contactName = 'Your name is required'
     if (!form.contactEmail.trim()) errors.contactEmail = 'Email is required'
     return errors
   }
@@ -130,12 +118,10 @@ function CreateTicketPage() {
     setError('')
     setOk('')
 
-    // Run validation — show red borders if anything is empty
     const errors = validateForm()
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
       setError('Please fill in all required fields highlighted below.')
-      // Scroll to top so user sees the error banner
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
@@ -164,244 +150,262 @@ function CreateTicketPage() {
   }
 
   return (
-    <section className="admin-resources-page">
-
-      <div className="home-section-card" style={{ padding: '1.5rem' }}>
-        <div className="panel-header">
-          <div>
-            <h1>Report an Incident</h1>
-            <p>Submit a maintenance or fault report for a campus facility or equipment.</p>
+    <section className="flex flex-col gap-6">
+      <Card>
+        <CardHeader className="gap-4 md:grid-cols-[1fr_auto] md:items-start">
+          <div className="flex flex-col gap-2">
+            <Badge variant="outline" className="w-fit">Incident intake</Badge>
+            <CardTitle className="text-3xl font-semibold tracking-tight md:text-4xl">Report an Incident</CardTitle>
+            <CardDescription>Submit a maintenance or fault report for a campus facility or equipment.</CardDescription>
           </div>
-          <ActionButton kind="ghost" onClick={() => navigate('/tickets/my')}>
-            ← My Tickets
-          </ActionButton>
-        </div>
-      </div>
+          <Button variant="outline" onClick={() => navigate('/tickets/my')}>
+            <ArrowLeftIcon data-icon="inline-start" />
+            My Tickets
+          </Button>
+        </CardHeader>
+      </Card>
 
-      <div className="home-section-card">
-        <StatusBanner type="error"   message={errorMsg}   />
-        <StatusBanner type="success" message={successMsg} />
+      {errorMsg ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Validation failed</AlertTitle>
+          <AlertDescription>{errorMsg}</AlertDescription>
+        </Alert>
+      ) : null}
 
-        <form className="booking-form" onSubmit={handleSubmit}>
+      {successMsg ? (
+        <Alert>
+          <SendIcon />
+          <AlertTitle>Ticket submitted</AlertTitle>
+          <AlertDescription>{successMsg}</AlertDescription>
+        </Alert>
+      ) : null}
 
-          {/* ── Title ── */}
-          <label>
-            Title *
-            <input
-              type="text"
-              placeholder="e.g. Projector not working in Lab 3"
-              value={form.title}
-              onChange={(e) => updateField('title', e.target.value)}
-              style={fieldErrors.title ? ERROR_STYLE : {}}
-            />
-            <FieldError message={fieldErrors.title} />
-          </label>
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Ticket Details</CardTitle>
+          <CardDescription>Use clear location and evidence so technicians can triage faster.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field data-invalid={Boolean(fieldErrors.title)}>
+                <FieldLabel htmlFor="ticket-title">Title *</FieldLabel>
+                <Input
+                  id="ticket-title"
+                  aria-invalid={Boolean(fieldErrors.title)}
+                  placeholder="e.g. Projector not working in Lab 3"
+                  value={form.title}
+                  onChange={(event) => updateField('title', event.target.value)}
+                />
+                <FieldError message={fieldErrors.title} />
+              </Field>
 
-          {/* ── Description ── */}
-          <label>
-            Description *
-            <textarea
-              placeholder="Describe the problem clearly — what happened, when, and what you already tried..."
-              value={form.description}
-              onChange={(e) => updateField('description', e.target.value)}
-              style={fieldErrors.description ? ERROR_STYLE : {}}
-            />
-            <FieldError message={fieldErrors.description} />
-          </label>
+              <Field data-invalid={Boolean(fieldErrors.description)}>
+                <FieldLabel htmlFor="ticket-description">Description *</FieldLabel>
+                <Textarea
+                  id="ticket-description"
+                  aria-invalid={Boolean(fieldErrors.description)}
+                  placeholder="Describe the problem clearly: what happened, when, and what you already tried."
+                  value={form.description}
+                  onChange={(event) => updateField('description', event.target.value)}
+                />
+                <FieldError message={fieldErrors.description} />
+              </Field>
 
-          {/* ── Category + Priority ── */}
-          <div className="resource-form-grid">
-            <label>
-              Category *
-              <select
-                value={form.category}
-                onChange={(e) => updateField('category', e.target.value)}
-                style={fieldErrors.category ? ERROR_STYLE : {}}
-              >
-                <option value="">Select a category</option>
-                {TICKET_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{formatTicketLabel(c)}</option>
-                ))}
-              </select>
-              <FieldError message={fieldErrors.category} />
-            </label>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field data-invalid={Boolean(fieldErrors.category)}>
+                  <FieldLabel>Category *</FieldLabel>
+                  <Select
+                    value={form.category || EMPTY_SELECT_VALUE}
+                    onValueChange={(value) => updateField('category', value === EMPTY_SELECT_VALUE ? '' : value)}
+                  >
+                    <SelectTrigger aria-invalid={Boolean(fieldErrors.category)} className="w-full">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value={EMPTY_SELECT_VALUE}>Select category</SelectItem>
+                        {TICKET_CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>{formatTicketLabel(category)}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FieldError message={fieldErrors.category} />
+                </Field>
 
-            <label>
-              Priority *
-              <select
-                value={form.priority}
-                onChange={(e) => updateField('priority', e.target.value)}
-                style={fieldErrors.priority ? ERROR_STYLE : {}}
-              >
-                <option value="">Select priority</option>
-                {TICKET_PRIORITIES.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-              <FieldError message={fieldErrors.priority} />
-            </label>
-          </div>
-
-          {/* ── Resource + Location ── */}
-          <div className="resource-form-grid">
-            <label>
-              Resource Name
-              <span style={{ fontWeight: 400, color: '#9ca3af', fontSize: '0.82rem' }}>
-                {' '}(fills location automatically)
-              </span>
-              <select
-                value={form.resourceId}
-                onChange={(e) => handleResourceChange(e.target.value)}
-                disabled={resLoading}
-              >
-                <option value="">
-                  {resLoading ? 'Loading resources...' : 'Select a resource (optional)'}
-                </option>
-                {resources.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name} — {r.type?.replace(/_/g, ' ')}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Location *
-              <input
-                type="text"
-                placeholder="e.g. Lab 3 – Floor 2, Block A"
-                value={form.location}
-                onChange={(e) => updateField('location', e.target.value)}
-                style={fieldErrors.location ? ERROR_STYLE : {}}
-              />
-              <FieldError message={fieldErrors.location} />
-            </label>
-          </div>
-
-          {/* ── Contact Details ── */}
-          <p style={{ margin: '0.5rem 0 0', fontWeight: 700, color: '#374151', fontSize: '0.9rem' }}>
-            Contact Details
-            <span style={{ fontWeight: 400, color: '#9ca3af', fontSize: '0.82rem', marginLeft: '0.5rem' }}>
-              (name and email pre-filled from your account)
-            </span>
-          </p>
-
-          <div className="resource-form-grid">
-            <label>
-              Your Name *
-              <input
-                type="text"
-                placeholder="Full name"
-                value={form.contactName}
-                onChange={(e) => updateField('contactName', e.target.value)}
-                style={fieldErrors.contactName ? ERROR_STYLE : {}}
-              />
-              <FieldError message={fieldErrors.contactName} />
-            </label>
-
-            <label>
-              Email *
-              <input
-                type="email"
-                placeholder="your@email.com"
-                value={form.contactEmail}
-                onChange={(e) => updateField('contactEmail', e.target.value)}
-                style={fieldErrors.contactEmail ? ERROR_STYLE : {}}
-              />
-              <FieldError message={fieldErrors.contactEmail} />
-            </label>
-
-            <label>
-              Phone Number
-              <input
-                type="tel"
-                placeholder="07X XXX XXXX"
-                value={form.contactPhone}
-                onChange={(e) => updateField('contactPhone', e.target.value)}
-              />
-            </label>
-          </div>
-
-          {/* ── Photo Evidence ── */}
-          <div>
-            <p style={{ margin: '0 0 0.5rem', fontWeight: 700, color: '#374151', fontSize: '0.9rem' }}>
-              Photo Evidence
-              <span style={{ fontWeight: 400, color: '#9ca3af', fontSize: '0.82rem', marginLeft: '0.5rem' }}>
-                (maximum 3 images)
-              </span>
-            </p>
-
-            {previews.length > 0 && (
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-                {previews.map((url, i) => (
-                  <div key={i} style={{ position: 'relative' }}>
-                    <img
-                      src={url}
-                      alt={`preview-${i + 1}`}
-                      style={{
-                        width: 96, height: 96, objectFit: 'cover',
-                        borderRadius: '0.65rem',
-                        border: '1px solid var(--border-soft)',
-                        display: 'block',
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeFile(i)}
-                      aria-label={`Remove photo ${i + 1}`}
-                      style={{
-                        position: 'absolute', top: -6, right: -6,
-                        width: 22, height: 22,
-                        background: 'var(--danger-600)', color: '#fff',
-                        border: 'none', borderRadius: '50%',
-                        cursor: 'pointer', fontSize: 14,
-                        lineHeight: '22px', textAlign: 'center',
-                        padding: 0, fontWeight: 700,
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                <Field data-invalid={Boolean(fieldErrors.priority)}>
+                  <FieldLabel>Priority *</FieldLabel>
+                  <Select
+                    value={form.priority || EMPTY_SELECT_VALUE}
+                    onValueChange={(value) => updateField('priority', value === EMPTY_SELECT_VALUE ? '' : value)}
+                  >
+                    <SelectTrigger aria-invalid={Boolean(fieldErrors.priority)} className="w-full">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value={EMPTY_SELECT_VALUE}>Select priority</SelectItem>
+                        {TICKET_PRIORITIES.map((priority) => (
+                          <SelectItem key={priority} value={priority}>{priority}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FieldError message={fieldErrors.priority} />
+                </Field>
               </div>
-            )}
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field>
+                  <FieldLabel>Resource Name</FieldLabel>
+                  <Select
+                    value={form.resourceId || EMPTY_SELECT_VALUE}
+                    onValueChange={handleResourceChange}
+                    disabled={resLoading}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={resLoading ? 'Loading resources...' : 'Select resource'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value={EMPTY_SELECT_VALUE}>
+                          {resLoading ? 'Loading resources...' : 'Select a resource (optional)'}
+                        </SelectItem>
+                        {resources.map((resource) => (
+                          <SelectItem key={resource.id} value={String(resource.id)}>
+                            {resource.name} - {resource.type?.replaceAll('_', ' ')}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FieldDescription>Location fills automatically when available.</FieldDescription>
+                </Field>
 
-            {files.length < 3 && (
-              <ActionButton kind="ghost" type="button" onClick={() => fileInputRef.current.click()}>
-                + Add Photo ({files.length}/3)
-              </ActionButton>
-            )}
+                <Field data-invalid={Boolean(fieldErrors.location)}>
+                  <FieldLabel htmlFor="ticket-location">Location *</FieldLabel>
+                  <Input
+                    id="ticket-location"
+                    aria-invalid={Boolean(fieldErrors.location)}
+                    placeholder="e.g. Lab 3, Floor 2, Block A"
+                    value={form.location}
+                    onChange={(event) => updateField('location', event.target.value)}
+                  />
+                  <FieldError message={fieldErrors.location} />
+                </Field>
+              </div>
 
-            {files.length === 3 && (
-              <p style={{ color: '#6b7280', fontSize: '0.82rem', margin: '0.25rem 0 0' }}>
-                Maximum 3 photos reached.
-              </p>
-            )}
-          </div>
+              <Field>
+                <FieldLabel>Contact Details</FieldLabel>
+                <FieldDescription>Name and email are pre-filled from your account.</FieldDescription>
+              </Field>
 
-          {/* ── Submit ── */}
-          <div className="booking-actions-row">
-            <ActionButton kind="primary" type="submit" disabled={loading}>
-              {loading ? 'Submitting...' : 'Submit Ticket'}
-            </ActionButton>
-            <ActionButton kind="ghost" type="button" onClick={() => navigate('/tickets/my')} disabled={loading}>
-              Cancel
-            </ActionButton>
-          </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field data-invalid={Boolean(fieldErrors.contactName)}>
+                  <FieldLabel htmlFor="ticket-contact-name">Your Name *</FieldLabel>
+                  <Input
+                    id="ticket-contact-name"
+                    aria-invalid={Boolean(fieldErrors.contactName)}
+                    placeholder="Full name"
+                    value={form.contactName}
+                    onChange={(event) => updateField('contactName', event.target.value)}
+                  />
+                  <FieldError message={fieldErrors.contactName} />
+                </Field>
 
-        </form>
-      </div>
+                <Field data-invalid={Boolean(fieldErrors.contactEmail)}>
+                  <FieldLabel htmlFor="ticket-contact-email">Email *</FieldLabel>
+                  <Input
+                    id="ticket-contact-email"
+                    type="email"
+                    aria-invalid={Boolean(fieldErrors.contactEmail)}
+                    placeholder="your@email.com"
+                    value={form.contactEmail}
+                    onChange={(event) => updateField('contactEmail', event.target.value)}
+                  />
+                  <FieldError message={fieldErrors.contactEmail} />
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="ticket-contact-phone">Phone Number</FieldLabel>
+                  <Input
+                    id="ticket-contact-phone"
+                    type="tel"
+                    placeholder="07X XXX XXXX"
+                    value={form.contactPhone}
+                    onChange={(event) => updateField('contactPhone', event.target.value)}
+                  />
+                </Field>
+              </div>
+
+              <Field>
+                <FieldLabel>Photo Evidence</FieldLabel>
+                <FieldDescription>Maximum 3 images.</FieldDescription>
+                {previews.length > 0 ? (
+                  <div className="flex flex-wrap gap-3">
+                    {previews.map((url, index) => (
+                      <div key={url} className="relative">
+                        <img
+                          src={url}
+                          alt={`preview-${index + 1}`}
+                          className="size-24 rounded-lg border object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon-xs"
+                          className="absolute -right-2 -top-2"
+                          onClick={() => removeFile(index)}
+                          aria-label={`Remove photo ${index + 1}`}
+                        >
+                          <XIcon />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+
+                {files.length < 3 ? (
+                  <Button type="button" variant="outline" onClick={() => fileInputRef.current.click()}>
+                    <ImagePlusIcon data-icon="inline-start" />
+                    Add Photo ({files.length}/3)
+                  </Button>
+                ) : (
+                  <FieldDescription>Maximum 3 photos reached.</FieldDescription>
+                )}
+              </Field>
+            </FieldGroup>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Button type="submit" disabled={loading}>
+                <SendIcon data-icon="inline-start" />
+                {loading ? 'Submitting...' : 'Submit Ticket'}
+              </Button>
+              <Button variant="outline" type="button" onClick={() => navigate('/tickets/my')} disabled={loading}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </section>
   )
+}
+
+function FieldError({ message }) {
+  if (!message) return null
+  return <FieldDescription className="text-destructive">{message}</FieldDescription>
 }
 
 export default CreateTicketPage
