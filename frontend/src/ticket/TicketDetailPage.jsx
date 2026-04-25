@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import {
+  AlertCircleIcon,
+  ArrowLeftIcon,
+  CheckIcon,
+  MessageSquareIcon,
+  SendIcon,
+  TrashIcon,
+} from 'lucide-react'
 import { useAuth } from '../context/useAuth'
-import ActionButton from '../components/ui/ActionButton'
-import StatusBanner from '../components/ui/StatusBanner'
 import {
   fetchTicketById,
   addComment,
@@ -16,33 +22,60 @@ import {
   formatTicketLabel,
   formatTicketDate,
   formatDuration,
-  getStatusBadgeClass,
-  getPriorityBadgeClass,
 } from '../api/ticketApi'
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Field, FieldGroup, FieldLabel } from '../components/ui/field'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select'
+import { Skeleton } from '../components/ui/skeleton'
+import { Textarea } from '../components/ui/textarea'
+
+const EMPTY_SELECT_VALUE = '__none__'
+
+function getStatusVariant(status) {
+  if (status === 'REJECTED') return 'destructive'
+  if (status === 'RESOLVED' || status === 'CLOSED') return 'secondary'
+  return 'outline'
+}
+
+function getPriorityVariant(priority) {
+  if (priority === 'CRITICAL') return 'destructive'
+  if (priority === 'HIGH') return 'secondary'
+  return 'outline'
+}
 
 function TicketDetailPage() {
-  const { id }   = useParams()
+  const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
 
-  const [ticket, setTicket]             = useState(null)
-  const [loading, setLoading]           = useState(true)
-  const [errorMessage, setError]        = useState('')
-  const [successMessage, setOk]         = useState('')
+  const [ticket, setTicket] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [errorMessage, setError] = useState('')
+  const [successMessage, setOk] = useState('')
   const [showStatusForm, setShowStatus] = useState(false)
-  const [newStatus, setNewStatus]       = useState('')
-  const [assignedTo, setAssignedTo]     = useState('')
-  const [resolutionNotes, setNotes]     = useState('')
-  const [rejectionReason, setReason]    = useState('')
-  const [statusLoading, setStatusLoad]  = useState(false)
-  const [commentText, setCommentText]   = useState('')
-  const [editingId, setEditingId]       = useState(null)
-  const [editingText, setEditingText]   = useState('')
+  const [newStatus, setNewStatus] = useState('')
+  const [assignedTo, setAssignedTo] = useState('')
+  const [resolutionNotes, setNotes] = useState('')
+  const [rejectionReason, setReason] = useState('')
+  const [statusLoading, setStatusLoad] = useState(false)
+  const [commentText, setCommentText] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editingText, setEditingText] = useState('')
   const [commentLoading, setCommentLoad] = useState(false)
   const [technicians, setTechnicians] = useState([])
 
   const isAdmin = user?.role === 'ADMIN'
-  const isTech  = user?.role === 'TECHNICIAN'
+  const isTech = user?.role === 'TECHNICIAN'
   const canUpdateStatus = isAdmin || isTech
 
   useEffect(() => {
@@ -50,15 +83,13 @@ function TicketDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  // Load technicians for the assign dropdown
-    useEffect(() => {
+  useEffect(() => {
     if (isAdmin || isTech) {
-        fetchTechnicians()
+      fetchTechnicians()
         .then(setTechnicians)
-        .catch(() => setTechnicians([]))  // Silent fail if no permission
+        .catch(() => setTechnicians([]))
     }
-    }, [isAdmin, isTech])
-
+  }, [isAdmin, isTech])
 
   async function loadTicket() {
     setLoading(true)
@@ -79,23 +110,24 @@ function TicketDetailPage() {
     setError('')
     setStatusLoad(true)
     try {
-    await updateTicketStatus(id, {
-        status:          newStatus,
+      await updateTicketStatus(id, {
+        status: newStatus,
         assignedToEmail: newStatus === 'IN_PROGRESS' && assignedTo ? assignedTo : undefined,
         resolutionNotes: newStatus === 'RESOLVED' && resolutionNotes ? resolutionNotes : undefined,
         rejectionReason: newStatus === 'REJECTED' && rejectionReason ? rejectionReason : undefined,
-        })
+      })
       setOk('Status updated successfully!')
       setShowStatus(false)
       setNotes('')
       setReason('')
       await loadTicket()
     } catch (err) {
-     const backendMsg = err?.response?.data?.message
-        || err?.response?.data?.error
-        || err?.message
-        || 'Failed to update status'
-        setError(backendMsg)
+      setError(
+        err?.response?.data?.message
+          || err?.response?.data?.error
+          || err?.message
+          || 'Failed to update status',
+      )
     } finally {
       setStatusLoad(false)
     }
@@ -152,413 +184,328 @@ function TicketDetailPage() {
 
   if (loading) {
     return (
-      <section className="admin-resources-page">
-        <p style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-          Loading ticket...
-        </p>
+      <section className="flex flex-col gap-4">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-64 w-full" />
       </section>
     )
   }
 
   if (!ticket) {
     return (
-      <section className="admin-resources-page">
-        <StatusBanner type="error" message="Ticket not found." />
+      <section className="flex flex-col gap-4">
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Ticket not found</AlertTitle>
+          <AlertDescription>Ticket could not be loaded.</AlertDescription>
+        </Alert>
       </section>
     )
   }
 
   const allowedNext = ALLOWED_TRANSITIONS[ticket.status] || []
+  const slaTarget = getSlaTarget(ticket.priority)
+  const responseBreached = ticket.minutesToFirstResponse != null && ticket.minutesToFirstResponse > slaTarget.responseMin
+  const resolutionBreached = ticket.minutesToResolution != null && ticket.minutesToResolution > slaTarget.resolutionMin
 
   return (
-    <section className="admin-resources-page">
+    <section className="flex flex-col gap-6">
+      <div>
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          <ArrowLeftIcon data-icon="inline-start" />
+          Back
+        </Button>
+      </div>
 
-      <ActionButton kind="ghost" onClick={() => navigate(-1)}>
-        ← Back
-      </ActionButton>
+      {errorMessage ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>Request failed</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      <StatusBanner type="error"   message={errorMessage}   />
-      <StatusBanner type="success" message={successMessage} />
+      {successMessage ? (
+        <Alert>
+          <CheckIcon />
+          <AlertTitle>Updated</AlertTitle>
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      {/* ── Ticket Info ── */}
-      <div className="home-section-card" style={{ padding: '1.5rem' }}>
-        <div className="panel-header">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
-              <span style={{ color: '#64748b', fontSize: '0.85rem' }}>Ticket #{ticket.id}</span>
-              <span className={getStatusBadgeClass(ticket.status)}>
-                {formatTicketLabel(ticket.status)}
-              </span>
-              <span className={getPriorityBadgeClass(ticket.priority)}>
-                {ticket.priority}
-              </span>
-              <span className="badge cancelled">
-                {formatTicketLabel(ticket.category)}
-              </span>
-              {ticket.slaBreached && (
-                <span className="badge rejected">⚠ SLA Breached</span>
-              )}
+      <Card>
+        <CardHeader className="gap-4 md:grid-cols-[1fr_auto] md:items-start">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">Ticket #{ticket.id}</Badge>
+              <Badge variant={getStatusVariant(ticket.status)}>{formatTicketLabel(ticket.status)}</Badge>
+              <Badge variant={getPriorityVariant(ticket.priority)}>{ticket.priority}</Badge>
+              <Badge variant="outline">{formatTicketLabel(ticket.category)}</Badge>
+              {ticket.slaBreached ? <Badge variant="destructive">SLA Breached</Badge> : null}
             </div>
-            <h1 style={{ margin: 0 }}>{ticket.title}</h1>
+            <CardTitle className="text-3xl font-semibold tracking-tight md:text-4xl">{ticket.title}</CardTitle>
+            <CardDescription>{ticket.description}</CardDescription>
           </div>
 
-          {canUpdateStatus && allowedNext.length > 0 && (
-            <ActionButton
-              kind={showStatusForm ? 'ghost' : 'primary'}
-              onClick={() => setShowStatus((v) => !v)}
-            >
+          {canUpdateStatus && allowedNext.length > 0 ? (
+            <Button variant={showStatusForm ? 'outline' : 'default'} onClick={() => setShowStatus((value) => !value)}>
               {showStatusForm ? 'Cancel' : 'Update Status'}
-            </ActionButton>
-          )}
-        </div>
+            </Button>
+          ) : null}
+        </CardHeader>
 
-        {/* Status update form */}
-        {showStatusForm && allowedNext.length > 0 && (
-          <div style={{
-            padding: '1.25rem',
-            background: '#f8fafc',
-            borderRadius: '0.85rem',
-            border: '1px solid #e5e7eb',
-            marginBottom: '1.25rem',
-          }}>
-            <form className="booking-form" onSubmit={handleStatusUpdate} style={{ padding: 0 }}>
-              <label>
-                New Status
-                <select
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                  style={{ maxWidth: 280 }}
-                >
-                  {allowedNext.map((s) => (
-                    <option key={s} value={s}>{formatTicketLabel(s)}</option>
-                  ))}
-                </select>
-              </label>
+        {showStatusForm && allowedNext.length > 0 ? (
+          <CardContent>
+            <form onSubmit={handleStatusUpdate}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel>New Status</FieldLabel>
+                  <Select value={newStatus} onValueChange={setNewStatus}>
+                    <SelectTrigger className="w-full md:w-72">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {allowedNext.map((status) => (
+                          <SelectItem key={status} value={status}>{formatTicketLabel(status)}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
 
-            {newStatus === 'IN_PROGRESS' && (
-            <label>
-                Assign Technician
-                <select
-                value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-                style={{ maxWidth: 360 }}
-                >
-                <option value="">
-                    {technicians.length === 0
-                    ? 'No technicians available'
-                    : '— Select a technician —'}
-                </option>
-                {technicians.map((tech) => (
-                    <option key={tech.id} value={tech.email}>
-                    {tech.name ? `${tech.name} (${tech.email})` : tech.email}
-                    </option>
-                ))}
-                </select>
-            </label>
-            )}
+                {newStatus === 'IN_PROGRESS' ? (
+                  <Field>
+                    <FieldLabel>Assign Technician</FieldLabel>
+                    <Select
+                      value={assignedTo || EMPTY_SELECT_VALUE}
+                      onValueChange={(value) => setAssignedTo(value === EMPTY_SELECT_VALUE ? '' : value)}
+                    >
+                      <SelectTrigger className="w-full md:w-96">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value={EMPTY_SELECT_VALUE}>
+                            {technicians.length === 0 ? 'No technicians available' : 'Select a technician'}
+                          </SelectItem>
+                          {technicians.map((tech) => (
+                            <SelectItem key={tech.id} value={tech.email}>
+                              {tech.name ? `${tech.name} (${tech.email})` : tech.email}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                ) : null}
 
-              {newStatus === 'RESOLVED' && (
-                <label>
-                  Resolution Notes *
-                  <textarea
-                    placeholder="Describe what was done to fix the issue..."
-                    value={resolutionNotes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    required
-                  />
-                </label>
-              )}
+                {newStatus === 'RESOLVED' ? (
+                  <Field>
+                    <FieldLabel htmlFor="resolution-notes">Resolution Notes *</FieldLabel>
+                    <Textarea
+                      id="resolution-notes"
+                      placeholder="Describe what was done to fix the issue."
+                      value={resolutionNotes}
+                      onChange={(event) => setNotes(event.target.value)}
+                      required
+                    />
+                  </Field>
+                ) : null}
 
-              {newStatus === 'REJECTED' && isAdmin && (
-                <label>
-                  Rejection Reason *
-                  <textarea
-                    placeholder="Why is this ticket being rejected?"
-                    value={rejectionReason}
-                    onChange={(e) => setReason(e.target.value)}
-                    required
-                  />
-                </label>
-              )}
+                {newStatus === 'REJECTED' && isAdmin ? (
+                  <Field>
+                    <FieldLabel htmlFor="rejection-reason">Rejection Reason *</FieldLabel>
+                    <Textarea
+                      id="rejection-reason"
+                      placeholder="Why is this ticket being rejected?"
+                      value={rejectionReason}
+                      onChange={(event) => setReason(event.target.value)}
+                      required
+                    />
+                  </Field>
+                ) : null}
+              </FieldGroup>
 
-              <div className="booking-actions-row">
-                <ActionButton kind="approve" type="submit" disabled={statusLoading}>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button type="submit" disabled={statusLoading}>
+                  <CheckIcon data-icon="inline-start" />
                   {statusLoading ? 'Updating...' : 'Confirm Update'}
-                </ActionButton>
-                <ActionButton kind="ghost" type="button" onClick={() => setShowStatus(false)}>
+                </Button>
+                <Button variant="outline" type="button" onClick={() => setShowStatus(false)}>
                   Cancel
-                </ActionButton>
+                </Button>
               </div>
             </form>
-          </div>
-        )}
+          </CardContent>
+        ) : null}
+      </Card>
 
-        {/* Details grid */}
-        <div className="resource-form-grid">
-          <InfoRow label="Description"  value={ticket.description} fullWidth />
-          <InfoRow label="Location"     value={ticket.location} />
-          <InfoRow label="Resource ID"  value={ticket.resourceId || '—'} />
-          <InfoRow label="Reported by"  value={ticket.createdByEmail} />
-          <InfoRow label="Assigned to"  value={ticket.assignedToEmail || 'Not assigned yet'} />
-          <InfoRow label="Created"      value={formatTicketDate(ticket.createdAt)} />
-          <InfoRow label="Last updated" value={formatTicketDate(ticket.updatedAt)} />
-          <InfoRow label="Contact"      value={`${ticket.contactName}${ticket.contactEmail ? ' · ' + ticket.contactEmail : ''}`} />
-          {ticket.resolutionNotes && (
-            <InfoRow label="Resolution Notes" value={ticket.resolutionNotes} fullWidth />
-          )}
-          {ticket.rejectionReason && (
-            <InfoRow label="Rejection Reason" value={ticket.rejectionReason} fullWidth />
-          )}
-        </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Ticket Metadata</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 text-sm md:grid-cols-2">
+            <InfoRow label="Location" value={ticket.location} />
+            <InfoRow label="Resource ID" value={ticket.resourceId || '-'} />
+            <InfoRow label="Reported by" value={ticket.createdByEmail} />
+            <InfoRow label="Assigned to" value={ticket.assignedToEmail || 'Not assigned yet'} />
+            <InfoRow label="Created" value={formatTicketDate(ticket.createdAt)} />
+            <InfoRow label="Last updated" value={formatTicketDate(ticket.updatedAt)} />
+            <InfoRow label="Contact" value={`${ticket.contactName}${ticket.contactEmail ? ` - ${ticket.contactEmail}` : ''}`} fullWidth />
+            {ticket.resolutionNotes ? <InfoRow label="Resolution Notes" value={ticket.resolutionNotes} fullWidth /> : null}
+            {ticket.rejectionReason ? <InfoRow label="Rejection Reason" value={ticket.rejectionReason} fullWidth /> : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>SLA Performance</CardTitle>
+            <CardDescription>{ticket.priority} priority targets applied.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            <SlaCard label="First response" value={formatDuration(ticket.minutesToFirstResponse)} note={`Target: ${slaTarget.responseLabel}`} breached={responseBreached} />
+            <SlaCard label="Resolution" value={formatDuration(ticket.minutesToResolution)} note={`Target: ${slaTarget.resolutionLabel}`} breached={resolutionBreached} />
+            <SlaCard label="SLA status" value={ticket.slaBreached ? 'Breached' : 'Within SLA'} note={formatTicketLabel(ticket.status)} breached={ticket.slaBreached} />
+            <SlaCard label="Priority level" value={ticket.priority} note={formatTicketLabel(ticket.category)} breached={ticket.priority === 'CRITICAL'} />
+          </CardContent>
+        </Card>
       </div>
 
-      {/* ── SLA Card ── */}
-      {/* ── SLA Card ── */}
-      {(() => {
-        // Priority-based SLA targets
-        const slaTargets = {
-          LOW:      { responseMin: 240,  resolutionMin: 10080, responseLabel: '4 hours',  resolutionLabel: '7 days'    },
-          MEDIUM:   { responseMin: 120,  resolutionMin: 4320,  responseLabel: '2 hours',  resolutionLabel: '3 days'    },
-          HIGH:     { responseMin: 60,   resolutionMin: 2880,  responseLabel: '1 hour',   resolutionLabel: '48 hours'  },
-          CRITICAL: { responseMin: 15,   resolutionMin: 1440,  responseLabel: '15 min',   resolutionLabel: '24 hours'  },
-        }
-        const target = slaTargets[ticket.priority] || slaTargets.MEDIUM
-        const responseBreached = ticket.minutesToFirstResponse != null
-          && ticket.minutesToFirstResponse > target.responseMin
-        const resolutionBreached = ticket.minutesToResolution != null
-          && ticket.minutesToResolution > target.resolutionMin
-
-        return (
-          <div className="home-section-card" style={{ padding: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <h2 style={{ margin: 0 }}>SLA Performance</h2>
-              <span style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                padding: '0.2rem 0.7rem',
-                borderRadius: 999,
-                background: ticket.priority === 'CRITICAL' ? '#fef2f2'
-                  : ticket.priority === 'HIGH' ? '#eff6ff'
-                  : ticket.priority === 'MEDIUM' ? '#fffbeb'
-                  : '#f0fdf4',
-                color: ticket.priority === 'CRITICAL' ? '#b91c1c'
-                  : ticket.priority === 'HIGH' ? '#1d4ed8'
-                  : ticket.priority === 'MEDIUM' ? '#92400e'
-                  : '#166534',
-                border: `1px solid ${ticket.priority === 'CRITICAL' ? '#fecaca'
-                  : ticket.priority === 'HIGH' ? '#bfdbfe'
-                  : ticket.priority === 'MEDIUM' ? '#fde68a'
-                  : '#bbf7d0'}`,
-              }}>
-                {ticket.priority} Priority SLA Targets applied
-              </span>
-            </div>
-            <div className="admin-stat-grid">
-              <SlaCard
-                label="Time to First Response"
-                value={formatDuration(ticket.minutesToFirstResponse)}
-                note={`Target: ${target.responseLabel}`}
-                breached={responseBreached}
-              />
-              <SlaCard
-                label="Time to Resolution"
-                value={formatDuration(ticket.minutesToResolution)}
-                note={`Target: ${target.resolutionLabel}`}
-                breached={resolutionBreached}
-              />
-              <SlaCard
-                label="SLA Status"
-                value={ticket.slaBreached ? 'Breached' : 'Within SLA'}
-                note={formatTicketLabel(ticket.status)}
-                breached={ticket.slaBreached}
-              />
-              <SlaCard
-                label="Priority Level"
-                value={ticket.priority}
-                note={formatTicketLabel(ticket.category)}
-                breached={ticket.priority === 'CRITICAL'}
-              />
-            </div>
-          </div>
-        )
-      })()}
-
-      {/* ── Attachments ── */}
-      {ticket.attachments?.length > 0 && (
-        <div className="home-section-card" style={{ padding: '1.25rem' }}>
-          <h2 style={{ margin: '0 0 1rem' }}>
-            Photo Evidence ({ticket.attachments.length}/3)
-          </h2>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            {ticket.attachments.map((att) => (
-              <div key={att.id}>
+      {ticket.attachments?.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Photo Evidence ({ticket.attachments.length}/3)</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-4">
+            {ticket.attachments.map((attachment) => (
+              <div key={attachment.id} className="flex w-36 flex-col gap-2">
                 <img
-                  src={getAttachmentUrl(ticket.id, att.id)}
-                  alt={att.fileName}
-                  style={{
-                    width: 140, height: 140, objectFit: 'cover',
-                    borderRadius: '0.85rem',
-                    border: '1px solid var(--border-soft)',
-                    display: 'block',
-                  }}
+                  src={getAttachmentUrl(ticket.id, attachment.id)}
+                  alt={attachment.fileName}
+                  className="size-36 rounded-xl border object-cover"
                 />
-                <p style={{
-                  fontSize: '0.72rem', color: '#6b7280',
-                  margin: '0.25rem 0', maxWidth: 140,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {att.fileName}
-                </p>
-                {isAdmin && (
-                  <ActionButton
-                    kind="danger"
-                    onClick={() => handleDeleteAttachment(att.id)}
-                    style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
-                  >
+                <span className="truncate text-xs text-muted-foreground">{attachment.fileName}</span>
+                {isAdmin ? (
+                  <Button variant="destructive" size="sm" onClick={() => handleDeleteAttachment(attachment.id)}>
+                    <TrashIcon data-icon="inline-start" />
                     Delete
-                  </ActionButton>
-                )}
+                  </Button>
+                ) : null}
               </div>
             ))}
-          </div>
-        </div>
-      )}
+          </CardContent>
+        </Card>
+      ) : null}
 
-      {/* ── Comments ── */}
-      <div className="home-section-card" style={{ padding: '1.25rem' }}>
-        <h2 style={{ margin: '0 0 1rem' }}>
-          Comments ({ticket.comments?.length ?? 0})
-        </h2>
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Comments ({ticket.comments?.length ?? 0})</CardTitle>
+          <CardDescription>Discuss issue updates with admins and technicians.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
+            {ticket.comments?.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No comments yet. Be first to add one.</p>
+            ) : null}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
-
-          {ticket.comments?.length === 0 && (
-            <p style={{ color: '#64748b' }}>No comments yet. Be the first to add one.</p>
-          )}
-
-          {ticket.comments?.map((comment) => (
-            <div
-              key={comment.id}
-              style={{
-                padding: '0.9rem 1rem',
-                background: '#f8fafc',
-                borderRadius: '0.85rem',
-                border: '1px solid #e5e7eb',
-              }}
-            >
-              {editingId === comment.id ? (
-                <div className="booking-form" style={{ padding: 0, gap: '0.5rem' }}>
-                  <textarea
-                    value={editingText}
-                    onChange={(e) => setEditingText(e.target.value)}
-                    rows={3}
-                  />
-                  <div className="booking-actions-row">
-                    <ActionButton kind="approve" onClick={() => handleEditComment(comment.id)} disabled={commentLoading}>
-                      Save
-                    </ActionButton>
-                    <ActionButton kind="ghost" onClick={() => { setEditingId(null); setEditingText('') }}>
-                      Cancel
-                    </ActionButton>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <span style={{
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        padding: '0.15rem 0.55rem',
-                        borderRadius: 999,
-                        background: comment.authorRole === 'Admin'
-                          ? '#fef2f2' : comment.authorRole === 'Technician'
-                          ? '#eff6ff' : '#f0fdf4',
-                        color: comment.authorRole === 'Admin'
-                          ? '#b91c1c' : comment.authorRole === 'Technician'
-                          ? '#1d4ed8' : '#166534',
-                        border: `1px solid ${comment.authorRole === 'Admin'
-                          ? '#fecaca' : comment.authorRole === 'Technician'
-                          ? '#bfdbfe' : '#bbf7d0'}`,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                      }}>
-                        {comment.authorRole || 'User'}
-                      </span>
-                      <strong style={{ fontSize: '0.875rem' }}>
-                        {comment.authorName || comment.authorEmail}
-                      </strong>
-                      <span className="muted">{formatTicketDate(comment.createdAt)}</span>
-                    </div>
-                    
-                    {(user?.email === comment.authorEmail || isAdmin) && (
-                      <div className="booking-actions-row" style={{ margin: 0 }}>
-                        {user?.email === comment.authorEmail && (
-                          <ActionButton
-                            kind="ghost"
-                            onClick={() => { setEditingId(comment.id); setEditingText(comment.content) }}
-                            style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
-                          >
-                            Edit
-                          </ActionButton>
-                        )}
-                        <ActionButton
-                          kind="danger"
-                          onClick={() => handleDeleteComment(comment.id)}
-                          style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
-                        >
-                          Delete
-                        </ActionButton>
+            {ticket.comments?.map((comment) => (
+              <Card key={comment.id} size="sm">
+                <CardContent className="flex flex-col gap-3">
+                  {editingId === comment.id ? (
+                    <>
+                      <Textarea value={editingText} onChange={(event) => setEditingText(event.target.value)} rows={3} />
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" onClick={() => handleEditComment(comment.id)} disabled={commentLoading}>Save</Button>
+                        <Button size="sm" variant="outline" onClick={() => { setEditingId(null); setEditingText('') }}>Cancel</Button>
                       </div>
-                    )}
-                  </div>
-                  <p style={{ margin: '0.5rem 0 0', color: '#374151' }}>{comment.content}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <form className="booking-form" onSubmit={handleAddComment} style={{ padding: 0 }}>
-          <label>
-            Add a Comment
-            <textarea
-              placeholder="Write your comment here..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              required
-            />
-          </label>
-          <div className="booking-actions-row">
-            <ActionButton kind="primary" type="submit" disabled={commentLoading || !commentText.trim()}>
-              {commentLoading ? 'Posting...' : 'Post Comment'}
-            </ActionButton>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline">{comment.authorRole || 'User'}</Badge>
+                          <span className="font-medium">{comment.authorName || comment.authorEmail}</span>
+                          <span className="text-sm text-muted-foreground">{formatTicketDate(comment.createdAt)}</span>
+                        </div>
+                        {(user?.email === comment.authorEmail || isAdmin) ? (
+                          <div className="flex gap-2">
+                            {user?.email === comment.authorEmail ? (
+                              <Button size="sm" variant="outline" onClick={() => { setEditingId(comment.id); setEditingText(comment.content) }}>
+                                Edit
+                              </Button>
+                            ) : null}
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteComment(comment.id)}>
+                              Delete
+                            </Button>
+                          </div>
+                        ) : null}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{comment.content}</p>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </form>
-      </div>
 
+          <form onSubmit={handleAddComment}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="ticket-comment">Add a Comment</FieldLabel>
+                <Textarea
+                  id="ticket-comment"
+                  placeholder="Write your comment here..."
+                  value={commentText}
+                  onChange={(event) => setCommentText(event.target.value)}
+                  required
+                />
+              </Field>
+            </FieldGroup>
+            <div className="mt-4">
+              <Button type="submit" disabled={commentLoading || !commentText.trim()}>
+                <MessageSquareIcon data-icon="inline-start" />
+                {commentLoading ? 'Posting...' : 'Post Comment'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </section>
   )
 }
 
+function getSlaTarget(priority) {
+  const targets = {
+    LOW: { responseMin: 240, resolutionMin: 10080, responseLabel: '4 hours', resolutionLabel: '7 days' },
+    MEDIUM: { responseMin: 120, resolutionMin: 4320, responseLabel: '2 hours', resolutionLabel: '3 days' },
+    HIGH: { responseMin: 60, resolutionMin: 2880, responseLabel: '1 hour', resolutionLabel: '48 hours' },
+    CRITICAL: { responseMin: 15, resolutionMin: 1440, responseLabel: '15 min', resolutionLabel: '24 hours' },
+  }
+  return targets[priority] || targets.MEDIUM
+}
+
 function InfoRow({ label, value, fullWidth }) {
   return (
-    <div style={fullWidth ? { gridColumn: '1 / -1' } : {}}>
-      <p style={{ margin: '0 0 0.2rem', fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        {label}
-      </p>
-      <p style={{ margin: 0, color: '#1f2937' }}>{value}</p>
+    <div className={fullWidth ? 'md:col-span-2' : undefined}>
+      <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className="text-foreground">{value}</p>
     </div>
   )
 }
 
 function SlaCard({ label, value, note, breached }) {
   return (
-    <article className="admin-stat-card" style={{ borderTop: `3px solid ${breached ? '#dc2626' : '#16a34a'}` }}>
-      <p>{label}</p>
-      <h2 style={{ color: breached ? '#b91c1c' : '#166534' }}>{value || '—'}</h2>
-      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{note}</span>
-    </article>
+    <Card size="sm">
+      <CardHeader>
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className="text-xl font-semibold">
+          <Badge variant={breached ? 'destructive' : 'secondary'}>{value || '-'}</Badge>
+        </CardTitle>
+        <CardDescription>{note}</CardDescription>
+      </CardHeader>
+    </Card>
   )
 }
 
