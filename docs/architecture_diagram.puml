@@ -1,0 +1,336 @@
+@startuml Smart_Campus_Architecture
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+!define RECTANGLE class
+
+skinparam class {
+    BackgroundColor<<Controller>> #E3F2FD
+    BackgroundColor<<Service>> #E8F5E9
+    BackgroundColor<<Repository>> #FFF3E0
+    BackgroundColor<<Model>> #FCE4EC
+    BackgroundColor<<Security>> #E8EAF6
+    BackgroundColor<<Frontend>> #E0F2F1
+    BackgroundColor<<Config>> #F3E5F5
+}
+
+package "Frontend (React)" as Frontend <<Frontend>> {
+    
+    package "Pages" {
+        class "HomePage" as HomePage <<Frontend>>
+        class "LoginPage" as LoginPage <<Frontend>>
+        class "OAuthCallback" as OAuthCallback <<Frontend>>
+        class "BookingPage" as BookingPage <<Frontend>>
+        class "CreateTicketPage" as CreateTicketPage <<Frontend>>
+        class "MyTicketsPage" as MyTicketsPage <<Frontend>>
+        class "TicketDetailPage" as TicketDetailPage <<Frontend>>
+        class "ProfilePage" as ProfilePage <<Frontend>>
+        class "AdminDashboard" as AdminDashboard <<Frontend>>
+        class "TechnicianDashboard" as TechDashboard <<Frontend>>
+    }
+    
+    package "API Services" {
+        class "authApi.js" as authApi <<Frontend>>
+        class "bookingApi.js" as bookingApi <<Frontend>>
+        class "ticketApi.js" as ticketApi <<Frontend>>
+        class "resourceApi.js" as resourceApi <<Frontend>>
+        class "notificationApi.js" as notifApi <<Frontend>>
+    }
+    
+    class "AuthContext" as AuthContext <<Frontend>>
+    class "Axios HTTP" as Axios <<Frontend>>
+}
+
+package "Backend (Spring Boot)" as Backend {
+    
+    package "Security Layer" as SecurityLayer <<Security>> {
+        class "SecurityConfig" as SecurityConfig <<Config>>
+        class "JwtAuthenticationFilter" as JwtFilter <<Security>>
+        class "JwtTokenProvider" as JwtProvider <<Security>>
+        class "OAuth2SuccessHandler" as OAuthHandler <<Security>>
+    }
+    
+    package "Controllers (REST API)" as Controllers <<Controller>> {
+        
+        package "Auth Module" {
+            class "AuthController\n/api/auth" as AuthController <<Controller>> {
+                +POST /login
+                +POST /verify-2fa
+                +GET /me
+                +POST /forgot-password
+                +POST /reset-password
+                +GET /invite/validate
+                +POST /invite/complete
+                +POST /submit-university-id
+            }
+            
+            class "UserController\n/api/users" as UserController <<Controller>> {
+                +GET /
+                +PUT /{id}/role
+                +DELETE /{id}
+                +POST /
+                +GET /registration-requests
+                +POST /{id}/approve
+                +POST /{id}/reject
+            }
+            
+            class "ProfileController\n/api/profile" as ProfileController <<Controller>> {
+                +GET /
+                +PUT /
+                +PUT /password
+                +PUT /picture
+            }
+            
+            class "TwoFactorController\n/api/2fa" as TwoFactorController <<Controller>> {
+                +GET /status
+                +POST /setup/totp
+                +POST /verify/totp
+                +POST /setup/sms/send-otp
+                +POST /setup/sms/verify-phone
+                +DELETE /disable
+            }
+        }
+        
+        package "Booking Module" {
+            class "BookingController\n/api/bookings" as BookingController <<Controller>> {
+                +POST /
+                +GET /me
+                +GET /{id}
+                +GET /
+                +GET /approved-weekly
+                +PATCH /{id}
+                +POST /{id}/resubmit
+            }
+        }
+        
+        package "Resource Module" {
+            class "ResourceController\n/api/resources" as ResourceController <<Controller>> {
+                +GET /
+                +GET /{id}
+                +POST /
+                +PUT /{id}
+                +DELETE /{id}
+            }
+        }
+        
+        package "Ticket Module" {
+            class "TicketController\n/api/v1/tickets" as TicketController <<Controller>> {
+                +POST /
+                +GET /
+                +GET /my
+                +GET /assigned
+                +GET /{id}
+                +PATCH /{id}/status
+                +DELETE /{id}
+            }
+            
+            class "CommentController\n/api/v1/tickets/{id}/comments" as CommentController <<Controller>> {
+                +GET /
+                +POST /
+                +PUT /{commentId}
+                +DELETE /{commentId}
+            }
+            
+            class "AttachmentController\n/api/v1/tickets/{id}/attachments" as AttachmentController <<Controller>> {
+                +POST /
+                +GET /{id}/data
+                +DELETE /{id}
+            }
+        }
+        
+        package "Notification Module" {
+            class "NotificationController\n/api/notifications" as NotificationController <<Controller>> {
+                +GET /
+                +GET /unread-count
+                +PATCH /{id}/read
+                +PATCH /read-all
+                +POST /
+                +GET /admin/all
+                +PATCH /{id}/toggle-published
+                +DELETE /{id}
+            }
+        }
+        
+        package "Timetable Module" {
+            class "TimetableController\n/api/timetable" as TimetableController <<Controller>> {
+                +POST /upload
+                +GET /weekly
+            }
+        }
+    }
+    
+    package "Services (Business Logic)" as Services <<Service>> {
+        class "UserService" as UserService <<Service>>
+        class "TwoFactorService" as TwoFactorService <<Service>>
+        class "BookingService" as BookingService <<Service>>
+        class "ResourceService" as ResourceService <<Service>>
+        class "TicketService" as TicketService <<Service>>
+        class "CommentService" as CommentService <<Service>>
+        class "AttachmentService" as AttachmentService <<Service>>
+        class "NotificationService" as NotificationService <<Service>>
+        class "EmailNotificationService" as EmailService <<Service>>
+        class "TimetableService" as TimetableService <<Service>>
+    }
+    
+    package "Repositories (Data Access)" as Repositories <<Repository>> {
+        class "UserRepository" as UserRepo <<Repository>>
+        class "BookingRepository" as BookingRepo <<Repository>>
+        class "ResourceRepository" as ResourceRepo <<Repository>>
+        class "TicketRepository" as TicketRepo <<Repository>>
+        class "TicketCommentRepository" as CommentRepo <<Repository>>
+        class "TicketAttachmentRepository" as AttachmentRepo <<Repository>>
+        class "NotificationRepository" as NotifRepo <<Repository>>
+        class "NotificationReadRepository" as NotifReadRepo <<Repository>>
+        class "TimetableSlotRepository" as TimetableRepo <<Repository>>
+    }
+    
+    package "Models/Entities" as Models <<Model>> {
+        class "User" as User <<Model>>
+        class "Booking" as Booking <<Model>>
+        class "Resource" as Resource <<Model>>
+        class "Ticket" as Ticket <<Model>>
+        class "TicketComment" as TicketComment <<Model>>
+        class "TicketAttachment" as TicketAttachment <<Model>>
+        class "AppNotification" as AppNotification <<Model>>
+        class "TimetableSlot" as TimetableSlot <<Model>>
+    }
+}
+
+package "Database" as DB {
+    database "PostgreSQL (Neon)" as PostgreSQL
+}
+
+' Frontend connections
+AuthContext --> authApi : uses
+AuthContext --> Axios : configures
+Axios --> LoginPage : HTTP requests
+Axios --> BookingPage : HTTP requests
+Axios --> CreateTicketPage : HTTP requests
+Axios --> AdminDashboard : HTTP requests
+Axios --> TechDashboard : HTTP requests
+
+' Security layer
+SecurityConfig --> JwtFilter : configures
+SecurityConfig --> OAuthHandler : configures
+SecurityConfig --> AuthController : protects
+
+' Controller to Service
+AuthController --> UserService : uses
+AuthController --> TwoFactorService : uses
+AuthController --> JwtProvider : uses
+
+UserController --> UserService : uses
+ProfileController --> UserService : uses
+TwoFactorController --> TwoFactorService : uses
+
+BookingController --> BookingService : uses
+ResourceController --> ResourceService : uses
+
+TicketController --> TicketService : uses
+TicketController --> UserService : uses
+CommentController --> CommentService : uses
+AttachmentController --> AttachmentService : uses
+
+NotificationController --> NotificationService : uses
+NotificationController --> EmailService : uses
+
+TimetableController --> TimetableService : uses
+
+' Service to Repository
+UserService --> UserRepo : uses
+TwoFactorService --> UserRepo : uses
+
+BookingService --> BookingRepo : uses
+BookingService --> ResourceRepo : uses
+BookingService --> UserRepo : uses
+
+ResourceService --> ResourceRepo : uses
+
+TicketService --> TicketRepo : uses
+TicketService --> UserRepo : uses
+CommentService --> CommentRepo : uses
+AttachmentService --> AttachmentRepo : uses
+
+NotificationService --> NotifRepo : uses
+NotificationService --> NotifReadRepo : uses
+NotificationService --> EmailService : uses
+
+TimetableService --> TimetableRepo : uses
+
+' Repository to Database
+UserRepo --> User : maps
+BookingRepo --> Booking : maps
+ResourceRepo --> Resource : maps
+TicketRepo --> Ticket : maps
+CommentRepo --> TicketComment : maps
+AttachmentRepo --> TicketAttachment : maps
+NotifRepo --> AppNotification : maps
+TimetableRepo --> TimetableSlot : maps
+
+User --> PostgreSQL : stores
+Booking --> PostgreSQL : stores
+Resource --> PostgreSQL : stores
+Ticket --> PostgreSQL : stores
+TicketComment --> PostgreSQL : stores
+TicketAttachment --> PostgreSQL : stores
+AppNotification --> PostgreSQL : stores
+TimetableSlot --> PostgreSQL : stores
+
+' Frontend to Backend
+authApi --> AuthController : HTTP
+bookingApi --> BookingController : HTTP
+ticketApi --> TicketController : HTTP
+resourceApi --> ResourceController : HTTP
+notifApi --> NotificationController : HTTP
+
+' JWT Flow
+JwtFilter --> JwtProvider : validates
+ticketApi --> JwtFilter : sends JWT
+bookingApi --> JwtFilter : sends JWT
+
+note right of AuthController
+  **Authentication Flow:**
+  1. POST /login (credentials)
+  2. If 2FA enabled: tempToken returned
+  3. POST /verify-2fa (tempToken + code)
+  4. JWT token generated
+  5. JWT used in Authorization header
+end note
+
+note right of BookingController
+  **Booking Status Flow:**
+  PENDING -> APPROVED/REJECTED
+  REJECTED -> resubmit -> PENDING
+  APPROVED -> CANCELLED
+end note
+
+note right of TicketController
+  **Ticket Status Flow:**
+  OPEN -> IN_PROGRESS
+  IN_PROGRESS -> RESOLVED
+  RESOLVED -> CLOSED
+  OPEN/IN_PROGRESS -> REJECTED
+end note
+
+note bottom of SecurityConfig
+  **Security Configuration:**
+  - JWT Authentication
+  - OAuth2 (Google) Login
+  - Role-based Access Control
+  - Public: /api/auth/**, /oauth2/**
+  - Protected: All other endpoints
+end note
+
+legend right
+  |= Color | Meaning |
+  |<#E3F2FD>| Controllers (REST API) |
+  |<#E8F5E9>| Services (Business Logic) |
+  |<#FFF3E0>| Repositories (Data Access) |
+  |<#FCE4EC>| Models/Entities |
+  |<#E8EAF6>| Security |
+  |<#E0F2F1>| Frontend |
+  |<#F3E5F5>| Configuration |
+endlegend
+
+@enduml

@@ -1,0 +1,176 @@
+digraph SmartCampusFull {
+    rankdir=TB;
+    node [shape=box, fontname="Arial", fontsize=8];
+    edge [fontname="Arial", fontsize=7];
+    graph [fontsize=13, pad=0.5];
+
+    // ===== FRONTEND =====
+    subgraph cluster_fe {
+        label="FRONTEND (React + Vite + Tailwind)";
+        style=filled; fillcolor="#E0F2F1";
+        
+        "fe_pages" [label="Pages:\nHomePage|LoginPage|OAuthCallback\nBookingPage|CreateTicket|MyTickets\nProfilePage|AdminDashboard"];
+        "fe_api" [label="API Services:\nauthApi.js|bookingApi.js\nticketApi.js|resourceApi.js\nnotificationApi.js"];
+        "fe_auth" [label="AuthContext\nuseAuth hook"];
+        "fe_axios" [label="Axios HTTP\n(interceptor adds JWT)", shape=ellipse];
+    }
+
+    // ===== BACKEND CONTROLLERS =====
+    subgraph cluster_ctl {
+        label="REST API CONTROLLERS (@RestController)";
+        style=filled; fillcolor="#BBDEFB";
+        
+        "auth_ctl" [label="AuthController\nPOST /login\nPOST /verify-2fa\nGET /me\nPOST /forgot-password", style=bold];
+        "user_ctl" [label="UserController\nGET /users\nPOST /users\nPUT /users/{id}/role\nDELETE /users/{id}"];
+        "profile_ctl" [label="ProfileController\nGET /profile\nPUT /profile\nPUT /profile/picture"];
+        "2fa_ctl" [label="TwoFactorController\nGET /2fa/status\nPOST /2fa/setup/totp\nPOST /2fa/setup/sms"];
+        "book_ctl" [label="BookingController\nPOST /bookings\nGET /bookings/me\nGET /bookings\nPATCH /bookings/{id}", style=bold];
+        "res_ctl" [label="ResourceController\nGET /resources\nPOST /resources\nPUT /resources/{id}"];
+        "tick_ctl" [label="TicketController\nPOST /v1/tickets\nGET /v1/tickets\nGET /v1/tickets/my\nPATCH /v1/tickets/{id}/status", style=bold];
+        "comment_ctl" [label="CommentController\nGET/POST comments"];
+        "attach_ctl" [label="AttachmentController\nPOST attachments"];
+        "notif_ctl" [label="NotificationController\nGET /notifications\nPATCH /{id}/read"];
+        "time_ctl" [label="TimetableController\nPOST /upload\nGET /weekly"];
+    }
+
+    // ===== SERVICES =====
+    subgraph cluster_svc {
+        label="SERVICES (@Service - Business Logic)";
+        style=filled; fillcolor="#C8E6C9";
+        
+        "user_svc" [label="UserService\nlogin()\ngetUserById()\nupdateUser()"];
+        "2fa_svc" [label="TwoFactorService\nverifyTotpCode()\nverifySmsOtp()"];
+        "book_svc" [label="BookingService\ncreateBooking()\ngetUserBookings()\nupdateStatus()\ncheckConflict()", style=bold];
+        "res_svc" [label="ResourceService\ngetAllResources()\ncreateResource()\nvalidate()"];
+        "tick_svc" [label="TicketService\ncreateTicket()\ngetByStatus()\nupdateStatus()", style=bold];
+        "comment_svc" [label="CommentService\naddComment()\neditComment()\ndeleteComment()"];
+        "attach_svc" [label="AttachmentService\nupload()\ndelete()"];
+        "notif_svc" [label="NotificationService\ncreate()\ngetUnread()\nmarkRead()"];
+        "email_svc" [label="EmailNotificationService\nsendEmail()"];
+        "time_svc" [label="TimetableService\nparseCSV()\ngetWeekly()"];
+    }
+
+    // ===== REPOSITORIES =====
+    subgraph cluster_repo {
+        label="REPOSITORIES (@Repository - Data Access)";
+        style=filled; fillcolor="#FFCCBC";
+        
+        "user_repo" [label="UserRepository\nfindByEmail()\nfindByUsername()"];
+        "book_repo" [label="BookingRepository\nfindByUserId()\nfindApprovedOverlap()"];
+        "res_repo" [label="ResourceRepository\nfindAll()\nfindById()"];
+        "tick_repo" [label="TicketRepository\nfindByStatus()\nfindByEmail()"];
+        "comment_repo" [label="TicketCommentRepository"];
+        "attach_repo" [label="TicketAttachmentRepository"];
+        "notif_repo" [label="NotificationRepository"];
+        "notif_read_repo" [label="NotificationReadRepository"];
+        "time_repo" [label="TimetableSlotRepository"];
+    }
+
+    // ===== MODELS =====
+    subgraph cluster_model {
+        label="ENTITIES (@Entity)";
+        style=filled; fillcolor="#F8BBD9";
+        
+        "user_ent" [label="User\nid|email|username\npassword|name|role\ntwoFactorEnabled"];
+        "book_ent" [label="Booking\nid|resourceId|userId\nbookingDate|startTime\nendTime|status|purpose"];
+        "res_ent" [label="Resource\nid|name|type|capacity\nlocation|status\navailabilityStart|End"];
+        "tick_ent" [label="Ticket\nid|title|description\ncategory|priority|status\nlocation|firstResponseAt"];
+        "comment_ent" [label="TicketComment\nid|content|createdBy\ncreatedAt"];
+        "attach_ent" [label="TicketAttachment\nid|fileName|fileType\nfileData"];
+        "notif_ent" [label="AppNotification\nid|title|message\ntype|read|targetEmail"];
+    }
+
+    // ===== SECURITY =====
+    subgraph cluster_sec {
+        label="SECURITY LAYER";
+        style=filled; fillcolor="#C5CAE9";
+        
+        "sec_cfg" [label="SecurityConfig\nCORS (localhost:5173)\nOAuth2 (Google)\nRole-based Auth\nCSRF disabled", style=bold];
+        "jwt_filt" [label="JwtAuthenticationFilter\nvalidates JWT token\nsets SecurityContext"];
+        "jwt_prov" [label="JwtTokenProvider\ngenerateToken()\nextractUserId()\nvalidate()", style=bold];
+        "oauth_hdlr" [label="OAuth2SuccessHandler\nGoogle login flow\ncreates/links user"];
+    }
+
+    // ===== DATABASE =====
+    "postgres" [shape=cylinder, label="PostgreSQL\n(Neon Cloud)", style=filled, fillcolor="#E1BEE7"];
+
+    // ===== RELATIONSHIPS =====
+
+    // Frontend flow
+    "fe_pages" -> "fe_api";
+    "fe_api" -> "fe_axios";
+    "fe_auth" -> "fe_axios" [style=dashed];
+    
+    // HTTP calls to controllers
+    "fe_axios" -> "auth_ctl" [label="/api/auth/*", color=blue, fontcolor=blue];
+    "fe_axios" -> "book_ctl" [label="/api/bookings/*", color=blue];
+    "fe_axios" -> "res_ctl" [label="/api/resources/*", color=blue];
+    "fe_axios" -> "tick_ctl" [label="/api/v1/tickets/*", color=blue];
+    "fe_axios" -> "notif_ctl" [label="/api/notifications/*", color=blue];
+    
+    // JWT in requests
+    "fe_axios" -> "jwt_filt" [label="Authorization:\nBearer <token>", style=dashed, color=purple];
+
+    // Security configuration and flow
+    "sec_cfg" -> "jwt_filt" [label="configures"];
+    "sec_cfg" -> "oauth_hdlr" [label="configures"];
+    "jwt_filt" -> "jwt_prov" [label="uses"];
+
+    // Controllers to Services
+    "auth_ctl" -> "user_svc";
+    "auth_ctl" -> "2fa_svc";
+    "auth_ctl" -> "jwt_prov";
+    "user_ctl" -> "user_svc";
+    "profile_ctl" -> "user_svc";
+    "2fa_ctl" -> "2fa_svc";
+    "book_ctl" -> "book_svc";
+    "res_ctl" -> "res_svc";
+    "tick_ctl" -> "tick_svc";
+    "tick_ctl" -> "user_svc";
+    "comment_ctl" -> "comment_svc";
+    "attach_ctl" -> "attach_svc";
+    "notif_ctl" -> "notif_svc";
+    "notif_ctl" -> "email_svc";
+    "time_ctl" -> "time_svc";
+
+    // Services to Repositories
+    "user_svc" -> "user_repo";
+    "book_svc" -> "book_repo";
+    "book_svc" -> "res_repo";
+    "book_svc" -> "user_repo";
+    "res_svc" -> "res_repo";
+    "tick_svc" -> "tick_repo";
+    "tick_svc" -> "user_repo";
+    "comment_svc" -> "comment_repo";
+    "attach_svc" -> "attach_repo";
+    "notif_svc" -> "notif_repo";
+    "notif_svc" -> "notif_read_repo";
+    "time_svc" -> "time_repo";
+
+    // Repositories to Entities
+    "user_repo" -> "user_ent";
+    "book_repo" -> "book_ent";
+    "res_repo" -> "res_ent";
+    "tick_repo" -> "tick_ent";
+    "comment_repo" -> "comment_ent";
+    "attach_repo" -> "attach_ent";
+    "notif_repo" -> "notif_ent";
+
+    // Entities to Database
+    "user_ent" -> "postgres" [label="JDBC/JPA", color=red, fontcolor=red];
+    "book_ent" -> "postgres" [color=red];
+    "res_ent" -> "postgres" [color=red];
+    "tick_ent" -> "postgres" [color=red];
+    "comment_ent" -> "postgres" [color=red];
+    "attach_ent" -> "postgres" [color=red];
+    "notif_ent" -> "postgres" [color=red];
+
+    // Security protection
+    "jwt_filt" -> "auth_ctl" [style=dashed, label="protects API"];
+    "jwt_filt" -> "book_ctl" [style=dashed];
+    "jwt_filt" -> "tick_ctl" [style=dashed];
+    "jwt_filt" -> "user_ctl" [style=dashed];
+
+    // Legend info
+    {rank=same; "fe_pages", "fe_api" }
+}

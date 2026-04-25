@@ -1,0 +1,87 @@
+digraph SmartCampus {
+    rankdir=TB;
+    node [shape=box, fontname="Arial", fontsize=9];
+    edge [fontname="Arial", fontsize=8];
+    graph [fontsize=14, pad=0.5];
+
+    subgraph cluster_front {
+        label="FRONTEND (React)";
+        style=filled; fillcolor="#E0F2F1";
+        "HomePage" [label="HomePage"];
+        "LoginPage" [label="LoginPage"];
+        "BookingPage" [label="BookingPage"];
+        "CreateTicket" [label="CreateTicketPage"];
+        "AdminDash" [label="AdminDashboard"];
+        "apiServices" [label="API Services (authApi, bookingApi, etc)"];
+        "Axios" [shape=ellipse, label="Axios HTTP"];
+    }
+
+    subgraph cluster_ctl {
+        label="REST API CONTROLLERS";
+        style=filled; fillcolor="#E3F2FD";
+        "AuthCtl" [label="AuthController\n/login, /verify-2fa"];
+        "UserCtl" [label="UserController\n/users"];
+        "BookCtl" [label="BookingController\n/bookings"];
+        "ResCtl" [label="ResourceController\n/resources"];
+        "TickCtl" [label="TicketController\n/v1/tickets"];
+        "NotifCtl" [label="NotificationController"];
+    }
+
+    subgraph cluster_svc {
+        label="SERVICES";
+        style=filled; fillcolor="#E8F5E9";
+        "UserSvc" [label="UserService"];
+        "BookingSvc" [label="BookingService"];
+        "ResourceSvc" [label="ResourceService"];
+        "TicketSvc" [label="TicketService"];
+        "NotifSvc" [label="NotificationService"];
+    }
+
+    subgraph cluster_repo {
+        label="REPOSITORIES";
+        style=filled; fillcolor="#FFF3E0";
+        "UserRepo" [label="UserRepository"];
+        "BookRepo" [label="BookingRepository"];
+        "ResRepo" [label="ResourceRepository"];
+        "TicketRepo" [label="TicketRepository"];
+    }
+
+    subgraph cluster_sec {
+        label="SECURITY";
+        style=filled; fillcolor="#E8EAF6";
+        "SecConfig" [label="SecurityConfig"];
+        "JwtFilter" [label="JwtAuthenticationFilter"];
+        "JwtProv" [label="JwtTokenProvider"];
+    }
+
+    "PostgreSQL" [shape=cylinder, label="PostgreSQL\n(Neon)"];
+
+    "apiServices" -> "Axios";
+    "Axios" -> "AuthCtl" [label="/api/auth", color=blue];
+    "Axios" -> "BookCtl" [label="/api/bookings", color=blue];
+    "Axios" -> "ResCtl" [label="/api/resources", color=blue];
+    "Axios" -> "TickCtl" [label="/api/v1/tickets", color=blue];
+    "Axios" -> "JwtFilter" [label="Bearer token", style=dashed];
+
+    "SecConfig" -> "JwtFilter";
+    "JwtFilter" -> "JwtProv";
+
+    "AuthCtl" -> "UserSvc";
+    "BookCtl" -> "BookingSvc";
+    "ResCtl" -> "ResourceSvc";
+    "TickCtl" -> "TicketSvc";
+    "NotifCtl" -> "NotifSvc";
+
+    "UserSvc" -> "UserRepo";
+    "BookingSvc" -> "BookRepo";
+    "BookingSvc" -> "ResRepo";
+    "ResourceSvc" -> "ResRepo";
+    "TicketSvc" -> "TicketRepo";
+
+    "UserRepo" -> "PostgreSQL" [color=red];
+    "BookRepo" -> "PostgreSQL" [color=red];
+    "ResRepo" -> "PostgreSQL" [color=red];
+    "TicketRepo" -> "PostgreSQL" [color=red];
+
+    "JwtFilter" -> "AuthCtl" [style=dashed, label="protects"];
+}
