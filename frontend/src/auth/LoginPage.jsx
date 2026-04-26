@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '../components/ui/field'
 import { Input } from '../components/ui/input'
 import { Separator } from '../components/ui/separator'
+import { getAuthDestination } from '@/lib/auth'
 
 function LoginBrandIcon() {
   return (
@@ -37,22 +38,12 @@ function LoginPage() {
   const [tfCode, setTfCode] = useState('')
   const [tfLoading, setTfLoading] = useState(false)
 
-  function getRoleHome(userData) {
-    if (!userData) return '/'
-    if (userData.role === 'ADMIN') return '/admin/dashboard'
-    if (userData.role === 'TECHNICIAN') return '/technician/dashboard'
-    if (userData.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
-    if (userData.role === 'RECOURSEMNG') return '/resource-dashboard'
-    if (userData.role === 'BOOKINGMNG') return '/booking-dashboard'
-    return '/'
-  }
-
   function getDestination(userData) {
-    const returnTo = searchParams.get('returnTo')
-    if (returnTo) return decodeURIComponent(returnTo)
-    const fromPath = location.state?.from?.pathname
-    if (fromPath && fromPath !== '/login') return fromPath
-    return getRoleHome(userData)
+    return getAuthDestination({
+      user: userData,
+      searchParams,
+      locationState: location.state,
+    })
   }
 
   async function handleSubmit(event) {

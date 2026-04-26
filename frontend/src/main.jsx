@@ -5,16 +5,15 @@ import axios from 'axios'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
+import { clearStoredAuth, getCookie, isPublicPath, TOKEN_KEY } from './lib/auth'
 
-const TOKEN_KEY = 'campus-jwt-token'
-
-const storedToken = localStorage.getItem(TOKEN_KEY)
+const storedToken = getCookie(TOKEN_KEY)
 if (storedToken) {
   axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
 }
 
 axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY)
+  const token = getCookie(TOKEN_KEY)
 
   if (token && !config.headers?.Authorization) {
     config.headers.Authorization = `Bearer ${token}`
@@ -27,13 +26,10 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem('campus-user')
+      clearStoredAuth()
       delete axios.defaults.headers.common['Authorization']
 
-      const publicPaths = ['/login', '/oauth2', '/forgot-password', '/reset-password', '/setup-account', '/enter-university-id']
-      const isPublic = publicPaths.some((path) => window.location.pathname.startsWith(path))
-      if (!isPublic) {
+      if (!isPublicPath(window.location.pathname)) {
         const returnTo = window.location.pathname + window.location.search
         window.location.href = `/login?returnTo=${encodeURIComponent(returnTo)}`
       }

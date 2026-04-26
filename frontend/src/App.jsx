@@ -30,6 +30,7 @@ import SetupAccountPage from './auth/SetupAccountPage'
 import AdminTicketsPage from './admin/AdminTicketsPage'
 import AdminNotificationsPage from './admin/AdminNotificationsPage'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { getRoleHome } from '@/lib/auth'
 
 function MaintenanceDashboard() {
   return <div className="page-content"><h1>Maintenance Manager Dashboard</h1></div>
@@ -41,16 +42,6 @@ function ResourceDashboard() {
 
 function BookingManagerDashboard() {
   return <div className="page-content"><h1>Booking Manager Dashboard</h1></div>
-}
-
-function getRoleHome(user) {
-  if (!user) return '/'
-  if (user.role === 'ADMIN') return '/admin/dashboard'
-  if (user.role === 'TECHNICIAN') return '/technician/dashboard'
-  if (user.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
-  if (user.role === 'RECOURSEMNG') return '/resource-dashboard'
-  if (user.role === 'BOOKINGMNG') return '/booking-dashboard'
-  return '/'
 }
 
 function App() {

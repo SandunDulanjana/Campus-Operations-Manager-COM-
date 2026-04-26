@@ -8,7 +8,6 @@ import {
   ClipboardListIcon,
   HomeIcon,
   LogOutIcon,
-  SearchIcon,
   Settings2Icon,
   ShieldIcon,
 } from 'lucide-react'
@@ -25,7 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import {
   fetchMyNotifications,
@@ -111,7 +109,7 @@ function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+      <div className="mx-auto flex min-h-18 max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
         <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Go to home page">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border bg-card text-foreground shadow-sm">
             <CampusMark className="size-7" />
@@ -124,50 +122,51 @@ function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
-          <Button variant="ghost" asChild>
+        <nav className="hidden items-center gap-2 md:flex" aria-label="Primary navigation">
+          <Button variant="outline" asChild>
             <Link to="/">
               <HomeIcon data-icon="inline-start" />
               Home
             </Link>
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost">
-                <BookOpenIcon data-icon="inline-start" />
-                Resources
-                <ChevronDownIcon data-icon="inline-end" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                  <Link to="/bookings">
+          {user ? (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost">
                     <BookOpenIcon data-icon="inline-start" />
-                    Bookings
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="ghost" asChild>
-            <Link to="/tickets/my">
-              <ClipboardListIcon data-icon="inline-start" />
-              Tickets
-            </Link>
-          </Button>
+                    Resources
+                    <ChevronDownIcon data-icon="inline-end" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem asChild>
+                      <Link to="/bookings">
+                        <BookOpenIcon data-icon="inline-start" />
+                        Bookings
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button variant="ghost" asChild>
+                <Link to="/tickets/my">
+                  <ClipboardListIcon data-icon="inline-start" />
+                  Tickets
+                </Link>
+              </Button>
+            </>
+          ) : null}
         </nav>
 
         <div className="flex min-w-0 items-center gap-2">
-          <div className="relative hidden lg:block">
-            <SearchIcon className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
-            <Input className="w-64 pl-8" placeholder="Search..." />
-          </div>
-
           {!user ? (
-            <Button asChild>
-              <Link to="/login">Login</Link>
-            </Button>
+            <>
+              <Button size="lg" asChild>
+                <Link to="/login">Login</Link>
+              </Button>
+            </>
           ) : (
             <>
               <DropdownMenu onOpenChange={(open) => open && loadNotifications()}>

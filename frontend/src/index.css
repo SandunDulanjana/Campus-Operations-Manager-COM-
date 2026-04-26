@@ -1,16 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --sans: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
-  --heading: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+  --sans: 'Manrope', 'Segoe UI', sans-serif;
+  --heading: 'Fraunces', 'Times New Roman', serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --background: #f8f8f8;
+  --background: #f4f5f0;
   --foreground: #111111;
   --card: #ffffff;
   --card-foreground: #111111;
@@ -18,15 +19,15 @@
   --popover-foreground: #111111;
   --primary: #111111;
   --primary-foreground: #fafafa;
-  --secondary: #f1f1f1;
+  --secondary: #eceee6;
   --secondary-foreground: #18181b;
-  --muted: #efefef;
-  --muted-foreground: #52525b;
-  --accent: #f1f1f1;
+  --muted: #e8ebe1;
+  --muted-foreground: #575f5a;
+  --accent: #eef0e9;
   --accent-foreground: #18181b;
   --destructive: #dc2626;
-  --border: #d4d4d8;
-  --input: #d4d4d8;
+  --border: #d1d7cf;
+  --input: #d1d7cf;
   --ring: #71717a;
   --chart-1: #18181b;
   --chart-2: #3f3f46;
@@ -45,18 +46,18 @@
 }
 
 @theme {
-  --font-sans: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
-  --font-heading: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+  --font-sans: 'Manrope', 'Segoe UI', sans-serif;
+  --font-heading: 'Fraunces', 'Times New Roman', serif;
 
-  --color-app-bg: #f8f8f8;
+  --color-app-bg: #f4f5f0;
   --color-app-fg: #111111;
   --color-brand-700: #09090b;
   --color-brand-600: #18181b;
   --color-brand-500: #3f3f46;
-  --color-brand-100: #f4f4f5;
-  --color-accent-700: #27272a;
-  --color-accent-500: #52525b;
-  --color-accent-100: #f4f4f5;
+  --color-brand-100: #eceee6;
+  --color-accent-700: #374151;
+  --color-accent-500: #5b635d;
+  --color-accent-100: #e7ebe3;
   --radius: 0.75rem;
 }
 
@@ -68,7 +69,10 @@ body {
   margin: 0;
   font-family: var(--sans);
   color: #09090b;
-  background: #ffffff;
+  background:
+    radial-gradient(circle at top left, rgba(167, 201, 173, 0.18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(193, 205, 229, 0.16), transparent 24%),
+    linear-gradient(180deg, #f7f8f3 0%, #eef1e8 100%);
 }
 
 #root {
@@ -80,12 +84,12 @@ h2,
 h3 {
   font-family: var(--heading);
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 @theme inline {
-  --font-heading: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
-  --font-sans: 'Inter', 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+  --font-heading: 'Fraunces', 'Times New Roman', serif;
+  --font-sans: 'Manrope', 'Segoe UI', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
