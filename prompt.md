@@ -141,3 +141,28 @@ here is the thing,
  when the login function implement it should have work as following.
 
  when the user login with admin credentials, they should navigate to the current homepage. the admins also have the all features that the normal users have, but in addition to that they also have access to the admin dashboard where they can manage bookings, users, and resources. when they click the profile icon the users who have logged in as admin should see the link to the admin dashboard in the dropdown menu. when they click on the admin dashboard link, it should navigate to the admin dashboard page.
+
+
+
+
+
+
+
+
+
+ =====================================================================================
+
+
+
+ when the user first time visits the website, they should see the home page with the carasoul banner that displays different images related to the campus and the booking system. the carousel should automatically transition between images every few seconds, and it should also have navigation arrows that allow users to manually navigate through the images. each image in the carousel should have the same sentence and the title that describes the campus and the system. the design of the carousel should be visually appealing and should complement the overall design of the website. 
+
+ the design of the home page is already implemented but you can make some changes to it to make it more visually appealing and user-friendly. 
+
+ the changes should have made in the top nav bar. when the user navigate to the home page, the nav bar should have the campus icon and the home page icon along with the login and signup buttons. when the user click on the home page icon, it should navigate to the home page (same page). also the login should be on the right side of the nav bar. when user click on the login button, it should navigate to the login page where user can enter their credentials to log in. 
+
+ when the user come to the home page, after 5h user have to again login to the system. so you have to implement the session management for the user login. when the user login, a session should be created for the user and it should expire after 5 hours. after the session expires, the user should be logged out automatically and they should be redirected to the login page. also when the user is logged in, they should see their profile name in the nav bar next to the profile icon. 
+
+
+ when the user is logged in as admin, they should navigate to the admin dashboard , if user is technician they should navigate to the technician dashboard and if user is normal user they should navigate to the home page. this part is already implemetended
+
+ 

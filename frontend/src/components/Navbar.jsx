@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   BellIcon,
   BookOpenIcon,
@@ -24,7 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Separator } from '@/components/ui/separator'
 import {
   fetchMyNotifications,
   fetchUnreadCount,
@@ -52,6 +51,7 @@ function formatNotifDate(dateStr) {
 function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifLoading, setNotifLoading] = useState(false)
@@ -106,75 +106,81 @@ function Navbar() {
   }
 
   const initials = getInitials(user?.name)
+  
+  const isActive = (path) => location.pathname === path
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex min-h-18 max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
-        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Go to home page">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border bg-card text-foreground shadow-sm">
-            <CampusMark className="size-7" />
-          </span>
-          <span className="hidden min-w-0 sm:block">
-            <span className="block truncate text-sm font-semibold">Smart Campus</span>
-            <span className="block truncate text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-              Operations Hub
+    <header className="sticky top-0 z-40 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-5 flex min-h-16 items-center justify-between py-3 md:mx-5 lg:mx-5">
+        {/* Left: Campus Logo */}
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center gap-3" aria-label="Go to home page">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-card text-foreground shadow-sm">
+              <CampusMark className="size-6" />
             </span>
-          </span>
-        </Link>
+            <span className="hidden min-w-0 sm:block">
+              <span className="block truncate text-sm font-semibold">Smart Campus</span>
+              <span className="block truncate text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+                Operations Hub
+              </span>
+            </span>
+          </Link>
+        </div>
 
-        <nav className="hidden items-center gap-2 md:flex" aria-label="Primary navigation">
-          <Button variant="outline" asChild>
-            <Link to="/">
-              <HomeIcon data-icon="inline-start" />
-              Home
-            </Link>
-          </Button>
-          {user ? (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost">
-                    <BookOpenIcon data-icon="inline-start" />
-                    Resources
-                    <ChevronDownIcon data-icon="inline-end" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48">
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem asChild>
-                      <Link to="/bookings">
-                        <BookOpenIcon data-icon="inline-start" />
-                        Bookings
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button variant="ghost" asChild>
-                <Link to="/tickets/my">
-                  <ClipboardListIcon data-icon="inline-start" />
-                  Tickets
-                </Link>
-              </Button>
-            </>
-          ) : null}
-        </nav>
+        {/* Center: Navigation Links (only when logged in) */}
+        {user && (
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
+            <Button 
+              variant={isActive('/') ? 'default' : 'ghost'} 
+              size="sm"
+              asChild
+              className="rounded-full px-4"
+            >
+              <Link to="/">
+                <HomeIcon className="mr-2 size-4" />
+                Home
+              </Link>
+            </Button>
+            <Button 
+              variant={isActive('/bookings') ? 'default' : 'ghost'} 
+              size="sm"
+              asChild
+              className="rounded-full px-4"
+            >
+              <Link to="/bookings">
+                <BookOpenIcon className="mr-2 size-4" />
+                Bookings
+              </Link>
+            </Button>
+            <Button 
+              variant={isActive('/tickets/my') ? 'default' : 'ghost'} 
+              size="sm"
+              asChild
+              className="rounded-full px-4"
+            >
+              <Link to="/tickets/my">
+                <ClipboardListIcon className="mr-2 size-4" />
+                Tickets
+              </Link>
+            </Button>
+          </nav>
+        )}
 
-        <div className="flex min-w-0 items-center gap-2">
+        {/* Right: Login or Profile */}
+        <div className="flex items-center gap-2">
           {!user ? (
-            <>
-              <Button size="lg" asChild>
-                <Link to="/login">Login</Link>
-              </Button>
-            </>
+            <Button size="sm" className="rounded-full px-6" asChild>
+              <Link to="/login">Login</Link>
+            </Button>
           ) : (
             <>
+              {/* Notifications */}
               <DropdownMenu onOpenChange={(open) => open && loadNotifications()}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon-sm" aria-label="Notifications">
-                    <BellIcon />
+                  <Button variant="outline" size="icon" className="relative rounded-full" aria-label="Notifications">
+                    <BellIcon className="size-4" />
                     {unreadCount > 0 ? (
-                      <Badge className="absolute -mt-7 ml-7 h-5 min-w-5 justify-center rounded-full px-1 text-[10px]">
+                      <Badge className="absolute -right-1 -top-1 h-5 min-w-5 justify-center rounded-full px-1.5 text-[10px]">
                         {unreadCount > 99 ? '99+' : unreadCount}
                       </Badge>
                     ) : null}
@@ -202,7 +208,7 @@ function Navbar() {
                           onClick={() => !notification.read && handleMarkRead(notification.id)}
                           className="items-start gap-3"
                         >
-                          <BellIcon data-icon="inline-start" />
+                          <BellIcon className="mt-0.5 size-4 shrink-0" />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate font-medium">{notification.title}</span>
                             <span className="block truncate text-xs text-muted-foreground">
@@ -220,12 +226,13 @@ function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-auto justify-start rounded-xl px-2.5 py-2">
-                    <Avatar>
+                  <Button variant="ghost" className="h-auto justify-start rounded-full px-2 py-1.5 pl-1.5 pr-3">
+                    <Avatar className="size-8">
                       <AvatarImage src={user.profilePicture || ''} alt={user.name || user.email} />
-                      <AvatarFallback>{initials}</AvatarFallback>
+                      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
                     </Avatar>
                     <span className="hidden min-w-0 md:block">
                       <span className="block truncate text-sm font-medium leading-none">
@@ -235,7 +242,7 @@ function Navbar() {
                         {user.role}
                       </span>
                     </span>
-                    <ChevronDownIcon className="hidden text-muted-foreground md:block" />
+                    <ChevronDownIcon className="hidden size-4 text-muted-foreground md:block" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -246,23 +253,23 @@ function Navbar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      <CircleUserIcon data-icon="inline-start" />
+                      <CircleUserIcon className="mr-2 size-4" />
                       Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      <Settings2Icon data-icon="inline-start" />
+                      <Settings2Icon className="mr-2 size-4" />
                       Account Settings
                     </DropdownMenuItem>
                     {user.role === 'ADMIN' ? (
                       <DropdownMenuItem onClick={() => navigate('/admin/dashboard')}>
-                        <ShieldIcon data-icon="inline-start" />
+                        <ShieldIcon className="mr-2 size-4" />
                         Admin Dashboard
                       </DropdownMenuItem>
                     ) : null}
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
-                    <LogOutIcon data-icon="inline-start" />
+                    <LogOutIcon className="mr-2 size-4" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -271,7 +278,6 @@ function Navbar() {
           )}
         </div>
       </div>
-      <Separator />
     </header>
   )
 }

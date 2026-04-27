@@ -141,3 +141,136 @@ h3 {
     @apply font-sans;
   }
 }
+
+/* Global Spacing - 20px margins from each side */
+:root {
+  --page-margin: 20px;
+  --page-margin-md: 20px;
+  --page-margin-lg: 20px;
+}
+
+/* Landing Shell - Updated for consistent 20px margins */
+.landing-shell {
+  --landing-max-width: 100%;
+  --landing-copy-width: 860px;
+  --landing-inline-padding: 20px;
+  --landing-section-gap: clamp(3rem, 6vw, 5rem);
+}
+
+.landing-frame {
+  width: 100%;
+  max-width: var(--landing-max-width);
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
+@media (min-width: 768px) {
+  .landing-frame {
+    padding-inline: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-frame {
+    padding-inline: 20px;
+  }
+}
+
+.landing-copy-frame {
+  max-width: var(--landing-copy-width);
+}
+
+.landing-section {
+  padding-block: var(--landing-section-gap);
+}
+
+.landing-section + .landing-section {
+  border-top: 1px solid rgba(17, 17, 17, 0.08);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+/* Focus visible styles */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Selection styles */
+::selection {
+  background: hsl(var(--primary) / 0.2);
+  color: hsl(var(--primary));
+}

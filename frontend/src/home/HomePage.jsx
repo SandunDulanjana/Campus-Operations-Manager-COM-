@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react'
+import { ArrowLeftIcon, ArrowRightIcon, ChevronDownIcon } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import homeImage1 from '../assets/home_image/1.jpg'
 import homeImage2 from '../assets/home_image/2.jpg'
 import homeImage3 from '../assets/home_image/3.jpg'
@@ -13,114 +14,238 @@ import ResourceShowcase from '../components/home/ResourceShowcase'
 import SloganIntroSection from '../components/home/SloganIntroSection'
 import { Button } from '@/components/ui/button'
 
-const HERO_IMAGES = [
-  homeImage1,
-  homeImage2,
-  homeImage3,
-  homeImage4,
-  homeImage5,
-  homeImage6,
-  homeImage7,
-  homeImage8,
+const HERO_SLIDES = [
+  {
+    image: homeImage1,
+    title: 'Welcome to Smart Campus',
+    description: 'Experience a seamless, connected campus environment where technology enhances every aspect of your academic journey.',
+  },
+  {
+    image: homeImage2,
+    title: 'Sports & Recreation',
+    description: 'World-class athletic facilities available for booking. From rugby fields to fitness centers, stay active and healthy.',
+  },
+  {
+    image: homeImage3,
+    title: 'Modern Learning Spaces',
+    description: 'State-of-the-art lecture halls and classrooms designed for collaborative learning and innovative teaching.',
+  },
+  {
+    image: homeImage4,
+    title: 'Research Laboratories',
+    description: 'Advanced labs equipped with cutting-edge technology to support groundbreaking research and experiments.',
+  },
+  {
+    image: homeImage5,
+    title: 'Collaboration Zones',
+    description: 'Flexible meeting rooms and breakout spaces designed for team projects, discussions, and creative brainstorming.',
+  },
+  {
+    image: homeImage6,
+    title: 'Event Venues',
+    description: 'Elegant spaces for conferences, seminars, and campus events. Create memorable experiences for your audience.',
+  },
+  {
+    image: homeImage7,
+    title: 'Tech Equipment Hub',
+    description: 'Reserve projectors, AV equipment, and technology resources to power your presentations and events.',
+  },
+  {
+    image: homeImage8,
+    title: 'Campus Community',
+    description: 'A vibrant community where ideas flourish, connections grow, and excellence is nurtured every day.',
+  },
 ]
 
 function HomePage() {
-  const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
 
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setActiveImageIndex((current) => (current + 1) % HERO_IMAGES.length)
-    }, 60000)
-
-    return () => window.clearInterval(interval)
+  const nextSlide = useCallback(() => {
+    setActiveIndex((prev) => (prev + 1) % HERO_SLIDES.length)
   }, [])
 
-  function showPreviousImage() {
-    setActiveImageIndex((current) => (current - 1 + HERO_IMAGES.length) % HERO_IMAGES.length)
-  }
+  const prevSlide = useCallback(() => {
+    setActiveIndex((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)
+  }, [])
 
-  function showNextImage() {
-    setActiveImageIndex((current) => (current + 1) % HERO_IMAGES.length)
-  }
+  const goToSlide = useCallback((index) => {
+    setActiveIndex(index)
+  }, [])
+
+  useEffect(() => {
+    if (isPaused) return
+    const interval = setInterval(nextSlide, 10000)
+    return () => clearInterval(interval)
+  }, [isPaused, nextSlide])
+
+  const currentSlide = HERO_SLIDES[activeIndex]
 
   return (
-    <section className="flex w-full flex-col">
-      <section
-        id="landing-overview"
-        className="landing-anchor-target relative isolate min-h-[82svh] overflow-hidden border-b border-black/10"
-        style={{
-          backgroundImage: `linear-gradient(92deg, rgba(17, 22, 20, 0.78) 0%, rgba(17, 22, 20, 0.48) 34%, rgba(17, 22, 20, 0.1) 62%), linear-gradient(180deg, rgba(17, 22, 20, 0.06) 0%, rgba(17, 22, 20, 0.36) 100%), url(${HERO_IMAGES[activeImageIndex]})`,
-          backgroundPosition: 'center',
-          backgroundSize: 'cover',
-        }}
+    <div className="flex min-h-screen flex-col">
+      {/* Hero Carousel - Full Screen */}
+      <section 
+        className="relative isolate h-screen w-full overflow-hidden"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,transparent_72%,rgba(245,242,235,0.92)_100%)]" />
+        {/* Background Images with Fade Animation */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeIndex}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${currentSlide.image})`,
+              backgroundPosition: 'center',
+              backgroundSize: 'cover',
+            }}
+          />
+        </AnimatePresence>
 
-        <div className="relative mx-auto flex min-h-[82svh] w-full max-w-screen-2xl items-end px-5 pb-16 pt-12 md:px-8 md:pb-20 md:pt-16 lg:px-12">
-          <div className="flex max-w-3xl flex-col gap-7 text-white">
-            <div className="flex flex-col gap-3">
-              <p className="landing-hero-brand text-sm uppercase tracking-[0.32em] text-white/72">
+        {/* Darker Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
+
+        {/* Content */}
+        <div className="relative z-10 flex h-full flex-col justify-end px-5 pb-24 pt-20 md:px-5 lg:px-5">
+          <div className="mx-auto w-full max-w-7xl">
+            <div className="max-w-3xl">
+              {/* Eyebrow */}
+              <motion.p
+                key={`eyebrow-${activeIndex}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mb-4 text-sm font-medium uppercase tracking-[0.3em] text-white/70"
+              >
                 Smart Campus
-              </p>
-              <h1 className="landing-hero-mark max-w-2xl text-5xl leading-[0.95] font-semibold md:text-7xl lg:text-[5.6rem]">
-                Smart Campus Operations Hub
-              </h1>
-              <p className="max-w-xl text-base leading-7 text-white/82 md:text-lg">
-                Book spaces, route requests, and keep campus activity coordinated through one public entry point and one operational system.
-              </p>
+              </motion.p>
+
+              {/* Title */}
+              <motion.h1
+                key={`title-${activeIndex}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="mb-6 font-serif text-4xl font-semibold leading-[1.1] text-white md:text-5xl lg:text-6xl"
+              >
+                {currentSlide.title}
+              </motion.h1>
+
+              {/* Description */}
+              <motion.p
+                key={`desc-${activeIndex}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="mb-8 max-w-2xl text-lg leading-relaxed text-white/80 md:text-xl"
+              >
+                {currentSlide.description}
+              </motion.p>
+
+              {/* CTA Buttons */}
+              <motion.div
+                key={`cta-${activeIndex}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="flex flex-wrap gap-3"
+              >
+                <Button size="lg" className="rounded-full px-8" asChild>
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="rounded-full border-white/30 bg-white/10 px-8 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                  asChild
+                >
+                  <a href="#resources">Explore Resources</a>
+                </Button>
+              </motion.div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Button size="lg" asChild>
-                <Link to="/login">Login</Link>
-              </Button>
-              <Button asChild variant="secondary" size="lg">
-                <a href="#landing-resources">Explore Resources</a>
-              </Button>
-            </div>
+            {/* Navigation Controls */}
+            <div className="mt-12 flex items-center gap-4">
+              {/* Arrow Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={prevSlide}
+                  aria-label="Previous slide"
+                  className="rounded-full border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                >
+                  <ArrowLeftIcon className="size-5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={nextSlide}
+                  aria-label="Next slide"
+                  className="rounded-full border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                >
+                  <ArrowRightIcon className="size-5" />
+                </Button>
+              </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-lg"
-                onClick={showPreviousImage}
-                aria-label="Previous image"
-                className="border-white/20 bg-white/10 text-white backdrop-blur-sm hover:bg-white/18 hover:text-white"
-              >
-                <ArrowLeftIcon />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-lg"
-                onClick={showNextImage}
-                aria-label="Next image"
-                className="border-white/20 bg-white/10 text-white backdrop-blur-sm hover:bg-white/18 hover:text-white"
-              >
-                <ArrowRightIcon />
-              </Button>
-              <div className="flex items-center gap-2 pl-2" aria-hidden="true">
-                {HERO_IMAGES.map((_, index) => (
-                  <span
+              {/* Dot Indicators */}
+              <div className="flex items-center gap-2" aria-hidden="true">
+                {HERO_SLIDES.map((_, index) => (
+                  <button
                     key={index}
-                    className={`rounded-full transition-all duration-500 ${index === activeImageIndex ? 'h-2 w-10 bg-white' : 'h-2 w-2 bg-white/40'}`}
+                    onClick={() => goToSlide(index)}
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      index === activeIndex 
+                        ? 'w-8 bg-white' 
+                        : 'w-2 bg-white/40 hover:bg-white/60'
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
                   />
                 ))}
               </div>
+
+              {/* Slide Counter */}
+              <span className="ml-auto text-sm font-medium text-white/70">
+                {String(activeIndex + 1).padStart(2, '0')} / {String(HERO_SLIDES.length).padStart(2, '0')}
+              </span>
             </div>
           </div>
         </div>
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <a 
+            href="#intro" 
+            className="flex flex-col items-center gap-1 text-white/60 transition-colors hover:text-white"
+          >
+            <span className="text-xs font-medium uppercase tracking-wider">Scroll</span>
+            <ChevronDownIcon className="size-5" />
+          </a>
+        </motion.div>
       </section>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-14 px-4 py-10 md:px-6 md:py-14">
+      {/* Introduction Section */}
+      <section id="intro" className="scroll-mt-16">
         <SloganIntroSection />
+      </section>
 
-        <div id="landing-resources" className="landing-anchor-target">
-          <ResourceShowcase />
-        </div>
-      </div>
-    </section>
+      {/* Resources Section */}
+      <section id="resources" className="scroll-mt-16">
+        <ResourceShowcase />
+      </section>
+    </div>
   )
 }
 
