@@ -111,8 +111,8 @@ function Navbar({ isHomePage = false }) {
 
   // Transparent styles for homepage
   const homePageStyles = isHomePage
-    ? 'absolute top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/20 backdrop-blur-sm'
-    : 'sticky top-0 z-40 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
+    ? 'absolute top-0 left-0 z-50 w-screen border-b border-white/10 bg-black/20 backdrop-blur-sm'
+    : 'sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
 
   // Text colors for homepage (white) vs normal (default)
   const textColorClass = isHomePage ? 'text-white' : 'text-foreground'

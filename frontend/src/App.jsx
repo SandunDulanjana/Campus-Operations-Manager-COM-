@@ -61,7 +61,7 @@ function App() {
 
   return (
     <TooltipProvider>
-      <div className={isAppShellRoute ? 'app-shell admin-mode' : 'app-shell'}>
+      <div className={isAppShellRoute ? 'app-shell admin-mode' : (isHomePage ? 'app-shell overflow-x-hidden' : 'app-shell')}>
         {!isLoginRoute && !isAppShellRoute && <Navbar isHomePage={isHomePage} />}
 
       <main className={isAppShellRoute ? 'page-content admin-page-content' : (isHomePage ? 'page-content-home' : 'page-content')}>

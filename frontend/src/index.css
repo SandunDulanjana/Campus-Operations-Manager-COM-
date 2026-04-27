@@ -67,16 +67,19 @@
 
 body {
   margin: 0;
+  padding: 0;
   font-family: var(--sans);
   color: #09090b;
   background:
     radial-gradient(circle at top left, rgba(167, 201, 173, 0.18), transparent 28%),
     radial-gradient(circle at bottom right, rgba(193, 205, 229, 0.16), transparent 24%),
     linear-gradient(180deg, #f7f8f3 0%, #eef1e8 100%);
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100svh;
+  width: 100%;
 }
 
 h1,
