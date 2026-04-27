@@ -18,6 +18,7 @@ import './App.css'
 import ProfilePage from './profile/ProfilePage'
 import ForgotPasswordPage from './auth/ForgotPasswordPage'
 import ResetPasswordPage from './auth/ResetPasswordPage'
+import ContactPage from './pages/ContactPage'
 import CreateTicketPage from './ticket/CreateTicketPage'
 import MyTicketsPage from './ticket/MyTicketsPage'
 import TicketDetailPage from './ticket/TicketDetailPage'
@@ -129,6 +130,8 @@ function App() {
               <Route path="tickets" element={<AdminTicketsPage />} />
               <Route path="notifications" element={<AdminNotificationsPage />} />
             </Route>
+
+            <Route path="/contact" element={<ContactPage />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

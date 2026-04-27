@@ -18,7 +18,7 @@ const exploreLinks = [
 ]
 
 const supportLinks = [
-  { label: 'Contact Us', href: '#' },
+  { label: 'Contact Us', href: '/contact' },
   { label: 'About Us', href: '#' },
   { label: 'Privacy Policy', href: '#' },
   { label: 'Terms of Service', href: '#' },
