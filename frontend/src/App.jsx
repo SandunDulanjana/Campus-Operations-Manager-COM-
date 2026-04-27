@@ -64,8 +64,8 @@ function App() {
       <div className={isAppShellRoute ? 'app-shell admin-mode' : 'app-shell'}>
         {!isLoginRoute && !isAppShellRoute && <Navbar isHomePage={isHomePage} />}
 
-        <main className={isAppShellRoute ? 'page-content admin-page-content' : 'page-content'}>
-          <Routes>
+      <main className={isAppShellRoute ? 'page-content admin-page-content' : (isHomePage ? 'page-content-home' : 'page-content')}>
+      <Routes>
             <Route path="/setup-account" element={<SetupAccountPage />} />
             <Route path="/login" element={user ? <Navigate to={getRoleHome(user)} replace /> : <LoginPage />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />

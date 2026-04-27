@@ -120,16 +120,16 @@ function Navbar({ isHomePage = false }) {
 
   return (
     <header className={homePageStyles}>
-      <div className="mx-8 flex min-h-16 items-center justify-between py-3 md:mx-10 lg:mx-12">
-        {/* Left: Campus Logo */}
+      <div className="mx-8 flex min-h-20 items-center justify-between py-4 md:mx-10 lg:mx-12">
+        {/* Left: Campus Logo - Increased Size */}
         <div className="flex items-center">
-          <Link to="/" className={`flex items-center gap-3 ${textColorClass}`} aria-label="Go to home page">
-            <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${isHomePage ? 'border-white/20 bg-white/10' : 'bg-card'} shadow-sm`}>
-              <CampusMark className="size-6" />
+          <Link to="/" className={`flex items-center gap-4 ${textColorClass}`} aria-label="Go to home page">
+            <span className={`flex size-14 shrink-0 items-center justify-center rounded-2xl border ${isHomePage ? 'border-white/20 bg-white/10' : 'bg-card'} shadow-sm`}>
+              <CampusMark className="size-9" />
             </span>
             <span className="hidden min-w-0 sm:block">
-              <span className="block truncate text-sm font-semibold">Smart Campus</span>
-              <span className={`block truncate text-[11px] uppercase tracking-[0.24em] ${mutedTextColorClass}`}>
+              <span className="block truncate text-base font-semibold">Smart Campus</span>
+              <span className={`block truncate text-xs uppercase tracking-[0.24em] ${mutedTextColorClass}`}>
                 Operations Hub
               </span>
             </span>
@@ -138,49 +138,49 @@ function Navbar({ isHomePage = false }) {
 
         {/* Center: Navigation Links (only when logged in) */}
         {user && (
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
+          <nav className="hidden items-center gap-2 md:flex" aria-label="Primary navigation">
             <Button 
-              variant={isActive('/') ? 'default' : (isHomePage ? 'ghost' : 'ghost')} 
-              size="sm"
+              variant={isActive('/') ? 'default' : 'ghost'} 
+              size="default"
               asChild
-              className={`rounded-full px-4 ${isHomePage && !isActive('/') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
+              className={`rounded-full px-6 py-5 text-base ${isHomePage && !isActive('/') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
             >
               <Link to="/">
-                <HomeIcon className="mr-2 size-4" />
+                <HomeIcon className="mr-2 size-5" />
                 Home
               </Link>
             </Button>
             <Button 
               variant={isActive('/bookings') ? 'default' : 'ghost'} 
-              size="sm"
+              size="default"
               asChild
-              className={`rounded-full px-4 ${isHomePage && !isActive('/bookings') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
+              className={`rounded-full px-6 py-5 text-base ${isHomePage && !isActive('/bookings') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
             >
               <Link to="/bookings">
-                <BookOpenIcon className="mr-2 size-4" />
+                <BookOpenIcon className="mr-2 size-5" />
                 Bookings
               </Link>
             </Button>
             <Button 
               variant={isActive('/tickets/my') ? 'default' : 'ghost'} 
-              size="sm"
+              size="default"
               asChild
-              className={`rounded-full px-4 ${isHomePage && !isActive('/tickets/my') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
+              className={`rounded-full px-6 py-5 text-base ${isHomePage && !isActive('/tickets/my') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
             >
               <Link to="/tickets/my">
-                <ClipboardListIcon className="mr-2 size-4" />
+                <ClipboardListIcon className="mr-2 size-5" />
                 Tickets
               </Link>
             </Button>
           </nav>
         )}
 
-        {/* Right: Login or Profile */}
-        <div className="flex items-center gap-2">
+        {/* Right: Login or Profile - Increased Size */}
+        <div className="flex items-center gap-3">
           {!user ? (
             <Button 
-              size="sm" 
-              className={`rounded-full px-6 ${isHomePage ? 'bg-white text-black hover:bg-white/90' : ''}`} 
+              size="lg" 
+              className={`rounded-full px-10 py-6 text-base ${isHomePage ? 'bg-white text-black hover:bg-white/90' : ''}`} 
               asChild
             >
               <Link to="/login">Login</Link>
@@ -193,10 +193,10 @@ function Navbar({ isHomePage = false }) {
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className={`relative rounded-full ${isHomePage ? 'border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white' : ''}`} 
+                    className={`relative h-12 w-12 rounded-full ${isHomePage ? 'border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white' : ''}`} 
                     aria-label="Notifications"
                   >
-                    <BellIcon className="size-4" />
+                    <BellIcon className="size-5" />
                     {unreadCount > 0 ? (
                       <Badge className="absolute -right-1 -top-1 h-5 min-w-5 justify-center rounded-full px-1.5 text-[10px]">
                         {unreadCount > 99 ? '99+' : unreadCount}
@@ -249,11 +249,11 @@ function Navbar({ isHomePage = false }) {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className={`h-auto justify-start rounded-full px-2 py-1.5 pl-1.5 pr-3 ${isHomePage ? 'text-white hover:bg-white/20' : ''}`}
+                    className={`h-auto justify-start rounded-full px-3 py-2 pl-2 pr-4 ${isHomePage ? 'text-white hover:bg-white/20' : ''}`}
                   >
-                    <Avatar className="size-8">
+                    <Avatar className="size-10">
                       <AvatarImage src={user.profilePicture || ''} alt={user.name || user.email} />
-                      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                      <AvatarFallback className="text-sm">{initials}</AvatarFallback>
                     </Avatar>
                     <span className="hidden min-w-0 md:block">
                       <span className="block truncate text-sm font-medium leading-none">

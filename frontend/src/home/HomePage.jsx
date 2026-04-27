@@ -82,8 +82,8 @@ function HomePage() {
   const currentSlide = HERO_SLIDES[activeIndex]
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Hero Carousel - True Full Screen (100vh) */}
+    <div className="min-h-screen">
+      {/* Hero Carousel - True Full Screen without side margins */}
       <section
         className="relative isolate h-screen w-full overflow-hidden"
         onMouseEnter={() => setIsPaused(true)}
@@ -106,13 +106,13 @@ function HomePage() {
           />
         </AnimatePresence>
 
-        {/* Darker Gradient Overlays for better text visibility */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-black/50" />
+        {/* Lighter Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/40" />
 
-        {/* Content - Positioned with padding from top to account for navbar */}
-        <div className="relative z-10 flex h-full flex-col justify-end px-8 pb-16 pt-32 md:px-10 lg:px-12">
-          <div className="w-full">
+        {/* Content - Full width without side margins */}
+        <div className="relative z-10 flex h-full flex-col justify-end pb-16 pt-32">
+          <div className="w-full px-8 md:px-10 lg:px-12">
             <div className="max-w-3xl">
               {/* Eyebrow */}
               <motion.p
@@ -155,13 +155,13 @@ function HomePage() {
                 transition={{ duration: 0.5, delay: 0.5 }}
                 className="flex flex-wrap gap-3"
               >
-                <Button size="lg" className="rounded-full px-8 bg-white text-black hover:bg-white/90" asChild>
+                <Button size="lg" className="rounded-full px-10 py-6 text-lg bg-white text-black hover:bg-white/90" asChild>
                   <Link to="/login">Login</Link>
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="rounded-full border-white/40 bg-white/10 px-8 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                  className="rounded-full border-white/40 bg-white/10 px-10 py-6 text-lg text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
                   asChild
                 >
                   <a href="#intro">Explore Resources</a>
@@ -179,9 +179,9 @@ function HomePage() {
                   size="icon"
                   onClick={prevSlide}
                   aria-label="Previous slide"
-                  className="rounded-full border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                  className="h-12 w-12 rounded-full border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
                 >
-                  <ArrowLeftIcon className="size-5" />
+                  <ArrowLeftIcon className="size-6" />
                 </Button>
                 <Button
                   type="button"
@@ -189,9 +189,9 @@ function HomePage() {
                   size="icon"
                   onClick={nextSlide}
                   aria-label="Next slide"
-                  className="rounded-full border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                  className="h-12 w-12 rounded-full border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
                 >
-                  <ArrowRightIcon className="size-5" />
+                  <ArrowRightIcon className="size-6" />
                 </Button>
               </div>
 
@@ -201,10 +201,10 @@ function HomePage() {
                   <button
                     key={index}
                     onClick={() => goToSlide(index)}
-                    className={`h-2 rounded-full transition-all duration-500 ${
+                    className={`h-2.5 rounded-full transition-all duration-500 ${
                       index === activeIndex
-                        ? 'w-8 bg-white'
-                        : 'w-2 bg-white/40 hover:bg-white/60'
+                        ? 'w-10 bg-white'
+                        : 'w-2.5 bg-white/40 hover:bg-white/60'
                     }`}
                     aria-label={`Go to slide ${index + 1}`}
                   />
