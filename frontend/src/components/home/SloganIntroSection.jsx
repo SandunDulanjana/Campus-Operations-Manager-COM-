@@ -25,21 +25,21 @@ function SloganIntroSection() {
   return (
     <section className="bg-background py-14 md:py-16">
       <div className="mx-12 md:mx-16 lg:mx-20">
-        {/* Section Header */}
-        <div className="mx-auto mb-12 max-w-4xl text-center">
-          <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
+        {/* Section Header - Title and description on one line, centered, smaller */}
+        <div className="mx-auto mb-12 max-w-6xl text-center">
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
             Platform Overview
           </p>
-          <h2 className="mb-4 font-serif text-2xl font-semibold leading-tight tracking-tight text-foreground md:text-3xl">
+          <h2 className="mb-2 whitespace-nowrap font-serif text-xl font-semibold tracking-tight text-foreground md:text-2xl">
             Manage campus operations with ease
           </h2>
-          <p className="mx-auto max-w-2xl text-base leading-relaxed text-muted-foreground">
-            One platform for all your campus needs. Book spaces, track requests, and manage resources seamlessly.
+          <p className="whitespace-nowrap text-sm text-muted-foreground">
+            One platform for all your campus needs — book spaces, track requests, manage resources.
           </p>
         </div>
 
         {/* Features List - Alternating Layout */}
-        <div className="mx-auto flex max-w-4xl flex-col gap-10 md:gap-12">
+        <div className="mx-auto flex max-w-5xl flex-col gap-10 md:gap-12">
           {FEATURES.map((feature) => {
             const IconComponent = feature.icon
             const isIconLeft = feature.align === 'left'
@@ -53,8 +53,8 @@ function SloganIntroSection() {
               >
                 {/* Icon */}
                 <div className="flex-shrink-0">
-                  <div className="flex size-12 items-center justify-center rounded-xl bg-black md:size-14">
-                    <IconComponent className="size-6 text-white md:size-7" />
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-primary md:size-14">
+                    <IconComponent className="size-6 text-primary-foreground md:size-7" />
                   </div>
                 </div>
 
@@ -73,7 +73,7 @@ function SloganIntroSection() {
         </div>
 
         {/* Bottom Stats/Info */}
-        <div className="mx-auto mt-12 max-w-4xl border-t border-border pt-8">
+        <div className="mx-auto mt-12 max-w-5xl border-t border-border pt-8">
           <div className="grid gap-6 text-center md:grid-cols-3">
             <div>
               <p className="mb-1 text-xl font-bold text-foreground md:text-2xl">500+</p>
