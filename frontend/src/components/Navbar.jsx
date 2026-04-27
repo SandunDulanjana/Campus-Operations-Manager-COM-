@@ -48,7 +48,7 @@ function formatNotifDate(dateStr) {
   return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
 }
 
-function Navbar() {
+function Navbar({ isHomePage = false }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -109,18 +109,27 @@ function Navbar() {
   
   const isActive = (path) => location.pathname === path
 
+  // Transparent styles for homepage
+  const homePageStyles = isHomePage
+    ? 'absolute top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/20 backdrop-blur-sm'
+    : 'sticky top-0 z-40 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
+
+  // Text colors for homepage (white) vs normal (default)
+  const textColorClass = isHomePage ? 'text-white' : 'text-foreground'
+  const mutedTextColorClass = isHomePage ? 'text-white/70' : 'text-muted-foreground'
+
   return (
-    <header className="sticky top-0 z-40 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-5 flex min-h-16 items-center justify-between py-3 md:mx-5 lg:mx-5">
+    <header className={homePageStyles}>
+      <div className="mx-8 flex min-h-16 items-center justify-between py-3 md:mx-10 lg:mx-12">
         {/* Left: Campus Logo */}
         <div className="flex items-center">
-          <Link to="/" className="flex items-center gap-3" aria-label="Go to home page">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-card text-foreground shadow-sm">
+          <Link to="/" className={`flex items-center gap-3 ${textColorClass}`} aria-label="Go to home page">
+            <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${isHomePage ? 'border-white/20 bg-white/10' : 'bg-card'} shadow-sm`}>
               <CampusMark className="size-6" />
             </span>
             <span className="hidden min-w-0 sm:block">
               <span className="block truncate text-sm font-semibold">Smart Campus</span>
-              <span className="block truncate text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+              <span className={`block truncate text-[11px] uppercase tracking-[0.24em] ${mutedTextColorClass}`}>
                 Operations Hub
               </span>
             </span>
@@ -131,10 +140,10 @@ function Navbar() {
         {user && (
           <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
             <Button 
-              variant={isActive('/') ? 'default' : 'ghost'} 
+              variant={isActive('/') ? 'default' : (isHomePage ? 'ghost' : 'ghost')} 
               size="sm"
               asChild
-              className="rounded-full px-4"
+              className={`rounded-full px-4 ${isHomePage && !isActive('/') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
             >
               <Link to="/">
                 <HomeIcon className="mr-2 size-4" />
@@ -145,7 +154,7 @@ function Navbar() {
               variant={isActive('/bookings') ? 'default' : 'ghost'} 
               size="sm"
               asChild
-              className="rounded-full px-4"
+              className={`rounded-full px-4 ${isHomePage && !isActive('/bookings') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
             >
               <Link to="/bookings">
                 <BookOpenIcon className="mr-2 size-4" />
@@ -156,7 +165,7 @@ function Navbar() {
               variant={isActive('/tickets/my') ? 'default' : 'ghost'} 
               size="sm"
               asChild
-              className="rounded-full px-4"
+              className={`rounded-full px-4 ${isHomePage && !isActive('/tickets/my') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
             >
               <Link to="/tickets/my">
                 <ClipboardListIcon className="mr-2 size-4" />
@@ -169,7 +178,11 @@ function Navbar() {
         {/* Right: Login or Profile */}
         <div className="flex items-center gap-2">
           {!user ? (
-            <Button size="sm" className="rounded-full px-6" asChild>
+            <Button 
+              size="sm" 
+              className={`rounded-full px-6 ${isHomePage ? 'bg-white text-black hover:bg-white/90' : ''}`} 
+              asChild
+            >
               <Link to="/login">Login</Link>
             </Button>
           ) : (
@@ -177,7 +190,12 @@ function Navbar() {
               {/* Notifications */}
               <DropdownMenu onOpenChange={(open) => open && loadNotifications()}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="relative rounded-full" aria-label="Notifications">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className={`relative rounded-full ${isHomePage ? 'border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white' : ''}`} 
+                    aria-label="Notifications"
+                  >
                     <BellIcon className="size-4" />
                     {unreadCount > 0 ? (
                       <Badge className="absolute -right-1 -top-1 h-5 min-w-5 justify-center rounded-full px-1.5 text-[10px]">
@@ -229,7 +247,10 @@ function Navbar() {
               {/* Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-auto justify-start rounded-full px-2 py-1.5 pl-1.5 pr-3">
+                  <Button 
+                    variant="ghost" 
+                    className={`h-auto justify-start rounded-full px-2 py-1.5 pl-1.5 pr-3 ${isHomePage ? 'text-white hover:bg-white/20' : ''}`}
+                  >
                     <Avatar className="size-8">
                       <AvatarImage src={user.profilePicture || ''} alt={user.name || user.email} />
                       <AvatarFallback className="text-xs">{initials}</AvatarFallback>
@@ -238,11 +259,11 @@ function Navbar() {
                       <span className="block truncate text-sm font-medium leading-none">
                         {user.name || user.email}
                       </span>
-                      <span className="block truncate text-xs uppercase tracking-[0.22em] text-muted-foreground">
+                      <span className={`block truncate text-xs uppercase tracking-[0.22em] ${isHomePage ? 'text-white/70' : 'text-muted-foreground'}`}>
                         {user.role}
                       </span>
                     </span>
-                    <ChevronDownIcon className="hidden size-4 text-muted-foreground md:block" />
+                    <ChevronDownIcon className={`hidden size-4 md:block ${isHomePage ? 'text-white/70' : 'text-muted-foreground'}`} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">

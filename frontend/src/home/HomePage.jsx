@@ -83,8 +83,8 @@ function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Hero Carousel - Full Screen */}
-      <section 
+      {/* Hero Carousel - True Full Screen (100vh) */}
+      <section
         className="relative isolate h-screen w-full overflow-hidden"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
@@ -93,10 +93,10 @@ function HomePage() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeIndex}
-            initial={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+            transition={{ duration: 1, ease: [0.4, 0, 0.2, 1] }}
             className="absolute inset-0"
             style={{
               backgroundImage: `url(${currentSlide.image})`,
@@ -106,14 +106,13 @@ function HomePage() {
           />
         </AnimatePresence>
 
-        {/* Darker Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/30" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
+        {/* Darker Gradient Overlays for better text visibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-black/50" />
 
-        {/* Content */}
-        <div className="relative z-10 flex h-full flex-col justify-end px-5 pb-24 pt-20 md:px-5 lg:px-5">
-          <div className="mx-auto w-full max-w-7xl">
+        {/* Content - Positioned with padding from top to account for navbar */}
+        <div className="relative z-10 flex h-full flex-col justify-end px-8 pb-16 pt-32 md:px-10 lg:px-12">
+          <div className="w-full">
             <div className="max-w-3xl">
               {/* Eyebrow */}
               <motion.p
@@ -143,7 +142,7 @@ function HomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="mb-8 max-w-2xl text-lg leading-relaxed text-white/80 md:text-xl"
+                className="mb-8 max-w-2xl text-lg leading-relaxed text-white/85 md:text-xl"
               >
                 {currentSlide.description}
               </motion.p>
@@ -156,16 +155,16 @@ function HomePage() {
                 transition={{ duration: 0.5, delay: 0.5 }}
                 className="flex flex-wrap gap-3"
               >
-                <Button size="lg" className="rounded-full px-8" asChild>
+                <Button size="lg" className="rounded-full px-8 bg-white text-black hover:bg-white/90" asChild>
                   <Link to="/login">Login</Link>
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="rounded-full border-white/30 bg-white/10 px-8 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full border-white/40 bg-white/10 px-8 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
                   asChild
                 >
-                  <a href="#resources">Explore Resources</a>
+                  <a href="#intro">Explore Resources</a>
                 </Button>
               </motion.div>
             </div>
@@ -203,8 +202,8 @@ function HomePage() {
                     key={index}
                     onClick={() => goToSlide(index)}
                     className={`h-2 rounded-full transition-all duration-500 ${
-                      index === activeIndex 
-                        ? 'w-8 bg-white' 
+                      index === activeIndex
+                        ? 'w-8 bg-white'
                         : 'w-2 bg-white/40 hover:bg-white/60'
                     }`}
                     aria-label={`Go to slide ${index + 1}`}
@@ -213,22 +212,26 @@ function HomePage() {
               </div>
 
               {/* Slide Counter */}
-              <span className="ml-auto text-sm font-medium text-white/70">
+              <span className="ml-auto text-sm font-medium text-white/80">
                 {String(activeIndex + 1).padStart(2, '0')} / {String(HERO_SLIDES.length).padStart(2, '0')}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        {/* Scroll Indicator - Positioned at the very bottom */}
+        <motion.div
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, y: [0, 8, 0] }}
+          transition={{ 
+            opacity: { delay: 1, duration: 0.5 },
+            y: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+          }}
         >
-          <a 
-            href="#intro" 
-            className="flex flex-col items-center gap-1 text-white/60 transition-colors hover:text-white"
+          <a
+            href="#intro"
+            className="flex flex-col items-center gap-1 text-white/70 transition-colors hover:text-white"
           >
             <span className="text-xs font-medium uppercase tracking-wider">Scroll</span>
             <ChevronDownIcon className="size-5" />
@@ -237,12 +240,12 @@ function HomePage() {
       </section>
 
       {/* Introduction Section */}
-      <section id="intro" className="scroll-mt-16">
+      <section id="intro">
         <SloganIntroSection />
       </section>
 
       {/* Resources Section */}
-      <section id="resources" className="scroll-mt-16">
+      <section id="resources">
         <ResourceShowcase />
       </section>
     </div>

@@ -50,18 +50,19 @@ function App() {
   const isAdminRoute = location.pathname.startsWith('/admin')
   const isTechnicianRoute = location.pathname.startsWith('/technician')
   const isAppShellRoute = isAdminRoute || isTechnicianRoute
+  const isHomePage = location.pathname === '/'
   const isLoginRoute = location.pathname === '/login'
-    || location.pathname === '/oauth/callback'
-    || location.pathname.startsWith('/oauth2')
-    || location.pathname === '/forgot-password'
-    || location.pathname === '/reset-password'
-    || location.pathname === '/setup-account'
-    || location.pathname === '/enter-university-id'
+  || location.pathname === '/oauth/callback'
+  || location.pathname.startsWith('/oauth2')
+  || location.pathname === '/forgot-password'
+  || location.pathname === '/reset-password'
+  || location.pathname === '/setup-account'
+  || location.pathname === '/enter-university-id'
 
   return (
     <TooltipProvider>
       <div className={isAppShellRoute ? 'app-shell admin-mode' : 'app-shell'}>
-        {!isLoginRoute && !isAppShellRoute && <Navbar />}
+        {!isLoginRoute && !isAppShellRoute && <Navbar isHomePage={isHomePage} />}
 
         <main className={isAppShellRoute ? 'page-content admin-page-content' : 'page-content'}>
           <Routes>
