@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ActivityIcon,
-  BellIcon,
   BoxesIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -137,34 +136,6 @@ function AdminDashboardHome() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
-        <Card className="bg-card/90">
-          <CardHeader>
-            <Badge variant="outline">Overview</Badge>
-            <CardTitle className="text-4xl font-semibold tracking-tight">Operations at glance</CardTitle>
-            <CardDescription className="max-w-2xl text-base">
-              Clean control surface for bookings, tickets, resources, notifications, user approvals.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card className="bg-card/90">
-          <CardHeader>
-            <CardDescription>System Health</CardDescription>
-            <CardTitle className="text-4xl font-semibold tracking-tight">Stable</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm text-muted-foreground">No critical admin blockers right now.</span>
-              <Badge variant="secondary">Monitoring active</Badge>
-            </div>
-            <div className="rounded-xl border bg-muted p-3 text-muted-foreground">
-              <TicketIcon />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {statCards.map((stat) => {
           const Icon = stat.icon
