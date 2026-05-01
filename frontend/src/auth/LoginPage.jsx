@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { AlertCircleIcon, ArrowLeftIcon, KeyRoundIcon, ShieldIcon } from 'lucide-react'
+import sliderImage1 from '../assets/home_image/1.jpg'
+import sliderImage2 from '../assets/home_image/2.jpg'
+import sliderImage3 from '../assets/home_image/3.jpg'
 import { loginWithCredentials } from '../api/authApi'
 import { verifyTwoFactorLogin } from '../api/twoFactorApi'
 import { useAuth } from '../context/useAuth'
@@ -37,6 +40,15 @@ function LoginPage() {
   const [devCode, setDevCode] = useState('')
   const [tfCode, setTfCode] = useState('')
   const [tfLoading, setTfLoading] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+  useEffect(() => {
+    const sliderImages = [sliderImage1, sliderImage2, sliderImage3]
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % sliderImages.length)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
 
   function getDestination(userData) {
     return getAuthDestination({
@@ -100,20 +112,62 @@ function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex size-12 items-center justify-center rounded-xl border bg-muted text-foreground">
+    <main className="flex min-h-screen bg-background">
+      {/* Left Side: Slider (Hidden on small screens) */}
+      <div className="hidden lg:flex w-1/2 flex-col justify-end items-center relative p-12 overflow-hidden bg-slate-900">
+        {/* Background Slider Images */}
+        <div className="absolute inset-0 w-full h-full">
+          {[sliderImage1, sliderImage2, sliderImage3].map((img, idx) => (
+            <img 
+              key={idx}
+              src={img} 
+              alt={`Slider ${idx + 1}`}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${currentImageIndex === idx ? 'opacity-100' : 'opacity-0'}`} 
+            />
+          ))}
+          {/* Dark Overlay for Text Readability */}
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+        
+        {/* Overlaid Content */}
+        <div className="relative z-10 text-center text-white mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 font-serif tracking-tight drop-shadow-md">
+            Manage your institution Easily<br/>and perfectly !!
+          </h2>
+          <p className="text-slate-200 max-w-md mx-auto text-sm md:text-base leading-relaxed drop-shadow-sm">
+            Trusted by the education industry since 2000.<br/>
+            Over 800 implementation by our dedicated team.
+          </p>
+        </div>
+
+        {/* Slider Dots */}
+        <div className="absolute bottom-12 z-10 flex gap-3">
+          {[0, 1, 2].map((idx) => (
+            <button 
+              key={idx}
+              onClick={() => setCurrentImageIndex(idx)}
+              className={`size-3 rounded-full transition-colors ${currentImageIndex === idx ? 'bg-white' : 'bg-white/40 hover:bg-white/70'}`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Right Side: Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-24 bg-white">
+        <div className="w-full max-w-md flex flex-col gap-6">
+          {/* Logo & Header */}
+          <div className="flex flex-col items-center gap-3 mb-6 text-center">
+            <div className="flex size-16 items-center justify-center rounded-xl bg-slate-900 text-white mb-2">
               <LoginBrandIcon />
             </div>
             <div>
-              <CardTitle className="text-2xl">Smart Campus</CardTitle>
-              <CardDescription>Operations Hub</CardDescription>
+              <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Smart <span className="font-light">CAMPUS</span></h1>
+              <p className="text-xs font-semibold tracking-widest text-slate-500 uppercase mt-2">Operations Hub</p>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
+          
+          <div className="flex flex-col gap-4">
           {error ? (
             <Alert variant="destructive">
               <AlertCircleIcon />
@@ -258,8 +312,9 @@ function LoginPage() {
               </div>
             </form>
           )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </div>
     </main>
   )
 }
