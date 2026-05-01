@@ -909,6 +909,11 @@
   padding: 0 clamp(1rem, 4vw, 3.5rem) 2.5rem;
 }
 
+.page-content-home {
+  width: 100%;
+  padding: 0;
+}
+
 .app-shell.admin-mode {
   min-height: 100svh;
   display: grid;
@@ -3761,6 +3766,54 @@ tbody tr:hover td {
 
 .landing-anchor-target {
   scroll-margin-top: 7.5rem;
+}
+
+.landing-hero-brand,
+.landing-hero-mark,
+#landing-overview h1,
+#landing-overview p,
+#landing-overview a,
+#landing-overview button {
+  animation-duration: 900ms;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-hero-brand {
+  animation-name: landing-fade-rise;
+}
+
+.landing-hero-mark {
+  font-family: var(--heading);
+  animation-name: landing-fade-rise;
+  animation-delay: 80ms;
+}
+
+#landing-overview h1 {
+  animation-name: landing-fade-rise;
+  animation-delay: 140ms;
+}
+
+#landing-overview p {
+  animation-name: landing-fade-rise;
+  animation-delay: 220ms;
+}
+
+#landing-overview a,
+#landing-overview button {
+  animation-name: landing-fade-rise;
+  animation-delay: 280ms;
+}
+
+@keyframes landing-fade-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 .home-hero-kicker {

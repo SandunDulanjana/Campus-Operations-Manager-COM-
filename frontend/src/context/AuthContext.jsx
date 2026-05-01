@@ -1,38 +1,18 @@
 import { createContext, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
+import { clearStoredAuth, persistAuth, persistUser, readStoredAuth, isSessionExpired } from '@/lib/auth'
 
 const AuthContext = createContext(null)
 
-const TOKEN_KEY = 'campus-jwt-token'
-const USER_KEY  = 'campus-user'
-
-// ── Restore session from localStorage (runs once at startup) ──────────────────
-function getStoredAuth() {
-  try {
-    const token = localStorage.getItem(TOKEN_KEY)
-    const raw   = localStorage.getItem(USER_KEY)
-    if (!token || !raw) return { user: null, token: null }
-    return { user: JSON.parse(raw), token }
-  } catch {
-    return { user: null, token: null }
-  }
-}
-
 export function AuthProvider({ children }) {
-
-  // ── State: initialised ONCE from localStorage via lazy initialiser ──────────
-  // The () => {...} form means React calls this only on the first render,
-  // not on every re-render.
-  const [user, setUser]   = useState(() => getStoredAuth().user)
+  const [user, setUser] = useState(() => readStoredAuth().user)
   const [token, setToken] = useState(() => {
-    const { token: t } = getStoredAuth()
-    // Set axios header SYNCHRONOUSLY here so the very first API call
-    // (which may fire before the useEffect below) already has the token.
+    const { token: t } = readStoredAuth()
     if (t) axios.defaults.headers.common['Authorization'] = `Bearer ${t}`
     return t
   })
+  const [sessionExpiresAt, setSessionExpiresAt] = useState(() => readStoredAuth().expiresAt)
 
-  // ── Keep axios header in sync whenever token changes ─────────────────────────
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
@@ -41,31 +21,43 @@ export function AuthProvider({ children }) {
     }
   }, [token])
 
-  // ── login: called by LoginPage after successful API response ─────────────────
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (sessionExpiresAt && isSessionExpired(sessionExpiresAt)) {
+        logout(true)
+      }
+    }, 60000)
+
+    return () => window.clearInterval(interval)
+  }, [sessionExpiresAt])
+
   function login(userData, jwtToken) {
-    localStorage.setItem(TOKEN_KEY, jwtToken)
-    localStorage.setItem(USER_KEY, JSON.stringify(userData))
+    const expiresAt = persistAuth(userData, jwtToken)
     axios.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`
     setToken(jwtToken)
     setUser(userData)
+    setSessionExpiresAt(expiresAt)
   }
 
-  // ── logout: clears everything ─────────────────────────────────────────────────
-  function logout() {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+  function logout(shouldRedirect = false) {
+    clearStoredAuth()
     delete axios.defaults.headers.common['Authorization']
     setToken(null)
     setUser(null)
+    setSessionExpiresAt(null)
+
+    if (shouldRedirect && !window.location.pathname.startsWith('/login')) {
+      const returnTo = window.location.pathname + window.location.search
+      window.location.href = `/login?returnTo=${encodeURIComponent(returnTo)}`
+    }
   }
 
-  // ── updateUser: used by ProfilePage after saving profile changes ──────────────
   function updateUser(updatedUserData) {
-    localStorage.setItem(USER_KEY, JSON.stringify(updatedUserData))
+    const expiresAt = persistUser(updatedUserData, sessionExpiresAt)
     setUser(updatedUserData)
+    setSessionExpiresAt(expiresAt)
   }
 
-  // ── Context value (memoised so consumers only re-render when user/token changes)
   const value = useMemo(
     () => ({ user, token, login, logout, updateUser }),
     [user, token]

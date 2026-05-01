@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertCircleIcon, RefreshCwIcon } from 'lucide-react'
+import { AlertCircleIcon, RefreshCwIcon, TicketIcon, ActivityIcon, AlertTriangleIcon } from 'lucide-react'
 import { fetchAssignedTickets } from '../api/ticketApi'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
 import { Badge } from '../components/ui/badge'
@@ -69,59 +69,59 @@ function TechnicianTicketAnalysis() {
 
   const statusData = useMemo(
     () => [
-      countTickets(filteredTickets, 'status', 'IN_PROGRESS', 'In progress'),
-      countTickets(filteredTickets, 'status', 'RESOLVED', 'Resolved'),
-      countTickets(filteredTickets, 'status', 'CLOSED', 'Closed'),
-      countTickets(filteredTickets, 'status', 'REJECTED', 'Rejected'),
-      countTickets(filteredTickets, 'status', 'OPEN', 'Open'),
+      countTickets(filteredTickets, 'status', 'IN_PROGRESS', 'In progress', '#3b82f6'),
+      countTickets(filteredTickets, 'status', 'RESOLVED', 'Resolved', '#10b981'),
+      countTickets(filteredTickets, 'status', 'CLOSED', 'Closed', '#64748b'),
+      countTickets(filteredTickets, 'status', 'REJECTED', 'Rejected', '#f43f5e'),
+      countTickets(filteredTickets, 'status', 'OPEN', 'Open', '#f59e0b'),
     ],
     [filteredTickets]
   )
 
   const priorityData = useMemo(
     () => [
-      countTickets(filteredTickets, 'priority', 'LOW', 'Low'),
-      countTickets(filteredTickets, 'priority', 'MEDIUM', 'Medium'),
-      countTickets(filteredTickets, 'priority', 'HIGH', 'High'),
-      countTickets(filteredTickets, 'priority', 'CRITICAL', 'Critical'),
+      countTickets(filteredTickets, 'priority', 'LOW', 'Low', '#10b981'),
+      countTickets(filteredTickets, 'priority', 'MEDIUM', 'Medium', '#f59e0b'),
+      countTickets(filteredTickets, 'priority', 'HIGH', 'High', '#f97316'),
+      countTickets(filteredTickets, 'priority', 'CRITICAL', 'Critical', '#e11d48'),
     ],
     [filteredTickets]
   )
 
   return (
     <section className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Ticket Analysis</CardTitle>
-          <CardDescription>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Ticket Analysis</h2>
+          <p className="text-muted-foreground mt-1">
             Monitor assigned ticket distribution, priority pressure, and SLA health.
-          </CardDescription>
-          <CardAction className="flex items-center gap-2">
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger aria-label="Date range" className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {DATE_RANGES.map((range) => (
-                    <SelectItem key={range.value} value={range.value}>
-                      {range.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={loadTickets} disabled={loading}>
-              <RefreshCwIcon data-icon="inline-start" />
-              Refresh
-            </Button>
-          </CardAction>
-        </CardHeader>
-      </Card>
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger aria-label="Date range" className="w-40 bg-white shadow-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {DATE_RANGES.map((range) => (
+                  <SelectItem key={range.value} value={range.value}>
+                    {range.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <Button onClick={loadTickets} disabled={loading} className="shadow-sm">
+            <RefreshCwIcon className={`mr-2 size-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+      </div>
 
       {error ? (
         <Alert variant="destructive">
-          <AlertCircleIcon />
+          <AlertCircleIcon className="size-4" />
           <AlertTitle>Request failed</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -132,18 +132,34 @@ function TechnicianTicketAnalysis() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <MetricCard title="Filtered tickets" value={total} detail={selectedRangeLabel(dateRange)} />
+            <MetricCard 
+              title="Filtered tickets" 
+              value={total} 
+              detail={selectedRangeLabel(dateRange)} 
+              icon={TicketIcon}
+              colorTheme={{ main: '#3b82f6', bg: '#eff6ff' }}
+            />
             <MetricCard
               title="Active work"
               value={statusData.find((item) => item.key === 'IN_PROGRESS')?.count || 0}
               detail="Tickets still in progress"
+              icon={ActivityIcon}
+              colorTheme={{ main: '#f59e0b', bg: '#fffbeb' }}
             />
             <MetricCard
               title="Critical priority"
               value={priorityData.find((item) => item.key === 'CRITICAL')?.count || 0}
               detail="Needs fastest response"
+              icon={AlertTriangleIcon}
+              colorTheme={{ main: '#ef4444', bg: '#fef2f2' }}
             />
-            <MetricCard title="SLA breached" value={slaBreached} detail={`${slaOk} within SLA`} />
+            <MetricCard 
+              title="SLA breached" 
+              value={slaBreached} 
+              detail={`${slaOk} within SLA`} 
+              icon={AlertCircleIcon}
+              colorTheme={{ main: '#8b5cf6', bg: '#f5f3ff' }}
+            />
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">
@@ -166,10 +182,11 @@ function TechnicianTicketAnalysis() {
   )
 }
 
-function countTickets(tickets, field, key, label) {
+function countTickets(tickets, field, key, label, color) {
   return {
     key,
     label,
+    color,
     count: tickets.filter((ticket) => ticket[field] === key).length,
   }
 }
@@ -178,15 +195,20 @@ function selectedRangeLabel(value) {
   return DATE_RANGES.find((range) => range.value === value)?.label || 'Selected range'
 }
 
-function MetricCard({ title, value, detail }) {
+function MetricCard({ title, value, detail, icon: Icon, colorTheme }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardDescription>{title}</CardDescription>
-        <CardTitle className="text-3xl">{value}</CardTitle>
+    <Card className="relative overflow-hidden transition-all hover:shadow-md border-l-4" style={{ borderLeftColor: colorTheme?.main || '#cbd5e1' }}>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardDescription className="font-medium text-muted-foreground">{title}</CardDescription>
+        {Icon && (
+          <div className="p-2 rounded-lg" style={{ backgroundColor: colorTheme?.bg || '#f1f5f9', color: colorTheme?.main || '#64748b' }}>
+            <Icon className="size-5" />
+          </div>
+        )}
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">{detail}</p>
+        <div className="text-3xl font-bold text-slate-800">{value}</div>
+        <p className="text-sm text-muted-foreground mt-1">{detail}</p>
       </CardContent>
     </Card>
   )
@@ -196,14 +218,14 @@ function DistributionCard({ title, description, items, total }) {
   const segments = getChartSegments(items, total)
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
+    <Card className="overflow-hidden border-t-4 border-t-slate-200 hover:shadow-md transition-all duration-300">
+      <CardHeader className="bg-slate-50/50 pb-4 border-b">
+        <CardTitle className="text-lg font-semibold text-slate-800">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6 pb-6">
         {total === 0 ? (
-          <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground bg-slate-50">
             No tickets in this range.
           </div>
         ) : (
@@ -225,7 +247,7 @@ function getChartSegments(items, total) {
       dash,
       offset,
       percent: total > 0 ? Math.round((item.count / total) * 100) : 0,
-      color: `var(--chart-${(index % 5) + 1})`,
+      color: item.color || `hsl(var(--chart-${(index % 5) + 1}))`,
       circumference,
     }
     offset += dash

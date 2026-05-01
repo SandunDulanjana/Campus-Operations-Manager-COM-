@@ -18,6 +18,7 @@ import './App.css'
 import ProfilePage from './profile/ProfilePage'
 import ForgotPasswordPage from './auth/ForgotPasswordPage'
 import ResetPasswordPage from './auth/ResetPasswordPage'
+import ContactPage from './pages/ContactPage'
 import CreateTicketPage from './ticket/CreateTicketPage'
 import MyTicketsPage from './ticket/MyTicketsPage'
 import TicketDetailPage from './ticket/TicketDetailPage'
@@ -30,6 +31,7 @@ import SetupAccountPage from './auth/SetupAccountPage'
 import AdminTicketsPage from './admin/AdminTicketsPage'
 import AdminNotificationsPage from './admin/AdminNotificationsPage'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { getRoleHome } from '@/lib/auth'
 
 function MaintenanceDashboard() {
   return <div className="page-content"><h1>Maintenance Manager Dashboard</h1></div>
@@ -43,37 +45,28 @@ function BookingManagerDashboard() {
   return <div className="page-content"><h1>Booking Manager Dashboard</h1></div>
 }
 
-function getRoleHome(user) {
-  if (!user) return '/'
-  if (user.role === 'ADMIN') return '/admin/dashboard'
-  if (user.role === 'TECHNICIAN') return '/technician/dashboard'
-  if (user.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
-  if (user.role === 'RECOURSEMNG') return '/resource-dashboard'
-  if (user.role === 'BOOKINGMNG') return '/booking-dashboard'
-  return '/'
-}
-
 function App() {
   const location = useLocation()
   const { user } = useAuth()
   const isAdminRoute = location.pathname.startsWith('/admin')
   const isTechnicianRoute = location.pathname.startsWith('/technician')
   const isAppShellRoute = isAdminRoute || isTechnicianRoute
+  const isHomePage = location.pathname === '/'
   const isLoginRoute = location.pathname === '/login'
-    || location.pathname === '/oauth/callback'
-    || location.pathname.startsWith('/oauth2')
-    || location.pathname === '/forgot-password'
-    || location.pathname === '/reset-password'
-    || location.pathname === '/setup-account'
-    || location.pathname === '/enter-university-id'
+  || location.pathname === '/oauth/callback'
+  || location.pathname.startsWith('/oauth2')
+  || location.pathname === '/forgot-password'
+  || location.pathname === '/reset-password'
+  || location.pathname === '/setup-account'
+  || location.pathname === '/enter-university-id'
 
   return (
     <TooltipProvider>
-      <div className={isAppShellRoute ? 'app-shell admin-mode' : 'app-shell'}>
-        {!isLoginRoute && !isAppShellRoute && <Navbar />}
+      <div className={isAppShellRoute ? 'app-shell admin-mode' : (isHomePage ? 'app-shell overflow-x-hidden' : 'app-shell')}>
+        {!isLoginRoute && !isAppShellRoute && <Navbar isHomePage={isHomePage} />}
 
-        <main className={isAppShellRoute ? 'page-content admin-page-content' : 'page-content'}>
-          <Routes>
+      <main className={isAppShellRoute ? 'page-content admin-page-content' : (isHomePage ? 'page-content-home' : 'page-content')}>
+      <Routes>
             <Route path="/setup-account" element={<SetupAccountPage />} />
             <Route path="/login" element={user ? <Navigate to={getRoleHome(user)} replace /> : <LoginPage />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
@@ -137,6 +130,8 @@ function App() {
               <Route path="tickets" element={<AdminTicketsPage />} />
               <Route path="notifications" element={<AdminNotificationsPage />} />
             </Route>
+
+            <Route path="/contact" element={<ContactPage />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

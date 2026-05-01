@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircleIcon, Clock3Icon, ShieldAlertIcon, TicketIcon, Trash2Icon } from 'lucide-react'
+import { AlertCircleIcon, Clock3Icon, ShieldAlertIcon, TicketIcon, Trash2Icon, ActivityIcon } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -96,15 +96,32 @@ function AdminTicketsPage() {
     breached: allTickets.filter((ticket) => ticket.slaBreached).length,
   }), [allTickets])
 
+  const STATUS_COLORS = {
+    'IN_PROGRESS': '#3b82f6',
+    'RESOLVED': '#10b981',
+    'CLOSED': '#64748b',
+    'REJECTED': '#f43f5e',
+    'OPEN': '#f59e0b',
+  }
+
+  const PRIORITY_COLORS = {
+    'LOW': '#10b981',
+    'MEDIUM': '#f59e0b',
+    'HIGH': '#f97316',
+    'CRITICAL': '#e11d48',
+  }
+
   const statusChartData = TICKET_STATUSES.map((status) => ({
     key: status,
     label: formatTicketLabel(status),
+    color: STATUS_COLORS[status] || '#cbd5e1',
     count: allTickets.filter((ticket) => ticket.status === status).length,
   }))
 
   const priorityChartData = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((priority) => ({
     key: priority,
     label: formatTicketLabel(priority),
+    color: PRIORITY_COLORS[priority] || '#cbd5e1',
     count: allTickets.filter((ticket) => ticket.priority === priority).length,
   }))
 
@@ -112,21 +129,21 @@ function AdminTicketsPage() {
     <section className="flex flex-col gap-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Total Tickets', value: counts.total, icon: TicketIcon },
-          { label: 'Open', value: counts.open, icon: Clock3Icon },
-          { label: 'In Progress', value: counts.inProgress, icon: Clock3Icon },
-          { label: 'SLA Breached', value: counts.breached, icon: ShieldAlertIcon },
+          { label: 'Total Tickets', value: counts.total, icon: TicketIcon, theme: { main: '#3b82f6', bg: '#eff6ff' } },
+          { label: 'Open', value: counts.open, icon: Clock3Icon, theme: { main: '#f59e0b', bg: '#fffbeb' } },
+          { label: 'In Progress', value: counts.inProgress, icon: ActivityIcon, theme: { main: '#8b5cf6', bg: '#f5f3ff' } },
+          { label: 'SLA Breached', value: counts.breached, icon: ShieldAlertIcon, theme: { main: '#ef4444', bg: '#fef2f2' } },
         ].map((item) => {
           const Icon = item.icon
           return (
-            <Card key={item.label} className="bg-card/80">
-              <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <Card key={item.label} className="relative overflow-hidden transition-all hover:shadow-md border-l-4" style={{ borderLeftColor: item.theme.main }}>
+              <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
                 <div className="flex flex-col gap-1">
-                  <CardDescription>{item.label}</CardDescription>
-                  <CardTitle className="text-3xl font-semibold tracking-tight">{item.value}</CardTitle>
+                  <CardDescription className="font-medium text-muted-foreground">{item.label}</CardDescription>
+                  <CardTitle className="text-3xl font-bold tracking-tight text-slate-800">{item.value}</CardTitle>
                 </div>
-                <div className="rounded-lg border bg-muted p-2 text-muted-foreground">
-                  <Icon />
+                <div className="p-2 rounded-lg" style={{ backgroundColor: item.theme.bg, color: item.theme.main }}>
+                  <Icon className="size-5" />
                 </div>
               </CardHeader>
             </Card>
@@ -268,13 +285,19 @@ function DistributionCard({ title, description, items, total }) {
   const segments = getChartSegments(items, total)
 
   return (
-    <Card>
-      <CardHeader className="border-b">
-        <CardTitle>{title}</CardTitle>
+    <Card className="overflow-hidden border-t-4 border-t-slate-200 hover:shadow-md transition-all duration-300">
+      <CardHeader className="bg-slate-50/50 pb-4 border-b">
+        <CardTitle className="text-lg font-semibold text-slate-800">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="pt-4">
-        <DonutDistribution segments={segments} total={total} label="Tickets" />
+      <CardContent className="pt-6 pb-6">
+        {total === 0 ? (
+          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground bg-slate-50">
+            No tickets in this range.
+          </div>
+        ) : (
+          <DonutDistribution segments={segments} total={total} label="Tickets" />
+        )}
       </CardContent>
     </Card>
   )
@@ -291,7 +314,7 @@ function getChartSegments(items, total) {
       dash,
       offset,
       percent: total > 0 ? Math.round((item.count / total) * 100) : 0,
-      color: `var(--chart-${(index % 5) + 1})`,
+      color: item.color || `hsl(var(--chart-${(index % 5) + 1}))`,
       circumference,
     }
     offset += dash

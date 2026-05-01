@@ -1,78 +1,194 @@
-function FooterIcon({ kind }) {
-  if (kind === 'facebook') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M13.5 21v-7h2.6l.4-3h-3v-1.9c0-.9.3-1.6 1.7-1.6h1.5V4.8c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4.1V11H8v3h2.5v7h3Z" />
-      </svg>
-    )
-  }
+import { Link } from 'react-router-dom'
+import { FacebookIcon, InstagramIcon, LinkedinIcon, YoutubeIcon, MailIcon, PhoneIcon, MapPinIcon } from 'lucide-react'
+import CampusMark from '@/components/icons/CampusMark'
+import { Button } from '@/components/ui/button'
 
-  if (kind === 'instagram') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="4" y="4" width="16" height="16" rx="4" />
-        <circle cx="12" cy="12" r="3.5" />
-        <circle cx="17.2" cy="6.8" r="1" />
-      </svg>
-    )
-  }
+const socialLinks = [
+  { label: 'Facebook', icon: FacebookIcon, href: '#' },
+  { label: 'Instagram', icon: InstagramIcon, href: '#' },
+  { label: 'LinkedIn', icon: LinkedinIcon, href: '#' },
+  { label: 'YouTube', icon: YoutubeIcon, href: '#' },
+]
 
-  if (kind === 'linkedin') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M7 9v8" />
-        <path d="M12 17v-4.5a2.5 2.5 0 0 1 5 0V17" />
-        <path d="M12 12a3 3 0 0 1 3-3" />
-        <circle cx="7" cy="6.5" r="1.2" />
-      </svg>
-    )
-  }
+const exploreLinks = [
+  { label: 'Home', href: '/' },
+  { label: 'Bookings', href: '/bookings' },
+  { label: 'Tickets', href: '/tickets/my' },
+  { label: 'Profile', href: '/profile' },
+]
 
-  if (kind === 'youtube') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M21 8.5a2.5 2.5 0 0 0-1.8-1.8C17.7 6.3 12 6.3 12 6.3s-5.7 0-7.2.4A2.5 2.5 0 0 0 3 8.5 26.4 26.4 0 0 0 2.7 12c0 1.2.1 2.3.3 3.5a2.5 2.5 0 0 0 1.8 1.8c1.5.4 7.2.4 7.2.4s5.7 0 7.2-.4a2.5 2.5 0 0 0 1.8-1.8c.2-1.2.3-2.3.3-3.5s-.1-2.3-.3-3.5Z" />
-        <path d="m10 9.5 5 2.5-5 2.5v-5Z" />
-      </svg>
-    )
-  }
-
-  return null
-}
+const supportLinks = [
+  { label: 'Contact Us', href: '/contact' },
+  { label: 'About Us', href: '#' },
+  { label: 'Privacy Policy', href: '#' },
+  { label: 'Terms of Service', href: '#' },
+]
 
 function Footer() {
   return (
-    <footer className="site-footer">
-      <div className="footer-main">
-        <div className="footer-support">
-          <p className="footer-overline">Need Any Support?</p>
-          <h3>Contact Campus Support</h3>
-          <p>support.smartcampus.lk</p>
-          <p>+94 11 754 4801</p>
-        </div>
+    <footer className="border-t bg-background">
+      {/* Main Footer Content */}
+      <div className="mx-12 py-12 md:mx-16 md:py-16 lg:mx-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+            {/* Left Column - Campus Support */}
+            <div className="space-y-6">
+              {/* Logo and Title */}
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-xl border bg-card text-foreground shadow-sm">
+                  <CampusMark className="size-6" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-base font-semibold text-foreground">
+                    Smart Campus
+                  </h3>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                    Operations Hub
+                  </p>
+                </div>
+              </div>
 
-        <nav className="footer-links" aria-label="Footer links">
-          <a href="#">Contact Us</a>
-          <a href="#">About Us</a>
-          <a href="#">Privacy Policy</a>
-        </nav>
+              {/* Contact Info */}
+              <div className="space-y-4">
+                <div>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Campus Support
+                  </p>
+                  <h4 className="mb-3 font-serif text-xl font-semibold text-foreground">
+                    Contact Campus Support
+                  </h4>
+                  <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+                    Get help with bookings, access issues, and campus operations questions.
+                    Our support team is available to assist you with any concerns.
+                  </p>
+                </div>
 
-        <div className="footer-social" aria-label="Social links">
-          <a href="#" aria-label="Facebook">
-            <FooterIcon kind="facebook" />
-          </a>
-          <a href="#" aria-label="Instagram">
-            <FooterIcon kind="instagram" />
-          </a>
-          <a href="#" aria-label="LinkedIn">
-            <FooterIcon kind="linkedin" />
-          </a>
-          <a href="#" aria-label="YouTube">
-            <FooterIcon kind="youtube" />
-          </a>
+                <div className="space-y-3">
+                  <a
+                    href="mailto:support.smartcampus.lk"
+                    className="flex items-center gap-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <MailIcon className="size-4 text-muted-foreground" />
+                    <span>support.smartcampus.lk</span>
+                  </a>
+                  <a
+                    href="tel:+94117544801"
+                    className="flex items-center gap-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <PhoneIcon className="size-4 text-muted-foreground" />
+                    <span>+94 11 754 4801</span>
+                  </a>
+                  <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                    <MapPinIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <span>Smart Campus Operations Center,<br />Main Administration Building</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Links */}
+            <div className="grid gap-8 sm:grid-cols-3 lg:gap-12">
+              {/* Explore Links */}
+              <div>
+                <h5 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
+                  Explore
+                </h5>
+                <ul className="space-y-3">
+                  {exploreLinks.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        to={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Support Links */}
+              <div>
+                <h5 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
+                  Support
+                </h5>
+                <ul className="space-y-3">
+                  {supportLinks.map((link) => (
+                    <li key={link.label}>
+                      <a
+                        href={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Follow Us */}
+              <div>
+                <h5 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
+                  Follow Us
+                </h5>
+                <div className="flex flex-wrap gap-2">
+                  {socialLinks.map((item) => {
+                    const Icon = item.icon
+                    return (
+                      <Button
+                        key={item.label}
+                        variant="outline"
+                        size="icon"
+                        className="size-9 rounded-full"
+                        aria-label={item.label}
+                        asChild
+                      >
+                        <a href={item.href} target="_blank" rel="noopener noreferrer">
+                          <Icon className="size-4" />
+                        </a>
+                      </Button>
+                    )
+                  })}
+                </div>
+
+                {/* Newsletter Signup Hint */}
+                <div className="mt-6">
+                  <p className="mb-2 text-xs text-muted-foreground">
+                    Stay updated with campus news
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/70">
+                    Follow us on social media for the latest announcements
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <p className="footer-copy">Copyright © {new Date().getFullYear()} Smart Campus — All Rights Reserved</p>
+
+      {/* Bottom Bar */}
+      <div className="border-t">
+        <div className="mx-12 py-6 md:mx-16 lg:mx-20">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+              <p className="text-xs text-muted-foreground">
+                Copyright &copy; {new Date().getFullYear()} Smart Campus - All Rights Reserved
+              </p>
+              <div className="flex items-center gap-6">
+                <a href="#" className="text-[10px] text-muted-foreground transition-colors hover:text-foreground">
+                  Privacy Policy
+                </a>
+                <a href="#" className="text-[10px] text-muted-foreground transition-colors hover:text-foreground">
+                  Terms of Service
+                </a>
+                <a href="#" className="text-[10px] text-muted-foreground transition-colors hover:text-foreground">
+                  Cookie Policy
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </footer>
   )
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   BellIcon,
   BookOpenIcon,
@@ -8,7 +8,6 @@ import {
   ClipboardListIcon,
   HomeIcon,
   LogOutIcon,
-  SearchIcon,
   Settings2Icon,
   ShieldIcon,
 } from 'lucide-react'
@@ -25,8 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
 import {
   fetchMyNotifications,
   fetchUnreadCount,
@@ -51,9 +48,10 @@ function formatNotifDate(dateStr) {
   return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
 }
 
-function Navbar() {
+function Navbar({ isHomePage = false }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifLoading, setNotifLoading] = useState(false)
@@ -108,74 +106,99 @@ function Navbar() {
   }
 
   const initials = getInitials(user?.name)
+  
+  const isActive = (path) => location.pathname === path
+
+  // Transparent styles for homepage
+  const homePageStyles = isHomePage
+    ? 'absolute top-0 left-0 z-50 w-screen border-b border-white/10 bg-black/20 backdrop-blur-sm'
+    : 'sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
+
+  // Text colors for homepage (white) vs normal (default)
+  const textColorClass = isHomePage ? 'text-white' : 'text-foreground'
+  const mutedTextColorClass = isHomePage ? 'text-white/70' : 'text-muted-foreground'
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
-        <Link to="/" className="flex min-w-0 items-center gap-3" aria-label="Go to home page">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border bg-card text-foreground shadow-sm">
-            <CampusMark className="size-7" />
-          </span>
-          <span className="hidden min-w-0 sm:block">
-            <span className="block truncate text-sm font-semibold">Smart Campus</span>
-            <span className="block truncate text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-              Operations Hub
+    <header className={homePageStyles}>
+      <div className="mx-8 flex min-h-20 items-center justify-between py-4 md:mx-10 lg:mx-12">
+        {/* Left: Campus Logo - Increased Size */}
+        <div className="flex items-center">
+          <Link to="/" className={`flex items-center gap-4 ${textColorClass}`} aria-label="Go to home page">
+            <span className={`flex size-14 shrink-0 items-center justify-center rounded-2xl border ${isHomePage ? 'border-white/20 bg-white/10' : 'bg-card'} shadow-sm`}>
+              <CampusMark className="size-9" />
             </span>
-          </span>
-        </Link>
+            <span className="hidden min-w-0 sm:block">
+              <span className="block truncate text-base font-semibold">Smart Campus</span>
+              <span className={`block truncate text-xs uppercase tracking-[0.24em] ${mutedTextColorClass}`}>
+                Operations Hub
+              </span>
+            </span>
+          </Link>
+        </div>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
-          <Button variant="ghost" asChild>
-            <Link to="/">
-              <HomeIcon data-icon="inline-start" />
-              Home
-            </Link>
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost">
-                <BookOpenIcon data-icon="inline-start" />
-                Resources
-                <ChevronDownIcon data-icon="inline-end" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                  <Link to="/bookings">
-                    <BookOpenIcon data-icon="inline-start" />
-                    Bookings
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="ghost" asChild>
-            <Link to="/tickets/my">
-              <ClipboardListIcon data-icon="inline-start" />
-              Tickets
-            </Link>
-          </Button>
-        </nav>
+        {/* Center: Navigation Links (only when logged in) */}
+        {user && (
+          <nav className="hidden items-center gap-2 md:flex" aria-label="Primary navigation">
+            <Button 
+              variant={isActive('/') ? 'default' : 'ghost'} 
+              size="default"
+              asChild
+              className={`rounded-full px-6 py-5 text-base ${isHomePage && !isActive('/') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
+            >
+              <Link to="/">
+                <HomeIcon className="mr-2 size-5" />
+                Home
+              </Link>
+            </Button>
+            <Button 
+              variant={isActive('/bookings') ? 'default' : 'ghost'} 
+              size="default"
+              asChild
+              className={`rounded-full px-6 py-5 text-base ${isHomePage && !isActive('/bookings') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
+            >
+              <Link to="/bookings">
+                <BookOpenIcon className="mr-2 size-5" />
+                Bookings
+              </Link>
+            </Button>
+            <Button 
+              variant={isActive('/tickets/my') ? 'default' : 'ghost'} 
+              size="default"
+              asChild
+              className={`rounded-full px-6 py-5 text-base ${isHomePage && !isActive('/tickets/my') ? 'text-white hover:bg-white/20 hover:text-white' : ''}`}
+            >
+              <Link to="/tickets/my">
+                <ClipboardListIcon className="mr-2 size-5" />
+                Tickets
+              </Link>
+            </Button>
+          </nav>
+        )}
 
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="relative hidden lg:block">
-            <SearchIcon className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
-            <Input className="w-64 pl-8" placeholder="Search..." />
-          </div>
-
+        {/* Right: Login or Profile - Increased Size */}
+        <div className="flex items-center gap-3">
           {!user ? (
-            <Button asChild>
+            <Button 
+              size="lg" 
+              className={`rounded-full px-10 py-6 text-base ${isHomePage ? 'bg-white text-black hover:bg-white/90' : ''}`} 
+              asChild
+            >
               <Link to="/login">Login</Link>
             </Button>
           ) : (
             <>
+              {/* Notifications */}
               <DropdownMenu onOpenChange={(open) => open && loadNotifications()}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon-sm" aria-label="Notifications">
-                    <BellIcon />
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className={`relative h-12 w-12 rounded-full ${isHomePage ? 'border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white' : ''}`} 
+                    aria-label="Notifications"
+                  >
+                    <BellIcon className="size-5" />
                     {unreadCount > 0 ? (
-                      <Badge className="absolute -mt-7 ml-7 h-5 min-w-5 justify-center rounded-full px-1 text-[10px]">
+                      <Badge className="absolute -right-1 -top-1 h-5 min-w-5 justify-center rounded-full px-1.5 text-[10px]">
                         {unreadCount > 99 ? '99+' : unreadCount}
                       </Badge>
                     ) : null}
@@ -203,7 +226,7 @@ function Navbar() {
                           onClick={() => !notification.read && handleMarkRead(notification.id)}
                           className="items-start gap-3"
                         >
-                          <BellIcon data-icon="inline-start" />
+                          <BellIcon className="mt-0.5 size-4 shrink-0" />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate font-medium">{notification.title}</span>
                             <span className="block truncate text-xs text-muted-foreground">
@@ -221,22 +244,26 @@ function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-auto justify-start rounded-xl px-2.5 py-2">
-                    <Avatar>
+                  <Button 
+                    variant="ghost" 
+                    className={`h-auto justify-start rounded-full px-3 py-2 pl-2 pr-4 ${isHomePage ? 'text-white hover:bg-white/20' : ''}`}
+                  >
+                    <Avatar className="size-10">
                       <AvatarImage src={user.profilePicture || ''} alt={user.name || user.email} />
-                      <AvatarFallback>{initials}</AvatarFallback>
+                      <AvatarFallback className="text-sm">{initials}</AvatarFallback>
                     </Avatar>
                     <span className="hidden min-w-0 md:block">
                       <span className="block truncate text-sm font-medium leading-none">
                         {user.name || user.email}
                       </span>
-                      <span className="block truncate text-xs uppercase tracking-[0.22em] text-muted-foreground">
+                      <span className={`block truncate text-xs uppercase tracking-[0.22em] ${isHomePage ? 'text-white/70' : 'text-muted-foreground'}`}>
                         {user.role}
                       </span>
                     </span>
-                    <ChevronDownIcon className="hidden text-muted-foreground md:block" />
+                    <ChevronDownIcon className={`hidden size-4 md:block ${isHomePage ? 'text-white/70' : 'text-muted-foreground'}`} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -247,23 +274,23 @@ function Navbar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      <CircleUserIcon data-icon="inline-start" />
+                      <CircleUserIcon className="mr-2 size-4" />
                       Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      <Settings2Icon data-icon="inline-start" />
+                      <Settings2Icon className="mr-2 size-4" />
                       Account Settings
                     </DropdownMenuItem>
                     {user.role === 'ADMIN' ? (
                       <DropdownMenuItem onClick={() => navigate('/admin/dashboard')}>
-                        <ShieldIcon data-icon="inline-start" />
+                        <ShieldIcon className="mr-2 size-4" />
                         Admin Dashboard
                       </DropdownMenuItem>
                     ) : null}
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
-                    <LogOutIcon data-icon="inline-start" />
+                    <LogOutIcon className="mr-2 size-4" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -272,7 +299,6 @@ function Navbar() {
           )}
         </div>
       </div>
-      <Separator />
     </header>
   )
 }

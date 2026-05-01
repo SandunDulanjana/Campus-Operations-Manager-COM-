@@ -6,6 +6,7 @@ import { useAuth } from '../context/useAuth'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { getRoleHome } from '@/lib/auth'
 
 function OAuthCallback() {
   const [searchParams] = useSearchParams()
@@ -16,16 +17,6 @@ function OAuthCallback() {
   const token = searchParams.get('token')
   const pendingToken = searchParams.get('pendingToken')
   const reason = searchParams.get('reason')
-
-  function getRoleHome(userData) {
-    if (!userData) return '/'
-    if (userData.role === 'ADMIN') return '/admin/dashboard'
-    if (userData.role === 'TECHNICIAN') return '/technician/dashboard'
-    if (userData.role === 'MAINTENANCEMNG') return '/maintenance-dashboard'
-    if (userData.role === 'RECOURSEMNG') return '/resource-dashboard'
-    if (userData.role === 'BOOKINGMNG') return '/booking-dashboard'
-    return '/'
-  }
 
   useEffect(() => {
     if (hasProcessed.current) return
